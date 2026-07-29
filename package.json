@@ -1,0 +1,16 @@
+{
+  "name": "wow-messenger",
+  "version": "1.0.0",
+  "description": "WoW Messenger — Full-Stack Messenger App",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm start",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start:prod": "cd server && node index.js",
+    "install-all": "cd server && npm install && cd ../client && npm install"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
