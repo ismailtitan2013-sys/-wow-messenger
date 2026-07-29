@@ -7,7 +7,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 // Инициализация Firebase Admin SDK
 // В продакшене: задайте GOOGLE_APPLICATION_CREDENTIALS в .env 
 // или передайте serviceAccount напрямую
-if (!admin.apps.length) {
+if (!admin.apps || admin.apps.length === 0) {
   try {
     // Попытка инициализации через переменные окружения или дефолтные credentials
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -66,7 +66,7 @@ const sendPushNotification = async (userId, payload) => {
     if (!user || !user.fcmTokens || user.fcmTokens.length === 0) return;
 
     // Проверяем что Firebase Admin полностью инициализирован
-    if (!admin.apps.length) return;
+    if (!admin.apps || admin.apps.length === 0) return;
 
     const message = {
       notification: {
