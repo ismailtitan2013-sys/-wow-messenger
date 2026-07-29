@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -11,7 +11,7 @@ import { Toaster } from 'react-hot-toast';
 const App = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Toaster position="top-right" toastOptions={{ 
           style: { 
             background: 'var(--bg-secondary)', 
@@ -45,7 +45,7 @@ const App = () => {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 };
