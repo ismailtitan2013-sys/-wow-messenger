@@ -23,6 +23,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
     if (localVideoRef.current && localStream) {
       if (localVideoRef.current.srcObject !== localStream) {
         localVideoRef.current.srcObject = localStream;
+        localVideoRef.current.muted = true;
         localVideoRef.current.play().catch(e => console.warn('Local play error', e));
       }
     }

@@ -420,8 +420,18 @@ const Chat = () => {
       const res = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
-      setProfileData({ ...profileData, avatarUrl: res.data.url });
-      toast.success('Аватар загружен!', { id: toastId });
+      const newAvatarUrl = res.data.url;
+      setProfileData({ ...profileData, avatarUrl: newAvatarUrl });
+      
+      // Авто-сохранение аватара
+      const updateRes = await axios.put('/api/users/profile', { ...profileData, avatarUrl: newAvatarUrl });
+      setUser(prev => {
+        const updatedUser = { ...prev, ...updateRes.data };
+        localStorage.setItem('wow_user', JSON.stringify(updatedUser));
+        return updatedUser;
+      });
+
+      toast.success('Аватар загружен и сохранен!', { id: toastId });
     } catch (err) {
       toast.error('Ошибка загрузки аватара', { id: toastId });
     }
