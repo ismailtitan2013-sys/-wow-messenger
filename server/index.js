@@ -37,6 +37,7 @@ const io = new Server(server, {
 
 // Инициализация сокетов
 initSocket(io);
+app.set('io', io);
 
 // Middleware
 app.use(cors(corsOptions));

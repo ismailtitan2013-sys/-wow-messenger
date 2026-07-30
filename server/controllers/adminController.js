@@ -44,6 +44,13 @@ const broadcastMessage = async (req, res) => {
     );
     
     await Promise.all(pushPromises);
+    
+    // Emit socket event for online users
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('global_announcement', text);
+    }
+    
     logger.info(`Admin broadcasted message: ${text}`);
 
     res.status(200).json({ message: 'Сообщение отправлено всем пользователям' });

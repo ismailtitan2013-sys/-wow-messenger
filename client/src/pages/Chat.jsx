@@ -217,6 +217,19 @@ const Chat = () => {
         cleanupCall();
       });
       
+      socketRef.current.on('global_announcement', (text) => {
+        toast(text, {
+          icon: '📢',
+          duration: 10000,
+          style: {
+            borderRadius: '10px',
+            background: 'var(--primary-color)',
+            color: '#fff',
+            fontWeight: 'bold'
+          }
+        });
+      });
+      
       setupPushNotifications();
     }
 
@@ -639,7 +652,7 @@ const Chat = () => {
             <div className="search-results">
               <div className="list-title">Результаты поиска</div>
               {searchResults.map(foundUser => (
-                <div key={foundUser.id} className="chat-item" onClick={() => handleStartChat(foundUser.id)}>
+                <div key={foundUser.id} className={`chat-item ${foundUser.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => handleStartChat(foundUser.id)}>
                   <div className="avatar"><UserAvatar usr={foundUser} /></div>
                   <div className="chat-item-info"><div className="chat-item-name">{renderUsernameWithBadge(foundUser.username)}</div></div>
                 </div>
@@ -663,7 +676,7 @@ const Chat = () => {
                 const chatName = getChatName(chat);
                 const partner = getPartner(chat);
                 return (
-                  <div key={chat.id} className={`chat-item ${currentChat?.id === chat.id ? 'active' : ''}`} onClick={() => {setCurrentChat(chat); setShowSidebarOnMobile(false);}}>
+                  <div key={chat.id} className={`chat-item ${currentChat?.id === chat.id ? 'active' : ''} ${partner?.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => {setCurrentChat(chat); setShowSidebarOnMobile(false);}}>
                     <div className="avatar relative">
                       {chat.isGroup ? '👥' : <UserAvatar usr={partner} />}
                       {!chat.isGroup && partner?.status === 'online' && <span className="online-indicator"></span>}
@@ -671,7 +684,7 @@ const Chat = () => {
                     <div className="chat-item-info">
                       <div className="chat-item-name">{renderUsernameWithBadge(chatName)}</div>
                       <div className="chat-item-last-msg">
-                        {chat.lastMessage?.deletedForEveryone ? <i>Сообщение удалено</i> : (chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Файл' : 'Нет сообщений'))}
+                        {chat.lastMessage?.deletedForEveryone ? <i>Сообщение удалено</i> : (chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Файл' : (!chat.isGroup && partner?.bio ? <span style={{fontStyle: 'italic', opacity: 0.8}}>{partner.bio}</span> : 'Нет сообщений')))}
                       </div>
                     </div>
                   </div>
@@ -714,10 +727,15 @@ const Chat = () => {
                 <button className="btn-icon mobile-only" onClick={() => { setCurrentChat(null); setShowSidebarOnMobile(true); }}><ArrowLeft size={24} /></button>
                 <div className="avatar small">{currentChat.isGroup ? <Users size={20} /> : <UserAvatar usr={getPartner(currentChat)} size="small" />}</div>
                 <div>
-                  <div className="chat-partner-name">{renderUsernameWithBadge(getChatName(currentChat))}</div>
+                  <div className={`chat-partner-name ${getPartner(currentChat)?.username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>{renderUsernameWithBadge(getChatName(currentChat))}</div>
                   <div className="chat-partner-status">
                     {currentChat.isGroup ? `${currentChat.participants.length} участников` : (getPartner(currentChat).status === 'online' ? 'В сети' : 'Был(а) недавно')}
                   </div>
+                  {!currentChat.isGroup && getPartner(currentChat)?.bio && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px', fontStyle: 'italic', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {getPartner(currentChat).bio}
+                    </div>
+                  )}
                 </div>
               </div>
               

@@ -256,6 +256,29 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* MilkyVIP Special Styles */
+.milky-vip-chat {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  border-left: 3px solid #3b82f6;
+}
+.milky-vip-chat:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+}
+.milky-vip-chat .chat-item-name span {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+.milky-vip-name span {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
 .chat-item-last-msg {
   font-size: 0.85rem;
   color: var(--text-secondary);
