@@ -22,9 +22,11 @@ const MONGO_URI = process.env.MONGO_URI || '';
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// CORS — принимает домен из переменной окружения
+// CORS — принимает любой домен (нужно для GitHub Pages)
 const corsOptions = {
-  origin: CLIENT_URL === '*' ? '*' : CLIENT_URL.split(',').map(s => s.trim()),
+  origin: function (origin, callback) {
+    callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 };
