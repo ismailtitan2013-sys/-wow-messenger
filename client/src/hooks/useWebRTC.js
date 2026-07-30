@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 export const useWebRTC = (socketRef, currentUserId) => {
   const [callState, setCallState] = useState({
@@ -17,6 +17,23 @@ export const useWebRTC = (socketRef, currentUserId) => {
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
   const peerConnectionRef = useRef();
+
+  // Синхронизация потоков с video тегами
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      if (localVideoRef.current.srcObject !== localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+    }
+  }, [localStream, callState.callEnded, callState.callAccepted]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      if (remoteVideoRef.current.srcObject !== remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+    }
+  }, [remoteStream, callState.callEnded, callState.callAccepted]);
 
   // STUN и TURN сервера для обхода NAT (чтобы звонки работали по всему миру)
   const iceServers = {
