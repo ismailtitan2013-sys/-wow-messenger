@@ -430,7 +430,11 @@ const Chat = () => {
   const handleProfileUpdate = async () => {
     try {
       const res = await axios.put('/api/users/profile', profileData);
-      setUser(prev => ({ ...prev, ...res.data }));
+      setUser(prev => {
+        const updatedUser = { ...prev, ...res.data };
+        localStorage.setItem('wow_user', JSON.stringify(updatedUser));
+        return updatedUser;
+      });
       
       // Обновляем accent-color если он изменился
       if (profileData.settings?.accentColor) {
