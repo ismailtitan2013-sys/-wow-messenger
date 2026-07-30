@@ -23,6 +23,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
     if (localVideoRef.current && localStream) {
       if (localVideoRef.current.srcObject !== localStream) {
         localVideoRef.current.srcObject = localStream;
+        localVideoRef.current.play().catch(e => console.warn('Local play error', e));
       }
     }
   }, [localStream, callState.callEnded, callState.callAccepted]);
@@ -31,6 +32,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
     if (remoteVideoRef.current && remoteStream) {
       if (remoteVideoRef.current.srcObject !== remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.play().catch(e => console.warn('Remote play error', e));
       }
     }
   }, [remoteStream, callState.callEnded, callState.callAccepted]);
@@ -88,7 +90,10 @@ export const useWebRTC = (socketRef, currentUserId) => {
   // Запрос доступа к устройствам
   const getMedia = async (video = true) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: video ? { facingMode: 'user' } : false, 
+        audio: true 
+      });
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
