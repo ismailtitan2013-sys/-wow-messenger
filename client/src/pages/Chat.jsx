@@ -401,6 +401,24 @@ const Chat = () => {
     setContextMenu(null);
   };
 
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    const toastId = toast.loading('Загрузка аватара...');
+    try {
+      const res = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+      });
+      setProfileData({ ...profileData, avatarUrl: res.data.url });
+      toast.success('Аватар загружен!', { id: toastId });
+    } catch (err) {
+      toast.error('Ошибка загрузки аватара', { id: toastId });
+    }
+  };
+
   const handleProfileUpdate = async () => {
     try {
       const res = await axios.put('/api/users/profile', profileData);
@@ -761,11 +779,11 @@ const Chat = () => {
         <div className="modal-overlay">
           <div className="modal-content settings-modal" style={{ width: '90%', maxWidth: '600px', display: 'flex', flexDirection: 'row', padding: 0, overflow: 'hidden' }}>
             <div className="settings-sidebar" style={{ width: '200px', borderRight: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.02)' }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ padding: '15px 20px', cursor: 'pointer', background: settingsTab === 'profile' ? 'var(--bg-secondary)' : 'transparent', fontWeight: settingsTab === 'profile' ? 'bold' : 'normal', borderLeft: settingsTab === 'profile' ? '3px solid var(--primary-color)' : '3px solid transparent' }} onClick={() => setSettingsTab('profile')}>Профиль</li>
-                <li style={{ padding: '15px 20px', cursor: 'pointer', background: settingsTab === 'privacy' ? 'var(--bg-secondary)' : 'transparent', fontWeight: settingsTab === 'privacy' ? 'bold' : 'normal', borderLeft: settingsTab === 'privacy' ? '3px solid var(--primary-color)' : '3px solid transparent' }} onClick={() => setSettingsTab('privacy')}>Приватность</li>
-                <li style={{ padding: '15px 20px', cursor: 'pointer', background: settingsTab === 'notifications' ? 'var(--bg-secondary)' : 'transparent', fontWeight: settingsTab === 'notifications' ? 'bold' : 'normal', borderLeft: settingsTab === 'notifications' ? '3px solid var(--primary-color)' : '3px solid transparent' }} onClick={() => setSettingsTab('notifications')}>Уведомления</li>
-                <li style={{ padding: '15px 20px', cursor: 'pointer', background: settingsTab === 'appearance' ? 'var(--bg-secondary)' : 'transparent', fontWeight: settingsTab === 'appearance' ? 'bold' : 'normal', borderLeft: settingsTab === 'appearance' ? '3px solid var(--primary-color)' : '3px solid transparent' }} onClick={() => setSettingsTab('appearance')}>Внешний вид</li>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }} className="settings-tabs-list">
+                <li className={`settings-tab-btn ${settingsTab === 'profile' ? 'active' : ''}`} onClick={() => setSettingsTab('profile')}>Профиль</li>
+                <li className={`settings-tab-btn ${settingsTab === 'privacy' ? 'active' : ''}`} onClick={() => setSettingsTab('privacy')}>Приватность</li>
+                <li className={`settings-tab-btn ${settingsTab === 'notifications' ? 'active' : ''}`} onClick={() => setSettingsTab('notifications')}>Уведомления</li>
+                <li className={`settings-tab-btn ${settingsTab === 'appearance' ? 'active' : ''}`} onClick={() => setSettingsTab('appearance')}>Внешний вид</li>
               </ul>
             </div>
             
@@ -786,8 +804,19 @@ const Chat = () => {
                     <input type="text" className="form-control" value={profileData.bio} onChange={e => setProfileData({...profileData, bio: e.target.value})} />
                   </div>
                   <div className="form-group">
-                    <label>URL Аватара</label>
-                    <input type="text" className="form-control" placeholder="/uploads/avatar.jpg или URL" value={profileData.avatarUrl} onChange={e => setProfileData({...profileData, avatarUrl: e.target.value})} />
+                    <label>Аватар</label>
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginTop: '5px' }}>
+                      <UserAvatar usr={{...user, avatarUrl: profileData.avatarUrl}} size="large" />
+                      <label className="btn btn-outline" style={{ cursor: 'pointer', margin: 0 }}>
+                        Выбрать фото
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleAvatarUpload} 
+                          style={{ display: 'none' }} 
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}

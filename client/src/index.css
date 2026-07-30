@@ -506,6 +506,19 @@ body {
 .modal-content h3 { margin-top: 0; color: var(--text-primary); margin-bottom: 1.5rem; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 
+.settings-tab-btn {
+  padding: 15px 20px;
+  cursor: pointer;
+  background: transparent;
+  border-left: 3px solid transparent;
+  transition: 0.2s;
+}
+.settings-tab-btn.active {
+  background: var(--bg-secondary);
+  font-weight: bold;
+  border-left: 3px solid var(--primary-color);
+}
+
 /* Call UI */
 .incoming-call-modal {
   background: var(--bg-secondary);
@@ -708,6 +721,34 @@ body {
   }
   .chat-sidebar.mobile-hidden { transform: translateX(-100%); }
   .chat-sidebar.mobile-visible { transform: translateX(0); }
+  
+  /* Fix Settings Modal for Mobile */
+  .settings-modal {
+    flex-direction: column !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .settings-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .settings-sidebar ul {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .settings-sidebar .settings-tab-btn {
+    padding: 10px !important;
+    border-left: none !important;
+    border-bottom: 3px solid transparent;
+  }
+  .settings-sidebar .settings-tab-btn.active {
+    border-bottom: 3px solid var(--primary-color);
+  }
+  .settings-content {
+    padding: 15px !important;
+  }
 }
 
 /* Audio Player */
