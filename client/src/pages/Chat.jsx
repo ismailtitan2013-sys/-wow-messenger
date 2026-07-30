@@ -128,7 +128,8 @@ const Chat = () => {
       socketRef.current.on('receive_message', (message) => {
         setMessages((prev) => {
           if (currentChat && message.chatId === currentChat.id) {
-            if (message.senderId !== user.id) {
+            const msgSenderId = typeof message.senderId === 'object' ? message.senderId._id : message.senderId;
+            if (msgSenderId !== user.id) {
               socketRef.current.emit('mark_as_read', currentChat.id);
             }
             return [...prev, message];
@@ -150,9 +151,10 @@ const Chat = () => {
 
       socketRef.current.on('messages_read', ({ chatId, readBy }) => {
         if (currentChat && chatId === currentChat.id) {
-          setMessages((prev) => prev.map(m => 
-            (m.senderId === user.id && m.status !== 'read') ? { ...m, status: 'read', isRead: true } : m
-          ));
+          setMessages((prev) => prev.map(m => {
+            const mSenderId = typeof m.senderId === 'object' ? m.senderId._id : m.senderId;
+            return (mSenderId === user.id && m.status !== 'read') ? { ...m, status: 'read', isRead: true } : m;
+          }));
         }
       });
 
@@ -316,7 +318,7 @@ const Chat = () => {
     }
   };
 
-  const handleSendMessage = async (e, audioBlob = null) => {
+  const handleSendMessage = async (e, audioBlob = null, audioFileName = 'audio_message.webm') => {
     if (e) e.preventDefault();
     if (!newMessage.trim() && !selectedFile && !audioBlob) return;
 
@@ -324,7 +326,7 @@ const Chat = () => {
 
     if (audioBlob) {
       const formData = new FormData();
-      formData.append('file', audioBlob, 'audio_message.webm');
+      formData.append('file', audioBlob, audioFileName);
       try {
         const res = await axios.post('/api/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
@@ -486,8 +488,10 @@ const Chat = () => {
     if (!mediaRecorderRef.current) return;
     
     mediaRecorderRef.current.onstop = () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      handleSendMessage(null, audioBlob);
+      const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
+      const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+      handleSendMessage(null, audioBlob, `audio_message.${ext}`);
       audioChunksRef.current = [];
     };
     
@@ -657,7 +661,8 @@ const Chat = () => {
 
             <div className="messages-area">
               {messages.map((msg) => {
-                const isOwn = msg.senderId === user.id;
+                const actualSenderId = typeof msg.senderId === 'object' ? msg.senderId._id : msg.senderId;
+                const isOwn = actualSenderId === user.id;
                 
                 if (msg.deletedForEveryone) {
                   return (
@@ -667,10 +672,10 @@ const Chat = () => {
                   );
                 }
 
-                const sender = currentChat.isGroup && !isOwn ? currentChat.participants.find(p => p.id === msg.senderId) : null;
+                const sender = currentChat.isGroup && !isOwn ? currentChat.participants.find(p => p.id === actualSenderId) : null;
 
                 return (
-                  <div key={msg.id} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
+                  <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
                     <div className="message-bubble">
                       {sender && <div className="message-sender-name">{renderUsernameWithBadge(sender.username)}</div>}
                       {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
