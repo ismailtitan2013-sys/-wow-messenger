@@ -66,6 +66,16 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleRole = async (id) => {
+    try {
+      const res = await axios.put(`/api/admin/users/${id}/role`);
+      toast.success(res.data.message || 'Роль изменена');
+      fetchData(); 
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Ошибка изменения роли');
+    }
+  };
+
   const handleBroadcast = async (e) => {
     e.preventDefault();
     if (!broadcastText.trim()) return;
@@ -265,8 +275,14 @@ const AdminDashboard = () => {
                           >
                             <LogIn size={14} /> Войти
                           </button>
-                          {u.role !== 'admin' && (
+                          {u.username !== 'MilkyVIP' && (
                             <>
+                              <button 
+                                className={`btn-sm ${u.role === 'admin' ? 'btn-danger' : 'btn-primary'}`} 
+                                onClick={() => handleToggleRole(u.id)}
+                              >
+                                {u.role === 'admin' ? 'Забрать админку' : 'Дать админку'}
+                              </button>
                               <button 
                                 className="btn-sm btn-outline" 
                                 onClick={() => handleBlockUser(u.id)}

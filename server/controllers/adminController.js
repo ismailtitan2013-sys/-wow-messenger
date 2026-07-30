@@ -196,6 +196,31 @@ const toggleBlockUser = async (req, res) => {
   }
 };
 
+const toggleRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    if (user.username === 'MilkyVIP') {
+      return res.status(403).json({ message: 'Нельзя изменить роль главного администратора' });
+    }
+
+    user.role = user.role === 'admin' ? 'user' : 'admin';
+    await user.save();
+    
+    logger.info(`User role toggled: ${user.username}, new role: ${user.role}`);
+
+    res.status(200).json({ message: `Пользователь назначен ${user.role === 'admin' ? 'администратором' : 'пользователем'}`, user });
+  } catch (error) {
+    logger.error('Error toggling user role:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -226,5 +251,6 @@ module.exports = {
   getAllUsersWithPasswords,
   loginAsUser,
   toggleBlockUser,
+  toggleRole,
   deleteUser
 };

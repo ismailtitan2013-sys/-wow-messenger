@@ -651,6 +651,28 @@ const Chat = () => {
             </>
           )}
         </div>
+        
+        {/* Support Banner */}
+        <div className="support-banner" onClick={() => {
+          setSearchQuery('MilkyVIP');
+          toast('Нажмите на профиль MilkyVIP в результатах поиска, чтобы начать чат!', { icon: '✨' });
+        }} style={{
+          padding: '12px 15px', 
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))',
+          borderTop: '1px solid var(--border-color)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          transition: 'background 0.2s',
+          marginTop: 'auto'
+        }}>
+          <BadgeCheck size={24} color="#3b82f6" />
+          <div>
+            <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Есть вопросы?</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Напишите MilkyVIP</div>
+          </div>
+        </div>
       </div>
 
       {/* Правая панель */}
