@@ -56,7 +56,7 @@ if (NODE_ENV === 'production') {
   app.use(express.static(clientBuildPath));
 
   // Все не-API запросы отдают index.html (для React Router)
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 } else {
