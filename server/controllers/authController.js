@@ -38,6 +38,31 @@ const register = async (req, res) => {
       { expiresIn: '24h' }
     );
     
+    // Автоматическая подписка на новостной канал MilkyVIP
+    if (username !== 'MilkyVIP') {
+      try {
+        const Chat = require('../models/Chat');
+        const milky = await User.findOne({ username: 'MilkyVIP' });
+        if (milky) {
+          let newsChannel = await Chat.findOne({ groupName: '📢 Новости WOW Messenger', isGroup: true });
+          if (!newsChannel) {
+            newsChannel = new Chat({
+              groupName: '📢 Новости WOW Messenger',
+              isGroup: true,
+              participants: [milky._id],
+              admins: [milky._id]
+            });
+          }
+          if (!newsChannel.participants.includes(user._id)) {
+            newsChannel.participants.push(user._id);
+            await newsChannel.save();
+          }
+        }
+      } catch (err) {
+        logger.error(`Error adding user to news channel: ${err.message}`);
+      }
+    }
+    
     logger.info(`New user registered and logged in: ${username}`, { userId: user._id, role });
 
     res.status(201).json({ 
