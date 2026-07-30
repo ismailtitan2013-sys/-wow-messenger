@@ -626,7 +626,9 @@ const Chat = () => {
         <div className="sidebar-header">
           <div className="current-user-info" onClick={() => setShowSettingsModal(true)} style={{cursor: 'pointer'}}>
             <UserAvatar usr={user} />
-            <span style={{fontWeight: 600}}>{renderUsernameWithBadge(user.username)}</span>
+            <span style={{fontWeight: 600}} className={user.username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
+              {renderUsernameWithBadge(user.username)}
+            </span>
           </div>
           <div className="sidebar-actions">
             <button className="btn-icon" onClick={() => setDarkMode(!darkMode)} title="Сменить тему">
