@@ -23,8 +23,15 @@ const initSocket = (io) => {
     }
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     console.log(`📡 Пользователь ${socket.user.id} подключился через сокет`);
+    
+    // Устанавливаем статус 'online' в БД
+    try {
+      await require('./models/User').findByIdAndUpdate(socket.user.id, { status: 'online' });
+    } catch (e) {
+      console.error('Ошибка обновления статуса online', e);
+    }
 
     // Пользователь присоединяется к своей персональной "комнате", чтобы получать уведомления
     socket.join(socket.user.id);
@@ -194,8 +201,16 @@ const initSocket = (io) => {
       io.to(to).emit('call_ended');
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log(`🔴 Пользователь ${socket.user.id} отключился`);
+      connectedUsers.delete(socket.user.id);
+      
+      // Устанавливаем статус 'offline'
+      try {
+        await require('./models/User').findByIdAndUpdate(socket.user.id, { status: 'offline' });
+      } catch (e) {
+        console.error('Ошибка обновления статуса offline', e);
+      }
     });
   });
 };
