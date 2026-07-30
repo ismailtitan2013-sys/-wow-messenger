@@ -805,7 +805,6 @@ const Chat = () => {
                   );
                 })()}
               </div>
-              </div>
             )}
 
             <div className="chat-input-area relative">
