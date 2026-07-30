@@ -107,6 +107,13 @@ const Chat = () => {
   }, [darkMode]);
 
   useEffect(() => {
+    if (profileData.settings?.accentColor) {
+      document.documentElement.style.setProperty('--primary-color', profileData.settings.accentColor);
+      document.documentElement.style.setProperty('--primary-color-hover', profileData.settings.accentColor);
+    }
+  }, [profileData.settings?.accentColor]);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target) && !e.target.closest('.btn-emoji')) {
         setShowEmojiPicker(false);
@@ -128,7 +135,7 @@ const Chat = () => {
       socketRef.current.on('receive_message', (message) => {
         setMessages((prev) => {
           if (currentChat && message.chatId === currentChat.id) {
-            const msgSenderId = typeof message.senderId === 'object' ? message.senderId._id : message.senderId;
+            const msgSenderId = typeof message.senderId === 'object' ? (message.senderId.id || message.senderId._id) : message.senderId;
             if (msgSenderId !== user.id) {
               socketRef.current.emit('mark_as_read', currentChat.id);
             }
@@ -152,7 +159,7 @@ const Chat = () => {
       socketRef.current.on('messages_read', ({ chatId, readBy }) => {
         if (currentChat && chatId === currentChat.id) {
           setMessages((prev) => prev.map(m => {
-            const mSenderId = typeof m.senderId === 'object' ? m.senderId._id : m.senderId;
+            const mSenderId = typeof m.senderId === 'object' ? (m.senderId.id || m.senderId._id) : m.senderId;
             return (mSenderId === user.id && m.status !== 'read') ? { ...m, status: 'read', isRead: true } : m;
           }));
         }
@@ -701,7 +708,7 @@ const Chat = () => {
 
             <div className="messages-area">
               {messages.map((msg) => {
-                const actualSenderId = typeof msg.senderId === 'object' ? msg.senderId._id : msg.senderId;
+                const actualSenderId = typeof msg.senderId === 'object' ? (msg.senderId.id || msg.senderId._id) : msg.senderId;
                 const isOwn = actualSenderId === user.id;
                 
                 if (msg.deletedForEveryone) {
