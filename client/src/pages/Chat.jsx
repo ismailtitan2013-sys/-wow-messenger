@@ -1001,7 +1001,7 @@ const Chat = () => {
                 </div>
               </>
             )}
-            {callState.isVideo && <video playsInline autoPlay muted ref={localVideoRef} className="local-video" />}
+
           </div>
           <div className="call-controls">
             <button className={`btn-call-control ${isAudioMuted ? 'muted' : ''}`} onClick={() => setIsAudioMuted(!toggleAudio())}>
@@ -1016,6 +1016,14 @@ const Chat = () => {
           </div>
         </div>
       )}
+      <video 
+        playsInline 
+        autoPlay 
+        muted 
+        ref={localVideoRef} 
+        className="local-video" 
+        style={{ display: (!callState.callEnded && callState.isVideo) ? 'block' : 'none', zIndex: 510 }} 
+      />
     </div>
   );
 };
