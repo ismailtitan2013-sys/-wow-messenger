@@ -81,17 +81,17 @@ const startServer = async () => {
 
     await mongoose.connect(mongoUri);
     console.log('📦 База данных успешно подключена');
-    
-    server.listen(PORT, () => {
-      console.log(`✅ Сервер запущен на порту ${PORT} (${NODE_ENV})`);
-      if (NODE_ENV === 'production') {
-        console.log('🌐 Фронтенд раздаётся из /client/dist');
-      }
-    });
   } catch (error) {
     console.error('❌ Ошибка подключения к базе данных:', error);
-    process.exit(1);
   }
 };
+
+// Запускаем сервер СРАЗУ ЖЕ, чтобы Render не выдал ошибку Port scan timeout
+server.listen(PORT, () => {
+  console.log(`✅ Сервер запущен на порту ${PORT} (${NODE_ENV})`);
+  if (NODE_ENV === 'production') {
+    console.log('🌐 Фронтенд раздаётся из /client/dist');
+  }
+});
 
 startServer();
