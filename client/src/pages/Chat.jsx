@@ -85,8 +85,9 @@ const Chat = () => {
     cleanupCall,
     toggleAudio,
     toggleVideo,
-    peerConnectionRef
-  } = useWebRTC(socketRef, user.id);
+    peerConnectionRef,
+    earlyCandidatesRef
+  } = useWebRTC(socketRef, user?.id);
 
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
@@ -187,16 +188,23 @@ const Chat = () => {
         setCallState(prev => ({ ...prev, callAccepted: true }));
         if (peerConnectionRef.current) {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(signal));
+          
+          for (const c of earlyCandidatesRef.current) {
+            try { await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+          }
+          earlyCandidatesRef.current = [];
         }
       });
 
       socketRef.current.on('ice_candidate', async ({ candidate }) => {
-        if (peerConnectionRef.current) {
+        if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
           try {
             await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
           } catch (e) {
             console.error('Ошибка добавления ICE кандидата', e);
           }
+        } else {
+          earlyCandidatesRef.current.push(candidate);
         }
       });
 

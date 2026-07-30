@@ -17,6 +17,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
   const localVideoRef = useRef();
   const remoteVideoRef = useRef();
   const peerConnectionRef = useRef();
+  const earlyCandidatesRef = useRef([]);
 
   // Синхронизация потоков с video тегами
   useEffect(() => {
@@ -79,6 +80,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
 
     setLocalStream(null);
     setRemoteStream(null);
+    earlyCandidatesRef.current = [];
     setCallState(prev => ({
       ...prev,
       isReceivingCall: false,
@@ -189,6 +191,13 @@ export const useWebRTC = (socketRef, currentUserId) => {
 
     // Устанавливаем удаленный Offer и создаем Answer
     await peer.setRemoteDescription(new RTCSessionDescription(callState.callerSignal));
+    
+    // Применяем ICE кандидаты, которые пришли до создания peer
+    for (const c of earlyCandidatesRef.current) {
+      try { await peer.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+    }
+    earlyCandidatesRef.current = [];
+
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
 
@@ -247,6 +256,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
     cleanupCall,
     toggleAudio,
     toggleVideo,
-    peerConnectionRef
+    peerConnectionRef,
+    earlyCandidatesRef
   };
 };
