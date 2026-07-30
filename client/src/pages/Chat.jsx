@@ -216,6 +216,15 @@ const Chat = () => {
       socketRef.current.on('call_ended', () => {
         cleanupCall();
       });
+
+      socketRef.current.on('message_reaction', ({ messageId, reactions }) => {
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === messageId || msg._id === messageId) {
+            return { ...msg, reactions };
+          }
+          return msg;
+        }));
+      });
       
       socketRef.current.on('global_announcement', (text) => {
         toast(text, {
@@ -577,6 +586,26 @@ const Chat = () => {
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
   };
 
+  const renderReactions = (reactions) => {
+    if (!reactions || reactions.length === 0) return null;
+    
+    // Group by emoji
+    const counts = {};
+    reactions.forEach(r => {
+      counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+    });
+    
+    return (
+      <div className="message-reactions-container" style={{display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap'}}>
+        {Object.entries(counts).map(([emoji, count]) => (
+          <span key={emoji} style={{background: 'var(--bg-glass)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '2px 6px', fontSize: '0.8rem', cursor: 'default'}}>
+            {emoji} {count > 1 && <span style={{fontSize: '0.75rem', opacity: 0.8}}>{count}</span>}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   const renderMessageStatus = (msg) => {
     if (msg.senderId !== user.id) return null;
     if (msg.status === 'read') return <CheckCheck size={14} className="msg-status read" />;
@@ -770,6 +799,7 @@ const Chat = () => {
                       {sender && <div className="message-sender-name">{renderUsernameWithBadge(sender.username)}</div>}
                       {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
                       {msg.text && <div className="message-text">{msg.text}</div>}
+                      {renderReactions(msg.reactions)}
                       <div className="message-meta">
                         {msg.isEdited && <span className="msg-edited">изменено </span>}
                         <span className="message-time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -793,6 +823,17 @@ const Chat = () => {
                   
                   return (
                     <>
+                      <div className="reactions-picker" style={{display: 'flex', gap: '8px', padding: '8px', borderBottom: '1px solid var(--border-color)', justifyContent: 'space-around', background: 'var(--bg-glass)'}}>
+                        {['❤️', '👍', '👎', '😂', '😮', '😢', '🔥'].map(emoji => (
+                          <span key={emoji} onClick={(e) => {
+                            e.stopPropagation();
+                            socketRef.current.emit('add_reaction', { messageId: contextMenu.message.id || contextMenu.message._id, chatId: currentChat.id, emoji });
+                            setContextMenu(null);
+                          }} style={{cursor: 'pointer', fontSize: '1.2rem', transition: 'transform 0.1s'}} onMouseEnter={(e) => e.target.style.transform='scale(1.3)'} onMouseLeave={(e) => e.target.style.transform='scale(1)'}>
+                            {emoji}
+                          </span>
+                        ))}
+                      </div>
                       {isAuthor && (
                         <div className="context-item" onClick={handleEditClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
                           <Edit2 size={16} /> Редактировать

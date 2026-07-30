@@ -163,6 +163,35 @@ const initSocket = (io) => {
       socket.to(chatId).emit('typing', { chatId, senderId: socket.user.id, isTyping });
     });
 
+    // Реакции на сообщения
+    socket.on('add_reaction', async (data) => {
+      try {
+        const { messageId, chatId, emoji } = data;
+        
+        // Находим сообщение
+        const message = await Message.findById(messageId);
+        if (message) {
+          // Проверяем, ставил ли этот пользователь уже такую же реакцию
+          const existingReactionIndex = message.reactions.findIndex(r => r.userId.toString() === socket.user.id.toString() && r.emoji === emoji);
+          
+          if (existingReactionIndex !== -1) {
+            // Если ставил, то удаляем её (тоггл)
+            message.reactions.splice(existingReactionIndex, 1);
+          } else {
+            // Добавляем новую реакцию
+            message.reactions.push({ emoji, userId: socket.user.id });
+          }
+          
+          await message.save();
+          
+          // Отправляем всем в комнате (включая отправителя) обновленные реакции
+          io.to(chatId).emit('message_reaction', { messageId, reactions: message.reactions });
+        }
+      } catch (error) {
+        console.error('Ошибка при добавлении реакции:', error);
+      }
+    });
+
     // --- WebRTC Signaling --- //
 
     // 1. Инициация звонка (отправка offer)
