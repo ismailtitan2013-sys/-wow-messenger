@@ -121,8 +121,8 @@ const initSocket = (io) => {
         const message = await Message.findById(messageId);
         if (!message) return;
 
-        // Удалять может только автор
-        if (message.senderId.toString() !== socket.user.id) return;
+        // Удалять может автор или администратор
+        if (message.senderId.toString() !== socket.user.id && socket.user.role !== 'admin') return;
 
         message.deletedForEveryone = true;
         message.text = ''; // Очищаем текст

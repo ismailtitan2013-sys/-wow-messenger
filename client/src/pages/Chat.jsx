@@ -392,7 +392,8 @@ const Chat = () => {
 
   const handleContextMenu = (e, msg) => {
     e.preventDefault();
-    if (msg.senderId === user.id && !msg.deletedForEveryone) {
+    const actualSenderId = typeof msg.senderId === 'object' ? (msg.senderId.id || msg.senderId._id) : msg.senderId;
+    if ((actualSenderId === user.id || user.role === 'admin') && !msg.deletedForEveryone) {
       setContextMenu({ message: msg, x: e.clientX, y: e.clientY });
     }
   };
@@ -742,12 +743,26 @@ const Chat = () => {
 
             {contextMenu && (
               <div className="context-menu" ref={contextMenuRef} style={{ top: contextMenu.y, left: contextMenu.x }}>
-                <div className="context-item" onClick={handleEditClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                  <Edit2 size={16} /> Редактировать
-                </div>
-                <div className="context-item delete" onClick={handleDeleteClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                  <Trash2 size={16} /> Удалить у всех
-                </div>
+                {(() => {
+                  const actualSenderId = typeof contextMenu.message.senderId === 'object' 
+                    ? (contextMenu.message.senderId.id || contextMenu.message.senderId._id) 
+                    : contextMenu.message.senderId;
+                  const isAuthor = actualSenderId === user.id;
+                  
+                  return (
+                    <>
+                      {isAuthor && (
+                        <div className="context-item" onClick={handleEditClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                          <Edit2 size={16} /> Редактировать
+                        </div>
+                      )}
+                      <div className="context-item delete" onClick={handleDeleteClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                        <Trash2 size={16} /> Удалить у всех
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
               </div>
             )}
 
