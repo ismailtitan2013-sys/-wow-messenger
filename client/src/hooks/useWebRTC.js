@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { startRingtone, stopRingtone } from '../utils/sound';
 
 export const useWebRTC = (socketRef, currentUserId) => {
   const [callState, setCallState] = useState({
@@ -64,6 +65,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
 
   // Очистка медиа и соединения
   const cleanupCall = useCallback(() => {
+    stopRingtone();
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
@@ -153,10 +155,12 @@ export const useWebRTC = (socketRef, currentUserId) => {
       name: currentUserName,
       isVideo
     });
+    startRingtone();
   };
 
   // Принять звонок
   const answerCall = async () => {
+    stopRingtone();
     setCallState(prev => ({ ...prev, callAccepted: true }));
 
     const stream = await getMedia(callState.isVideo);
@@ -210,6 +214,7 @@ export const useWebRTC = (socketRef, currentUserId) => {
 
   // Отклонить звонок
   const rejectCall = () => {
+    stopRingtone();
     socketRef.current.emit('reject_call', { to: callState.callerId });
     cleanupCall();
   };

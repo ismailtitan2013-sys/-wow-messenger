@@ -12,6 +12,7 @@ import {
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff
 } from 'lucide-react';
+import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
 import { requestFCMToken, onForegroundMessage } from '../firebase';
 
@@ -135,6 +136,9 @@ const Chat = () => {
 
       socketRef.current.on('receive_message', (message) => {
         setMessages((prev) => {
+          if (message.senderId !== user.id && message.senderId._id !== user.id) {
+            playMessageSound();
+          }
           if (currentChat && message.chatId === currentChat.id) {
             const msgSenderId = typeof message.senderId === 'object' ? (message.senderId.id || message.senderId._id) : message.senderId;
             if (msgSenderId !== user.id) {
@@ -173,6 +177,7 @@ const Chat = () => {
       });
 
       socketRef.current.on('call_incoming', ({ signal, from, name, isVideo }) => {
+        startRingtone();
         setCallState(prev => ({
           ...prev,
           isReceivingCall: true,
@@ -185,6 +190,7 @@ const Chat = () => {
       });
 
       socketRef.current.on('call_accepted', async (signal) => {
+        stopRingtone();
         setCallState(prev => ({ ...prev, callAccepted: true }));
         if (peerConnectionRef.current) {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(signal));
