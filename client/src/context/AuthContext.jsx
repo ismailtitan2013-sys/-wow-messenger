@@ -18,6 +18,26 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem('wow_token');
+          localStorage.removeItem('wow_user');
+          delete axios.defaults.headers.common['Authorization'];
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
+
+  useEffect(() => {
     // В реальном проекте здесь должен быть запрос /api/auth/me для проверки токена
     // Для демо мы просто читаем из localStorage
     const storedUser = localStorage.getItem('wow_user');
