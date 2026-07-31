@@ -511,8 +511,12 @@ const Chat = () => {
     });
   };
 
-  const getPartner = (chat) => chat.isGroup ? null : (chat?.participants?.find(p => p.id !== user.id) || {});
-  const getChatName = (chat) => chat.isGroup ? chat.groupName : getPartner(chat).username;
+  const getPartner = (chat) => {
+    if (!chat || chat.isGroup) return null;
+    return chat.participants.find(p => p && p.id !== user.id && p._id !== user.id) || chat.participants.find(p => p) || {};
+  };
+
+  const getChatName = (chat) => chat.isGroup ? chat.groupName : (getPartner(chat)?.username || 'Удаленный аккаунт');
   const handleLogout = () => { logout(); navigate('/login'); };
 
   const setupPushNotifications = async () => {
@@ -797,7 +801,7 @@ const Chat = () => {
                   );
                 }
 
-                const sender = currentChat.isGroup && !isOwn ? currentChat.participants.find(p => p.id === actualSenderId) : null;
+                const sender = currentChat.isGroup && !isOwn ? currentChat.participants.find(p => p && (p.id === actualSenderId || p._id === actualSenderId)) : null;
 
                 return (
                   <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
