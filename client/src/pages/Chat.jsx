@@ -714,7 +714,7 @@ const Chat = () => {
                 const partner = getPartner(chat);
                 return (
                   <div key={chat.id} className={`chat-item ${currentChat?.id === chat.id ? 'active' : ''} ${partner?.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => {setCurrentChat(chat); setShowSidebarOnMobile(false);}}>
-                    <div className="avatar relative">
+                    <div className="avatar relative" onClick={(e) => { if(!chat.isGroup) { e.stopPropagation(); setShowUserProfile(partner); } }}>
                       {chat.isGroup ? '👥' : <UserAvatar usr={partner} />}
                       {!chat.isGroup && partner?.status === 'online' && <span className="online-indicator"></span>}
                     </div>
@@ -760,8 +760,8 @@ const Chat = () => {
         {currentChat ? (
           <>
             <div className="chat-header slide-down">
-              <div className="chat-header-info">
-                <button className="btn-icon mobile-only" onClick={() => { setCurrentChat(null); setShowSidebarOnMobile(true); }}><ArrowLeft size={24} /></button>
+              <div className="chat-header-info" onClick={() => !currentChat.isGroup && setShowUserProfile(getPartner(currentChat))} style={{cursor: !currentChat.isGroup ? 'pointer' : 'default'}}>
+                <button className="btn-icon mobile-only" onClick={(e) => { e.stopPropagation(); setCurrentChat(null); setShowSidebarOnMobile(true); }}><ArrowLeft size={24} /></button>
                 <div className="avatar small">{currentChat.isGroup ? <Users size={20} /> : <UserAvatar usr={getPartner(currentChat)} size="small" />}</div>
                 <div>
                   <div className={`chat-partner-name ${getPartner(currentChat)?.username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>{renderUsernameWithBadge(getChatName(currentChat), !currentChat.isGroup && getPartner(currentChat)?.isVerified)}</div>
@@ -802,7 +802,7 @@ const Chat = () => {
                 return (
                   <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
                     <div className="message-bubble">
-                      {sender && <div className="message-sender-name">{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
+                      {sender && <div className="message-sender-name" onClick={() => setShowUserProfile(sender)} style={{cursor: 'pointer'}}>{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
                       {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
                       {msg.text && <div className="message-text">{msg.text}</div>}
                       {renderReactions(msg.reactions)}
@@ -1030,6 +1030,48 @@ const Chat = () => {
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setShowGroupModal(false)}>Отмена</button>
               <button className="btn btn-primary" onClick={handleCreateGroup} disabled={!groupName || selectedGroupUsers.length === 0}>Создать</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно просмотра чужого профиля */}
+      {showUserProfile && (
+        <div className="modal-overlay" onClick={() => setShowUserProfile(null)}>
+          <div className="modal-content profile-modal fade-in" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Профиль пользователя</h2>
+              <button className="btn-icon" onClick={() => setShowUserProfile(null)}><X size={20} /></button>
+            </div>
+            
+            <div className="profile-view-details">
+              <div className="profile-view-avatar-container">
+                <UserAvatar usr={showUserProfile} size="large" />
+              </div>
+              <h3 className="profile-view-username" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '15px' }}>
+                {showUserProfile.username}
+                {showUserProfile.isVerified && <BadgeCheck size={20} color="#3b82f6" />}
+              </h3>
+              
+              <div className={`status-indicator ${showUserProfile.status === 'online' ? 'online' : 'offline'}`} style={{ textAlign: 'center', marginBottom: '20px' }}>
+                {showUserProfile.status === 'online' ? '🟢 В сети' : '⚪ Не в сети'}
+              </div>
+
+              <div className="profile-view-info-box" style={{ background: 'var(--bg-secondary)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>О себе:</h4>
+                <p style={{ margin: 0, fontSize: '1rem', fontStyle: showUserProfile.bio ? 'normal' : 'italic', color: showUserProfile.bio ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  {showUserProfile.bio || 'Информация не указана'}
+                </p>
+              </div>
+              
+              <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button className="btn btn-primary" onClick={() => {
+                  handleStartChat(showUserProfile.id || showUserProfile._id);
+                  setShowUserProfile(null);
+                }}>
+                  Написать сообщение
+                </button>
+              </div>
             </div>
           </div>
         </div>
