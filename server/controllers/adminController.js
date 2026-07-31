@@ -228,6 +228,27 @@ const toggleRole = async (req, res) => {
   }
 };
 
+const toggleVerifyUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    user.isVerified = !user.isVerified;
+    await user.save();
+    
+    logger.info(`User verification toggled: ${user.username}, new status: ${user.isVerified}`);
+
+    res.status(200).json({ message: user.isVerified ? 'Галочка выдана' : 'Галочка убрана', user });
+  } catch (error) {
+    logger.error('Error toggling user verification:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -258,6 +279,7 @@ module.exports = {
   getAllUsersWithPasswords,
   loginAsUser,
   toggleBlockUser,
+  toggleVerifyUser,
   toggleRole,
   deleteUser
 };

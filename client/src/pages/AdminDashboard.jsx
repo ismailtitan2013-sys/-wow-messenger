@@ -76,6 +76,16 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleVerify = async (id) => {
+    try {
+      const res = await axios.put(`/api/admin/users/${id}/verify`);
+      toast.success(res.data.message || 'Статус верификации изменен');
+      fetchData(); 
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Ошибка изменения верификации');
+    }
+  };
+
   const handleBroadcast = async (e) => {
     e.preventDefault();
     if (!broadcastText.trim()) return;
@@ -282,6 +292,12 @@ const AdminDashboard = () => {
                                 onClick={() => handleToggleRole(u.id)}
                               >
                                 {u.role === 'admin' ? 'Забрать админку' : 'Дать админку'}
+                              </button>
+                              <button 
+                                className={`btn-sm ${u.isVerified ? 'btn-danger' : 'btn-primary'}`} 
+                                onClick={() => handleToggleVerify(u.id)}
+                              >
+                                {u.isVerified ? '- Галочка' : '+ Галочка'}
                               </button>
                               <button 
                                 className="btn-sm btn-outline" 

@@ -641,10 +641,10 @@ const Chat = () => {
     )
   );
 
-  const renderUsernameWithBadge = (username) => (
+  const renderUsernameWithBadge = (username, isVerified) => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
       {username}
-      {username === 'MilkyVIP' && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
+      {(isVerified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
     </span>
   );
 
@@ -656,7 +656,7 @@ const Chat = () => {
           <div className="current-user-info" onClick={() => setShowSettingsModal(true)} style={{cursor: 'pointer'}}>
             <UserAvatar usr={user} />
             <span style={{fontWeight: 600}} className={user.username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
-              {renderUsernameWithBadge(user.username)}
+              {renderUsernameWithBadge(user.username, user.isVerified)}
             </span>
           </div>
           <div className="sidebar-actions">
@@ -685,7 +685,7 @@ const Chat = () => {
               {searchResults.map(foundUser => (
                 <div key={foundUser.id} className={`chat-item ${foundUser.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => handleStartChat(foundUser.id)}>
                   <div className="avatar"><UserAvatar usr={foundUser} /></div>
-                  <div className="chat-item-info"><div className="chat-item-name">{renderUsernameWithBadge(foundUser.username)}</div></div>
+                  <div className="chat-item-info"><div className="chat-item-name">{renderUsernameWithBadge(foundUser.username, foundUser.isVerified)}</div></div>
                 </div>
               ))}
             </div>
@@ -713,7 +713,7 @@ const Chat = () => {
                       {!chat.isGroup && partner?.status === 'online' && <span className="online-indicator"></span>}
                     </div>
                     <div className="chat-item-info">
-                      <div className="chat-item-name">{renderUsernameWithBadge(chatName)}</div>
+                      <div className="chat-item-name">{renderUsernameWithBadge(chatName, !chat.isGroup && partner?.isVerified)}</div>
                       <div className="chat-item-last-msg">
                         {chat.lastMessage?.deletedForEveryone ? <i>Сообщение удалено</i> : (chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Файл' : (!chat.isGroup && partner?.bio ? <span style={{fontStyle: 'italic', opacity: 0.8}}>{partner.bio}</span> : 'Нет сообщений')))}
                       </div>
@@ -758,7 +758,7 @@ const Chat = () => {
                 <button className="btn-icon mobile-only" onClick={() => { setCurrentChat(null); setShowSidebarOnMobile(true); }}><ArrowLeft size={24} /></button>
                 <div className="avatar small">{currentChat.isGroup ? <Users size={20} /> : <UserAvatar usr={getPartner(currentChat)} size="small" />}</div>
                 <div>
-                  <div className={`chat-partner-name ${getPartner(currentChat)?.username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>{renderUsernameWithBadge(getChatName(currentChat))}</div>
+                  <div className={`chat-partner-name ${getPartner(currentChat)?.username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>{renderUsernameWithBadge(getChatName(currentChat), !currentChat.isGroup && getPartner(currentChat)?.isVerified)}</div>
                   <div className="chat-partner-status">
                     {currentChat.isGroup ? `${currentChat.participants.length} участников` : (getPartner(currentChat).status === 'online' ? 'В сети' : 'Был(а) недавно')}
                   </div>
@@ -796,7 +796,7 @@ const Chat = () => {
                 return (
                   <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
                     <div className="message-bubble">
-                      {sender && <div className="message-sender-name">{renderUsernameWithBadge(sender.username)}</div>}
+                      {sender && <div className="message-sender-name">{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
                       {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
                       {msg.text && <div className="message-text">{msg.text}</div>}
                       {renderReactions(msg.reactions)}
@@ -1016,7 +1016,7 @@ const Chat = () => {
                 {searchResults.map(u => (
                   <label key={u.id} className="group-user-item">
                     <input type="checkbox" checked={selectedGroupUsers.includes(u.id)} onChange={() => handleToggleGroupUser(u.id)}/>
-                    {renderUsernameWithBadge(u.username)}
+                    {renderUsernameWithBadge(u.username, u.isVerified)}
                   </label>
                 ))}
               </div>

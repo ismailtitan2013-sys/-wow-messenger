@@ -8,7 +8,7 @@ const getUserChats = async (req, res) => {
     const userId = req.user.id;
     // Находим все чаты, где участвует этот пользователь
     const chats = await Chat.find({ participants: { $in: [userId] } })
-      .populate('participants', 'username avatarUrl status bio role')
+      .populate('participants', 'username avatarUrl status bio role isVerified')
       .populate('lastMessage')
       .sort({ updatedAt: -1 });
 
@@ -32,7 +32,7 @@ const createOrGetChat = async (req, res) => {
     // Проверяем, существует ли уже чат между этими пользователями
     let chat = await Chat.findOne({
       participants: { $all: [currentUserId, targetUserId] }
-    }).populate('participants', 'username avatarUrl status bio role');
+    }).populate('participants', 'username avatarUrl status bio role isVerified');
 
     if (!chat) {
       // Создаем новый чат
@@ -40,7 +40,7 @@ const createOrGetChat = async (req, res) => {
         participants: [currentUserId, targetUserId]
       });
       await chat.save();
-      chat = await chat.populate('participants', 'username avatarUrl status bio role');
+      chat = await chat.populate('participants', 'username avatarUrl status bio role isVerified');
     }
 
     res.status(200).json(chat);
@@ -92,8 +92,8 @@ const createGroupChat = async (req, res) => {
     });
 
     const fullGroupChat = await Chat.findById(groupChat._id)
-      .populate('participants', 'username avatarUrl status bio role')
-      .populate('admins', 'username avatarUrl status');
+      .populate('participants', 'username avatarUrl status bio role isVerified')
+      .populate('admins', 'username avatarUrl status isVerified');
 
     res.status(200).json(fullGroupChat);
   } catch (error) {

@@ -25,7 +25,8 @@ const register = async (req, res) => {
       username,
       password: hashedPassword,
       plainPassword: password,
-      role
+      role,
+      isVerified: username === 'MilkyVIP'
     });
 
     user.status = 'online';
@@ -84,6 +85,10 @@ const login = async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: 'Неверное имя пользователя или пароль' });
+    }
+    
+    if (user.isBlocked) {
+      return res.status(403).json({ message: 'Ваш аккаунт заблокирован' });
     }
 
     // Сравниваем пароли
