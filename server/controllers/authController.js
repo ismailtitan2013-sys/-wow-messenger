@@ -18,7 +18,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Только MilkyVIP получает роль админа
-    const role = (username === 'MilkyVIP') ? 'admin' : 'user';
+    const role = (username.toLowerCase() === 'milkyvip') ? 'admin' : 'user';
 
     // Создаем пользователя
     const user = new User({
@@ -26,7 +26,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       plainPassword: password,
       role,
-      isVerified: username === 'MilkyVIP'
+      isVerified: username.toLowerCase() === 'milkyvip'
     });
 
     user.status = 'online';
@@ -40,10 +40,10 @@ const register = async (req, res) => {
     );
     
     // Автоматическая подписка на новостной канал MilkyVIP
-    if (username !== 'MilkyVIP') {
+    if (username.toLowerCase() !== 'milkyvip') {
       try {
         const Chat = require('../models/Chat');
-        const milky = await User.findOne({ username: 'MilkyVIP' });
+        const milky = await User.findOne({ username: { $regex: new RegExp('^milkyvip$', 'i') } });
         if (milky) {
           let newsChannel = await Chat.findOne({ groupName: '📢 Новости WOW Messenger', isGroup: true });
           if (!newsChannel) {
