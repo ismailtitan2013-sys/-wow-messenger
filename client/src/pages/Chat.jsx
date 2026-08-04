@@ -647,7 +647,7 @@ const Chat = () => {
     usr?.avatarUrl ? (
       <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${usr.avatarUrl}`} alt="avatar" className={`avatar-img ${size}`} />
     ) : (
-      <div className={`avatar ${size}`}>{usr?.username?.charAt(0).toUpperCase()}</div>
+      <div className={`avatar ${size}`}>{usr?.username ? usr.username.charAt(0).toUpperCase() : '?'}</div>
     )
   );
 
