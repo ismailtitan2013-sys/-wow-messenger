@@ -44,6 +44,7 @@ const Chat = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [showUserProfile, setShowUserProfile] = useState(null);
   
   // Group creation states
   const [showGroupModal, setShowGroupModal] = useState(false);
