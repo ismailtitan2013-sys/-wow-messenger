@@ -65,9 +65,10 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error("Login Error:", error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Ошибка авторизации' 
+        message: error.response?.data?.message || error.message || 'Ошибка авторизации: сервер недоступен' 
       };
     }
   };
@@ -85,9 +86,10 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error("Register Error:", error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Ошибка регистрации' 
+        message: error.response?.data?.message || error.message || 'Ошибка регистрации: сервер недоступен' 
       };
     }
   };
