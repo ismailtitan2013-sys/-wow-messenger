@@ -29,8 +29,9 @@ const createOrGetChat = async (req, res) => {
       return res.status(400).json({ message: 'Нельзя создать чат с самим собой' });
     }
 
-    // Проверяем, существует ли уже чат между этими пользователями
+    // Проверяем, существует ли уже приватный чат между этими пользователями
     let chat = await Chat.findOne({
+      isGroup: { $ne: true },
       participants: { $all: [currentUserId, targetUserId] }
     }).populate('participants', 'username avatarUrl status bio role isVerified');
 
