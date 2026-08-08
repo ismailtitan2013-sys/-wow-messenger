@@ -10,7 +10,8 @@ import {
   Settings, Users, LogOut, Sun, Moon, 
   Search, Phone, Video, Paperclip, Smile, 
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
-  FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff
+  FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
+  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
@@ -54,6 +55,17 @@ const Chat = () => {
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedGroupUsers, setSelectedGroupUsers] = useState([]);
+
+  // Stories States
+  const [storiesFeed, setStoriesFeed] = useState([]);
+  const [showAddStoryModal, setShowAddStoryModal] = useState(false);
+  const [newStoryText, setNewStoryText] = useState('');
+  const [newStoryMediaUrl, setNewStoryMediaUrl] = useState('');
+  const [newStoryType, setNewStoryType] = useState('text');
+  const [newStoryBg, setNewStoryBg] = useState('linear-gradient(135deg, #6366f1 0%, #a855f7 100%)');
+  const [activeStoryViewer, setActiveStoryViewer] = useState(null);
+  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+  const [storyReplyText, setStoryReplyText] = useState('');
 
   // Phase 5 States
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -275,7 +287,120 @@ const Chat = () => {
 
   useEffect(() => {
     fetchChats();
+    fetchStoriesFeed();
   }, []);
+
+  const fetchStoriesFeed = async () => {
+    try {
+      const res = await axios.get('/api/stories/feed');
+      setStoriesFeed(res.data);
+    } catch (err) {
+      console.error('Ошибка загрузки историй:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!activeStoryViewer) return;
+
+    const currentStory = activeStoryViewer.stories[activeStoryIndex];
+    if (currentStory) {
+      axios.post(`/api/stories/${currentStory.id || currentStory._id}/view`).catch(() => {});
+    }
+
+    const timer = setTimeout(() => {
+      handleNextStory();
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [activeStoryViewer, activeStoryIndex]);
+
+  const handleAddStory = async () => {
+    if (!newStoryText.trim() && !newStoryMediaUrl.trim()) {
+      return toast.error('Заполните текст или укажите ссылку на изображение');
+    }
+    const toastId = toast.loading('Публикация истории...');
+    try {
+      await axios.post('/api/stories', {
+        text: newStoryText,
+        mediaUrl: newStoryMediaUrl,
+        mediaType: newStoryMediaUrl ? 'image' : 'text',
+        backgroundColor: newStoryBg
+      });
+      toast.success('История опубликована на 24 часа! ✨', { id: toastId });
+      setShowAddStoryModal(false);
+      setNewStoryText('');
+      setNewStoryMediaUrl('');
+      fetchStoriesFeed();
+    } catch (err) {
+      toast.error('Ошибка публикации истории', { id: toastId });
+    }
+  };
+
+  const handleDeleteStory = async (storyId) => {
+    if (!window.confirm('Удалить эту историю?')) return;
+    try {
+      await axios.delete(`/api/stories/${storyId}`);
+      toast.success('История удалена');
+      setActiveStoryViewer(null);
+      fetchStoriesFeed();
+    } catch (err) {
+      toast.error('Ошибка удаления истории');
+    }
+  };
+
+  const handleNextStory = () => {
+    if (!activeStoryViewer) return;
+    if (activeStoryIndex < activeStoryViewer.stories.length - 1) {
+      setActiveStoryIndex(prev => prev + 1);
+    } else {
+      const currentGroupIdx = storiesFeed.findIndex(g => String(g.user._id || g.user.id) === String(activeStoryViewer.user._id || activeStoryViewer.user.id));
+      if (currentGroupIdx !== -1 && currentGroupIdx < storiesFeed.length - 1) {
+        setActiveStoryViewer(storiesFeed[currentGroupIdx + 1]);
+        setActiveStoryIndex(0);
+      } else {
+        setActiveStoryViewer(null);
+      }
+    }
+  };
+
+  const handlePrevStory = () => {
+    if (!activeStoryViewer) return;
+    if (activeStoryIndex > 0) {
+      setActiveStoryIndex(prev => prev - 1);
+    } else {
+      const currentGroupIdx = storiesFeed.findIndex(g => String(g.user._id || g.user.id) === String(activeStoryViewer.user._id || activeStoryViewer.user.id));
+      if (currentGroupIdx > 0) {
+        const prevGroup = storiesFeed[currentGroupIdx - 1];
+        setActiveStoryViewer(prevGroup);
+        setActiveStoryIndex(prevGroup.stories.length - 1);
+      } else {
+        setActiveStoryViewer(null);
+      }
+    }
+  };
+
+  const handleSendStoryReply = async () => {
+    if (!storyReplyText.trim() || !activeStoryViewer) return;
+    try {
+      const chatRes = await axios.post('/api/chats', { targetUserId: activeStoryViewer.user._id || activeStoryViewer.user.id });
+      const targetChat = chatRes.data;
+      
+      const currentStory = activeStoryViewer.stories[activeStoryIndex];
+      const storySnippet = currentStory.text ? `"${currentStory.text}"` : 'историю';
+      const msgText = `Ответ на историю (${storySnippet}): ${storyReplyText}`;
+      
+      socketRef.current.emit('send_message', {
+        chatId: targetChat.id || targetChat._id,
+        text: msgText,
+        receiverId: activeStoryViewer.user._id || activeStoryViewer.user.id
+      });
+      
+      toast.success('Ответ отправлен!');
+      setStoryReplyText('');
+    } catch (err) {
+      toast.error('Ошибка отправки ответа');
+    }
+  };
 
   const fetchChats = async () => {
     try {
@@ -734,6 +859,64 @@ const Chat = () => {
           <div className="search-input-wrapper">
             <Search size={18} className="search-icon" />
             <input type="text" className="form-control" placeholder="Поиск пользователей..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}/>
+          </div>
+        </div>
+
+        {/* Stories Bar */}
+        <div className="stories-container">
+          <div className="stories-title">
+            <span>Истории</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '2px' }} onClick={() => setShowAddStoryModal(true)}>
+              <Plus size={14} /> Создать
+            </span>
+          </div>
+          <div className="stories-scroll">
+            {/* My Story Item */}
+            <div className="story-item" onClick={() => {
+              const myGroup = storiesFeed.find(g => String(g.user._id || g.user.id) === String(user.id));
+              if (myGroup) {
+                setActiveStoryViewer(myGroup);
+                setActiveStoryIndex(0);
+              } else {
+                setShowAddStoryModal(true);
+              }
+            }}>
+              <div className="add-story-avatar">
+                {(() => {
+                  const myGroup = storiesFeed.find(g => String(g.user._id || g.user.id) === String(user.id));
+                  if (myGroup) {
+                    return (
+                      <div className="story-ring">
+                        <UserAvatar usr={user} size="small" />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div style={{ position: 'relative' }}>
+                      <UserAvatar usr={user} size="small" />
+                      <div className="add-story-plus">+</div>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="story-item-name">Вы</div>
+            </div>
+
+            {/* Other Users' Stories */}
+            {storiesFeed.filter(g => String(g.user._id || g.user.id) !== String(user.id)).map(group => {
+              const hasUnviewed = group.stories.some(s => !s.views?.some(v => String(v.userId) === String(user.id)));
+              return (
+                <div key={group.user._id || group.user.id} className="story-item" onClick={() => {
+                  setActiveStoryViewer(group);
+                  setActiveStoryIndex(0);
+                }}>
+                  <div className={`story-ring ${hasUnviewed ? '' : 'viewed'}`}>
+                    <UserAvatar usr={group.user} size="small" />
+                  </div>
+                  <div className="story-item-name">{group.user.username}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -1213,6 +1396,206 @@ const Chat = () => {
         className="local-video" 
         style={{ display: (!callState.callEnded && callState.isVideo) ? 'block' : 'none', zIndex: 510 }} 
       />
+
+      {/* Add Story Modal */}
+      {showAddStoryModal && (
+        <div className="modal-overlay" onClick={() => setShowAddStoryModal(false)}>
+          <div className="modal-content slide-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>✨ Создать историю</h3>
+              <button className="btn-icon" onClick={() => setShowAddStoryModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className={`btn ${newStoryType === 'text' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setNewStoryType('text')}>
+                  <Palette size={16} /> Текст
+                </button>
+                <button className={`btn ${newStoryType === 'image' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setNewStoryType('image')}>
+                  <Image size={16} /> Фото
+                </button>
+              </div>
+
+              {newStoryType === 'text' ? (
+                <>
+                  <div style={{
+                    background: newStoryBg,
+                    height: '180px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px',
+                    color: 'white',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '1.2rem',
+                    boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)'
+                  }}>
+                    {newStoryText || 'Введите ваш текст ниже...'}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Текст истории</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="О чем вы думаете? ✨"
+                      value={newStoryText}
+                      onChange={e => setNewStoryText(e.target.value)}
+                      maxLength={150}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Цвет фона</label>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                      {[
+                        'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                        'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',
+                        'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                        'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                        'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)'
+                      ].map((bg, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setNewStoryBg(bg)}
+                          style={{
+                            background: bg,
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            cursor: 'pointer',
+                            border: newStoryBg === bg ? '3px solid white' : 'none'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label>Ссылка на фото</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="https://example.com/image.jpg"
+                      value={newStoryMediaUrl}
+                      onChange={e => setNewStoryMediaUrl(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Подпись</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Добавьте описание..."
+                      value={newStoryText}
+                      onChange={e => setNewStoryText(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              <button className="btn btn-primary" onClick={handleAddStory} style={{ width: '100%', marginTop: '10px' }}>
+                🚀 Опубликовать на 24 часа
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Story Viewer Modal */}
+      {activeStoryViewer && (
+        <div className="story-modal-overlay" onClick={() => setActiveStoryViewer(null)}>
+          {(() => {
+            const currentStory = activeStoryViewer.stories[activeStoryIndex];
+            if (!currentStory) return null;
+            const isOwner = String(currentStory.userId?._id || currentStory.userId?.id || currentStory.userId) === String(user.id);
+            const isAdmin = user.role === 'admin' || user.username === 'MilkyVIP';
+
+            return (
+              <div className="story-viewer-box" onClick={e => e.stopPropagation()} style={{ background: currentStory.backgroundColor || 'linear-gradient(135deg, #0f172a, #1e293b)' }}>
+                {/* Progress Segments */}
+                <div className="story-progress-segments">
+                  {activeStoryViewer.stories.map((s, idx) => (
+                    <div key={s.id || s._id || idx} className="story-progress-segment">
+                      <div className={`story-progress-fill ${idx < activeStoryIndex ? 'active' : ''}`} style={{
+                        width: idx === activeStoryIndex ? '100%' : (idx < activeStoryIndex ? '100%' : '0%'),
+                        transition: idx === activeStoryIndex ? 'width 5s linear' : 'none'
+                      }}></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Header */}
+                <div className="story-header">
+                  <div className="story-author-info">
+                    <UserAvatar usr={activeStoryViewer.user} size="small" />
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        {renderUsernameWithBadge(activeStoryViewer.user.username, activeStoryViewer.user.isVerified)}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                        {new Date(currentStory.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {(isOwner || isAdmin) && (
+                      <button className="btn-icon" title="Удалить историю" style={{ color: '#ef4444' }} onClick={() => handleDeleteStory(currentStory.id || currentStory._id)}>
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                    <button className="btn-icon" onClick={() => setActiveStoryViewer(null)}><X size={22} /></button>
+                  </div>
+                </div>
+
+                {/* Body & Navigation */}
+                <div className="story-body">
+                  <div className="story-nav-btn left" onClick={handlePrevStory}></div>
+                  <div className="story-nav-btn right" onClick={handleNextStory}></div>
+
+                  {currentStory.mediaUrl ? (
+                    <div style={{ textAlign: 'center' }}>
+                      <img src={currentStory.mediaUrl} alt="story" className="story-media-img" />
+                      {currentStory.text && <div className="story-text-display" style={{ marginTop: '15px', fontSize: '1.1rem' }}>{currentStory.text}</div>}
+                    </div>
+                  ) : (
+                    <div className="story-text-display">{currentStory.text}</div>
+                  )}
+                </div>
+
+                {/* Footer Reply / Views */}
+                <div className="story-footer-reply">
+                  {isOwner ? (
+                    <div style={{ color: 'white', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', margin: 'auto', opacity: 0.9 }}>
+                      <Eye size={16} /> Просмотров: {currentStory.views?.length || 0}
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        className="story-reply-input"
+                        placeholder="Ответить на историю..."
+                        value={storyReplyText}
+                        onChange={e => setStoryReplyText(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleSendStoryReply();
+                        }}
+                      />
+                      <button className="btn-icon" style={{ background: '#3b82f6', color: 'white', borderRadius: '50%', width: '36px', height: '36px' }} onClick={handleSendStoryReply}>
+                        <Send size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 };
