@@ -11,7 +11,7 @@ import {
   Search, Phone, Video, Paperclip, Smile, 
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
-  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight
+  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
@@ -66,6 +66,7 @@ const Chat = () => {
   const [activeStoryViewer, setActiveStoryViewer] = useState(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
   const [storyReplyText, setStoryReplyText] = useState('');
+  const [uploadingStoryFile, setUploadingStoryFile] = useState(false);
 
   // Phase 5 States
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -316,14 +317,15 @@ const Chat = () => {
 
   const handleAddStory = async () => {
     if (!newStoryText.trim() && !newStoryMediaUrl.trim()) {
-      return toast.error('Заполните текст или укажите ссылку на изображение');
+      return toast.error('Заполните текст или выберите фото/видео файл');
     }
     const toastId = toast.loading('Публикация истории...');
     try {
+      const isVideo = newStoryType === 'video' || newStoryMediaUrl.match(/\.(mp4|webm|mov|avi)$/i);
       await axios.post('/api/stories', {
         text: newStoryText,
         mediaUrl: newStoryMediaUrl,
-        mediaType: newStoryMediaUrl ? 'image' : 'text',
+        mediaType: newStoryMediaUrl ? (isVideo ? 'video' : 'image') : 'text',
         backgroundColor: newStoryBg
       });
       toast.success('История опубликована на 24 часа! ✨', { id: toastId });
@@ -333,6 +335,32 @@ const Chat = () => {
       fetchStoriesFeed();
     } catch (err) {
       toast.error('Ошибка публикации истории', { id: toastId });
+    }
+  };
+
+  const handleStoryFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploadingStoryFile(true);
+    const toastId = toast.loading('Загрузка файла с устройства...');
+    try {
+      const res = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const mediaPath = res.data.url;
+      const isVideo = res.data.type === 'video' || file.type.startsWith('video/');
+
+      setNewStoryMediaUrl(mediaPath);
+      setNewStoryType(isVideo ? 'video' : 'image');
+      toast.success(isVideo ? 'Видео успешно загружено!' : 'Фото успешно загружено!', { id: toastId });
+    } catch (err) {
+      toast.error('Ошибка загрузки файла', { id: toastId });
+    } finally {
+      setUploadingStoryFile(false);
     }
   };
 
@@ -1410,8 +1438,8 @@ const Chat = () => {
                 <button className={`btn ${newStoryType === 'text' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setNewStoryType('text')}>
                   <Palette size={16} /> Текст
                 </button>
-                <button className={`btn ${newStoryType === 'image' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setNewStoryType('image')}>
-                  <Image size={16} /> Фото
+                <button className={`btn ${newStoryType !== 'text' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setNewStoryType('image')}>
+                  <Image size={16} /> Фото / Видео
                 </button>
               </div>
 
@@ -1474,18 +1502,50 @@ const Chat = () => {
                 </>
               ) : (
                 <>
-                  <div className="form-group">
-                    <label>Ссылка на фото</label>
+                  <label className="story-file-upload-box">
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      style={{ display: 'none' }}
+                      onChange={handleStoryFileUpload}
+                    />
+                    {uploadingStoryFile ? (
+                      <div>⏳ Загрузка файла...</div>
+                    ) : newStoryMediaUrl ? (
+                      <div style={{ width: '100%', textAlign: 'center' }}>
+                        {newStoryType === 'video' || newStoryMediaUrl.match(/\.(mp4|webm|mov|avi)$/i) ? (
+                          <video src={newStoryMediaUrl.startsWith('http') ? newStoryMediaUrl : `${import.meta.env.VITE_API_URL || ''}${newStoryMediaUrl}`} controls style={{ maxWidth: '100%', maxHeight: '140px', borderRadius: '8px' }} />
+                        ) : (
+                          <img src={newStoryMediaUrl.startsWith('http') ? newStoryMediaUrl : `${import.meta.env.VITE_API_URL || ''}${newStoryMediaUrl}`} alt="preview" style={{ maxWidth: '100%', maxHeight: '140px', borderRadius: '8px', objectFit: 'cover' }} />
+                        )}
+                        <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '6px', fontWeight: 'bold' }}>✓ Файл выбран (нажмите для замены)</div>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={28} color="#3b82f6" />
+                        <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                          Выберите фото или видео с устройства
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          Нажмите для выбора из файлов / галереи
+                        </div>
+                      </>
+                    )}
+                  </label>
+
+                  <div className="form-group" style={{ marginTop: '10px' }}>
+                    <label style={{ fontSize: '0.8rem' }}>Или вставьте ссылку на файл</label>
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="https://example.com/image.jpg"
+                      placeholder="https://example.com/video.mp4"
                       value={newStoryMediaUrl}
                       onChange={e => setNewStoryMediaUrl(e.target.value)}
                     />
                   </div>
+
                   <div className="form-group">
-                    <label>Подпись</label>
+                    <label style={{ fontSize: '0.8rem' }}>Подпись к истории</label>
                     <input
                       type="text"
                       className="form-control"
@@ -1558,8 +1618,22 @@ const Chat = () => {
                   <div className="story-nav-btn right" onClick={handleNextStory}></div>
 
                   {currentStory.mediaUrl ? (
-                    <div style={{ textAlign: 'center' }}>
-                      <img src={currentStory.mediaUrl} alt="story" className="story-media-img" />
+                    <div style={{ textAlign: 'center', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      {currentStory.mediaType === 'video' || currentStory.mediaUrl.match(/\.(mp4|webm|mov|avi)$/i) ? (
+                        <video
+                          src={currentStory.mediaUrl.startsWith('http') ? currentStory.mediaUrl : `${import.meta.env.VITE_API_URL || ''}${currentStory.mediaUrl}`}
+                          autoPlay
+                          playsInline
+                          loop
+                          className="story-media-video"
+                        />
+                      ) : (
+                        <img
+                          src={currentStory.mediaUrl.startsWith('http') ? currentStory.mediaUrl : `${import.meta.env.VITE_API_URL || ''}${currentStory.mediaUrl}`}
+                          alt="story"
+                          className="story-media-img"
+                        />
+                      )}
                       {currentStory.text && <div className="story-text-display" style={{ marginTop: '15px', fontSize: '1.1rem' }}>{currentStory.text}</div>}
                     </div>
                   ) : (

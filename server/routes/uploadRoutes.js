@@ -23,10 +23,15 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
   fileFilter: (req, file, cb) => {
-    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'audio/webm', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4'];
-    if (allowedMimes.includes(file.mimetype)) {
+    const allowedMimes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska', 'video/mov', 'video/avi',
+      'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain', 'audio/webm', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4'
+    ];
+    if (allowedMimes.includes(file.mimetype) || file.mimetype.startsWith('video/') || file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
       cb(new Error('Недопустимый формат файла'));
@@ -41,13 +46,14 @@ router.post('/', authMiddleware, upload.single('file'), (req, res) => {
     }
     
     const isImage = req.file.mimetype.startsWith('image/');
+    const isVideo = req.file.mimetype.startsWith('video/');
     const isAudio = req.file.mimetype.startsWith('audio/');
     
     res.status(200).json({
       url: `/uploads/${req.file.filename}`,
       name: req.file.originalname,
       size: req.file.size,
-      type: isImage ? 'image' : (isAudio ? 'audio' : 'document')
+      type: isImage ? 'image' : (isVideo ? 'video' : (isAudio ? 'audio' : 'document'))
     });
   } catch (error) {
     console.error('Ошибка загрузки файла:', error);
