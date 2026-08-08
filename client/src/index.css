@@ -412,6 +412,10 @@ body {
   color: var(--text-secondary) !important;
   box-shadow: none;
 }
+.message-bubble.deleted-vip {
+  border: 1px dashed #ef4444 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15) !important;
+}
 .message-sender-name {
   font-size: 0.75rem;
   font-weight: 600;

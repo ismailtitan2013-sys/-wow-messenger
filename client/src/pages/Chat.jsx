@@ -160,6 +160,9 @@ const Chat = () => {
       socketRef.current.on('message_deleted', (deletedMsg) => {
         setMessages((prev) => prev.map(m => m.id === deletedMsg.id ? deletedMsg : m));
         updateChatListWithNewMessage(deletedMsg, true);
+        if (user?.role === 'admin' || user?.username === 'MilkyVIP') {
+          toast('Собеседник удалил сообщение, но оно сохранено для вас!', { icon: '👁️' });
+        }
       });
 
       socketRef.current.on('messages_read', ({ chatId, readBy }) => {
@@ -644,13 +647,42 @@ const Chat = () => {
     );
   };
 
-  const UserAvatar = ({ usr, size = 'default' }) => (
-    usr?.avatarUrl ? (
-      <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${usr.avatarUrl}`} alt="avatar" className={`avatar-img ${size}`} />
-    ) : (
-      <div className={`avatar ${size}`}>{usr?.username ? usr.username.charAt(0).toUpperCase() : '?'}</div>
-    )
-  );
+  const UserAvatar = ({ usr, size = 'default' }) => {
+    const [imgError, setImgError] = useState(false);
+    const avatarUrl = usr?.avatarUrl;
+
+    useEffect(() => {
+      setImgError(false);
+    }, [avatarUrl]);
+
+    const getFullUrl = (url) => {
+      if (!url) return '';
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+        return url;
+      }
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+    };
+
+    const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
+
+    if (avatarUrl && !imgError) {
+      return (
+        <img
+          src={getFullUrl(avatarUrl)}
+          alt=""
+          className={`avatar-img ${size}`}
+          onError={() => setImgError(true)}
+        />
+      );
+    }
+
+    return (
+      <div className={`avatar ${size}`}>
+        {initial}
+      </div>
+    );
+  };
 
   const renderUsernameWithBadge = (username, isVerified) => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -695,7 +727,7 @@ const Chat = () => {
               <div className="list-title">Результаты поиска</div>
               {searchResults.map(foundUser => (
                 <div key={foundUser.id} className={`chat-item ${foundUser.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => handleStartChat(foundUser.id)}>
-                  <div className="avatar"><UserAvatar usr={foundUser} /></div>
+                  <UserAvatar usr={foundUser} />
                   <div className="chat-item-info"><div className="chat-item-name">{renderUsernameWithBadge(foundUser.username, foundUser.isVerified)}</div></div>
                 </div>
               ))}
@@ -719,14 +751,20 @@ const Chat = () => {
                 const partner = getPartner(chat);
                 return (
                   <div key={chat.id} className={`chat-item ${currentChat?.id === chat.id ? 'active' : ''} ${partner?.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => {setCurrentChat(chat); setShowSidebarOnMobile(false);}}>
-                    <div className="avatar relative" onClick={(e) => { if(!chat.isGroup) { e.stopPropagation(); setShowUserProfile(partner); } }}>
-                      {chat.isGroup ? '👥' : <UserAvatar usr={partner} />}
+                    <div className="relative" onClick={(e) => { if(!chat.isGroup) { e.stopPropagation(); setShowUserProfile(partner); } }}>
+                      {chat.isGroup ? <div className="avatar">👥</div> : <UserAvatar usr={partner} />}
                       {!chat.isGroup && partner?.status === 'online' && <span className="online-indicator"></span>}
                     </div>
                     <div className="chat-item-info">
                       <div className="chat-item-name">{renderUsernameWithBadge(chatName, !chat.isGroup && partner?.isVerified)}</div>
                       <div className="chat-item-last-msg">
-                        {chat.lastMessage?.deletedForEveryone ? <i>Сообщение удалено</i> : (chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Файл' : (!chat.isGroup && partner?.bio ? <span style={{fontStyle: 'italic', opacity: 0.8}}>{partner.bio}</span> : 'Нет сообщений')))}
+                        {chat.lastMessage?.deletedForEveryone ? (
+                          (user?.role === 'admin' || user?.username === 'MilkyVIP') ? (
+                            <span style={{ color: '#ef4444' }}>🚫 <s style={{ opacity: 0.85 }}>{chat.lastMessage.text || 'Удаленное сообщение'}</s></span>
+                          ) : (
+                            <i>Сообщение удалено</i>
+                          )
+                        ) : (chat.lastMessage?.text || (chat.lastMessage?.attachments?.length ? 'Файл' : (!chat.isGroup && partner?.bio ? <span style={{fontStyle: 'italic', opacity: 0.8}}>{partner.bio}</span> : 'Нет сообщений')))}
                       </div>
                     </div>
                   </div>
@@ -767,7 +805,7 @@ const Chat = () => {
             <div className="chat-header slide-down">
               <div className="chat-header-info" onClick={() => !currentChat.isGroup && setShowUserProfile(getPartner(currentChat))} style={{cursor: !currentChat.isGroup ? 'pointer' : 'default'}}>
                 <button className="btn-icon mobile-only" onClick={(e) => { e.stopPropagation(); setCurrentChat(null); setShowSidebarOnMobile(true); }}><ArrowLeft size={24} /></button>
-                <div className="avatar small">{currentChat.isGroup ? <Users size={20} /> : <UserAvatar usr={getPartner(currentChat)} size="small" />}</div>
+                {currentChat.isGroup ? <div className="avatar small"><Users size={20} /></div> : <UserAvatar usr={getPartner(currentChat)} size="small" />}
                 <div>
                   <div className={`chat-partner-name ${getPartner(currentChat)?.username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>{renderUsernameWithBadge(getChatName(currentChat), !currentChat.isGroup && getPartner(currentChat)?.isVerified)}</div>
                   <div className="chat-partner-status">
@@ -795,8 +833,30 @@ const Chat = () => {
                 const isOwn = actualSenderId === user.id;
                 
                 if (msg.deletedForEveryone) {
+                  const isMilkyOrAdmin = user?.role === 'admin' || user?.username === 'MilkyVIP';
+                  if (isMilkyOrAdmin) {
+                    return (
+                      <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
+                        <div className="message-bubble deleted-vip" style={{ borderLeft: '3px solid #ef4444', backgroundColor: 'rgba(239, 68, 68, 0.12)', padding: '10px 14px', borderRadius: '12px' }}>
+                          <div style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 'bold', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span>🚫 Удалено (Видно вам как MilkyVIP / Админ)</span>
+                          </div>
+                          {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
+                          {msg.text ? (
+                            <div className="message-text" style={{ textDecoration: 'line-through', opacity: 0.9 }}>{msg.text}</div>
+                          ) : (
+                            <div style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>[Содержимое сообщения не было сохранено]</div>
+                          )}
+                          {renderReactions(msg.reactions)}
+                          <div className="message-meta">
+                            <span className="message-time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
                   return (
-                    <div key={msg.id} className={`message-wrapper ${isOwn ? 'own' : 'other'}`}>
+                    <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'}`}>
                       <div className="message-bubble deleted"><i>🚫 Сообщение удалено</i></div>
                     </div>
                   );

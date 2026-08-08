@@ -122,10 +122,11 @@ const initSocket = (io) => {
         if (!message) return;
 
         // Удалять может автор или администратор
-        if (message.senderId.toString() !== socket.user.id && socket.user.role !== 'admin') return;
+        const isMilkyOrAdmin = socket.user.role === 'admin' || socket.user.username === 'MilkyVIP';
+        if (message.senderId.toString() !== socket.user.id && !isMilkyOrAdmin) return;
 
         message.deletedForEveryone = true;
-        message.text = ''; // Очищаем текст
+        // Текст сообщения сохраняется для истории админов/MilkyVIP
         await message.save();
 
         io.to(chatId).emit('message_deleted', message);
