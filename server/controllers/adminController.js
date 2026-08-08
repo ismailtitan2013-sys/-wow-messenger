@@ -258,14 +258,25 @@ const deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'Пользователь не найден' });
     }
 
-    if (user.role === 'admin') {
-      return res.status(403).json({ message: 'Нельзя удалить администратора' });
+    if (user.role === 'admin' || user.username === 'MilkyVIP') {
+      return res.status(403).json({ message: 'Нельзя удалить главного администратора' });
     }
 
-    await User.findByIdAndDelete(id);
-    logger.info(`User deleted: ${user.username}`);
+    // 1. Удаляем личные чаты с этим пользователем
+    await Chat.deleteMany({ isGroup: { $ne: true }, participants: { $in: [id] } });
 
-    res.status(200).json({ message: 'Пользователь успешно удален' });
+    // 2. Удаляем пользователя из участников и админов всех групповых чатов
+    await Chat.updateMany({ isGroup: true }, { $pull: { participants: id, admins: id } });
+
+    // 3. Удаляем сообщения этого пользователя
+    await Message.deleteMany({ senderId: id });
+
+    // 4. Удаляем сам аккаунт
+    await User.findByIdAndDelete(id);
+
+    logger.info(`User and associated chats deleted: ${user.username}`);
+
+    res.status(200).json({ message: 'Пользователь и его чаты успешно удалены' });
   } catch (error) {
     logger.error('Error deleting user:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });

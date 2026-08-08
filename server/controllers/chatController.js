@@ -12,7 +12,14 @@ const getUserChats = async (req, res) => {
       .populate('lastMessage')
       .sort({ updatedAt: -1 });
 
-    res.status(200).json(chats);
+    // Отфильтровываем удаленные личные чаты (где один из собеседников был удален из базы)
+    const validChats = chats.filter(chat => {
+      if (chat.isGroup) return true;
+      const validParticipants = chat.participants.filter(p => p !== null);
+      return validParticipants.length >= 2;
+    });
+
+    res.status(200).json(validChats);
   } catch (error) {
     console.error('Ошибка при получении чатов:', error);
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
