@@ -62,25 +62,30 @@ const initSocket = (io) => {
         const populatedMessage = await Message.findById(savedMessage._id)
           .populate('senderId', 'username avatarUrl status role');
 
-        // Отправляем сообщение всем участникам чата
+        const messageData = populatedMessage.toJSON();
+
+        // Отправляем сообщение в комнату чата
+        io.to(chatId).emit('receive_message', messageData);
+
+        // Отправляем сообщение всем участникам чата персонально
         chat.participants.forEach(async (participantId) => {
           const socketId = connectedUsers.get(participantId.toString());
           if (socketId) {
-            io.to(socketId).emit('receive_message', populatedMessage);
+            io.to(socketId).emit('receive_message', messageData);
           } else if (participantId.toString() !== socket.user.id) {
             // Check if user allows push
             const pUser = await require('./models/User').findById(participantId);
             if (pUser && (!pUser.settings || pUser.settings.allowPushNotifications !== false)) {
               let pushText = text;
-            if (attachments && attachments.length > 0) {
-              pushText = attachments[0].type === 'audio' ? '🎤 Голосовое сообщение' : '📎 Вложение';
-            }
-            sendPushNotification(participantId.toString(), {
-              title: `Новое сообщение`,
-              body: pushText,
-              icon: populatedMessage.senderId.avatarUrl || '/favicon.svg',
-              chatId: chat._id
-            });
+              if (attachments && attachments.length > 0) {
+                pushText = attachments[0].type === 'audio' ? '🎤 Голосовое сообщение' : '📎 Вложение';
+              }
+              sendPushNotification(participantId.toString(), {
+                title: `Новое сообщение`,
+                body: pushText,
+                icon: messageData.senderId.avatarUrl || '/favicon.svg',
+                chatId: chat._id
+              });
             }
           }
         });

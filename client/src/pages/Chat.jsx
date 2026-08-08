@@ -23,6 +23,10 @@ const Chat = () => {
   
   const [chats, setChats] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
+  const currentChatRef = useRef(currentChat);
+  useEffect(() => {
+    currentChatRef.current = currentChat;
+  }, [currentChat]);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loadingChats, setLoadingChats] = useState(true);
@@ -136,29 +140,37 @@ const Chat = () => {
       });
 
       socketRef.current.on('receive_message', (message) => {
-        setMessages((prev) => {
-          if (message.senderId !== user.id && message.senderId._id !== user.id) {
-            playMessageSound();
+        const activeChat = currentChatRef.current;
+        const msgChatId = String(message.chatId?._id || message.chatId || '');
+        const activeChatId = String(activeChat?.id || activeChat?._id || '');
+        const msgSenderId = typeof message.senderId === 'object' ? String(message.senderId.id || message.senderId._id) : String(message.senderId);
+
+        if (msgSenderId !== String(user.id)) {
+          playMessageSound();
+        }
+
+        if (activeChatId && msgChatId === activeChatId) {
+          if (msgSenderId !== String(user.id)) {
+            socketRef.current.emit('mark_as_read', activeChatId);
           }
-          if (currentChat && message.chatId === currentChat.id) {
-            const msgSenderId = typeof message.senderId === 'object' ? (message.senderId.id || message.senderId._id) : message.senderId;
-            if (msgSenderId !== user.id) {
-              socketRef.current.emit('mark_as_read', currentChat.id);
+          setMessages((prev) => {
+            const msgId = String(message.id || message._id || Math.random());
+            if (prev.some(m => String(m.id || m._id) === msgId)) {
+              return prev;
             }
             return [...prev, message];
-          }
-          return prev;
-        });
+          });
+        }
         updateChatListWithNewMessage(message);
       });
 
       socketRef.current.on('message_edited', (editedMsg) => {
-        setMessages((prev) => prev.map(m => m.id === editedMsg.id ? editedMsg : m));
+        setMessages((prev) => prev.map(m => String(m.id || m._id) === String(editedMsg.id || editedMsg._id) ? editedMsg : m));
         updateChatListWithNewMessage(editedMsg, true);
       });
 
       socketRef.current.on('message_deleted', (deletedMsg) => {
-        setMessages((prev) => prev.map(m => m.id === deletedMsg.id ? deletedMsg : m));
+        setMessages((prev) => prev.map(m => String(m.id || m._id) === String(deletedMsg.id || deletedMsg._id) ? deletedMsg : m));
         updateChatListWithNewMessage(deletedMsg, true);
         if (user?.role === 'admin' || user?.username === 'MilkyVIP') {
           toast('Собеседник удалил сообщение, но оно сохранено для вас!', { icon: '👁️' });
@@ -166,16 +178,20 @@ const Chat = () => {
       });
 
       socketRef.current.on('messages_read', ({ chatId, readBy }) => {
-        if (currentChat && chatId === currentChat.id) {
+        const activeChat = currentChatRef.current;
+        const activeChatId = String(activeChat?.id || activeChat?._id || '');
+        if (activeChatId && String(chatId) === activeChatId) {
           setMessages((prev) => prev.map(m => {
-            const mSenderId = typeof m.senderId === 'object' ? (m.senderId.id || m.senderId._id) : m.senderId;
-            return (mSenderId === user.id && m.status !== 'read') ? { ...m, status: 'read', isRead: true } : m;
+            const mSenderId = typeof m.senderId === 'object' ? String(m.senderId.id || m.senderId._id) : String(m.senderId);
+            return (mSenderId === String(user.id) && m.status !== 'read') ? { ...m, status: 'read', isRead: true } : m;
           }));
         }
       });
 
       socketRef.current.on('typing', (data) => {
-        if (currentChat && data.chatId === currentChat.id) {
+        const activeChat = currentChatRef.current;
+        const activeChatId = String(activeChat?.id || activeChat?._id || '');
+        if (activeChatId && String(data.chatId) === activeChatId) {
           setPartnerTyping(data.isTyping);
         }
       });
