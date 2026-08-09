@@ -79,6 +79,20 @@ const userSchema = new mongoose.Schema({
   lastDailyClaim: {
     type: Date,
   },
+  dailyStreak: {
+    type: Number,
+    default: 0,
+  },
+  lastSpinTime: {
+    type: Date,
+  },
+  completedQuests: [{
+    type: String,
+  }],
+  clickerLevel: {
+    type: Number,
+    default: 1,
+  },
   pushSubscriptions: [{
     endpoint: String,
     expirationTime: Date,

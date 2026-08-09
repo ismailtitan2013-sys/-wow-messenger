@@ -114,9 +114,10 @@ const Chat = () => {
 
   // Store & Coins States
   const [showStoreModal, setShowStoreModal] = useState(false);
-  const [activeStoreTab, setActiveStoreTab] = useState('frames');
+  const [activeStoreTab, setActiveStoreTab] = useState('clicker');
   const [storeData, setStoreData] = useState({
     catalog: {},
+    quests: [],
     userCoins: user.coins || 100,
     userInventory: user.inventory || [],
     equippedFrame: user.avatarFrame || 'none',
@@ -124,13 +125,21 @@ const Chat = () => {
     equippedTheme: user.activeTheme || 'default',
     equippedBadges: user.badges || [],
     giftsReceived: user.giftsReceived || [],
-    canClaimDaily: true
+    completedQuests: user.completedQuests || [],
+    clickerLevel: user.clickerLevel || 1,
+    canClaimDaily: true,
+    canSpinWheel: true
   });
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [selectedGiftId, setSelectedGiftId] = useState('gift_star');
   const [coinsToSend, setCoinsToSend] = useState(50);
   const [giftMsg, setGiftMsg] = useState('');
   const [giftRecipient, setGiftRecipient] = useState(null);
+
+  // Clicker & Mini-Games States
+  const [tapFloats, setTapFloats] = useState([]);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
 
   const fetchStoreAndOpen = async () => {
     try {
@@ -158,6 +167,112 @@ const Chat = () => {
       setStoreData(prev => ({ ...prev, userCoins: res.data.coins, canClaimDaily: false }));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Ошибка получения бонуса');
+    }
+  };
+
+  const handleTapCoin = async (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - 20;
+    const y = e.clientY - rect.top - 20;
+
+    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
+    const level = storeData.clickerLevel || 1;
+    const tapVal = isMilky ? '+10 000 000' : `+${1 + level * 2}`;
+
+    const newFloat = { id: Date.now() + Math.random(), x, y, text: tapVal };
+    setTapFloats(prev => [...prev.slice(-12), newFloat]);
+    setTimeout(() => {
+      setTapFloats(prev => prev.filter(f => f.id !== newFloat.id));
+    }, 800);
+
+    try {
+      const res = await axios.post('/api/coins/tap', { count: 1 }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(prev => {
+        const u = { ...prev, coins: res.data.coins };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpgradeClicker = async () => {
+    try {
+      const res = await axios.post('/api/coins/upgrade-clicker', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setStoreData(prev => ({ ...prev, clickerLevel: res.data.clickerLevel, userCoins: res.data.coins }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка улучшения');
+    }
+  };
+
+  const handleSpinWheel = async () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+    const newRot = wheelRotation + 1440 + Math.floor(Math.random() * 360);
+    setWheelRotation(newRot);
+
+    setTimeout(async () => {
+      try {
+        const res = await axios.post('/api/coins/spin-wheel', {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success(res.data.message);
+        setUser(prev => {
+          const u = { ...prev, coins: res.data.coins };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, userCoins: res.data.coins, canSpinWheel: false }));
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Ошибка вращения');
+      } finally {
+        setIsSpinning(false);
+      }
+    }, 3000);
+  };
+
+  const handleAnswerQuiz = async (questionId, answerIndex) => {
+    try {
+      const res = await axios.post('/api/coins/quiz', { questionId, answerIndex }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setUser(prev => {
+        const u = { ...prev, coins: res.data.coins };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Неверный ответ');
+    }
+  };
+
+  const handleClaimQuest = async (questId) => {
+    try {
+      const res = await axios.post('/api/coins/claim-quest', { questId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setUser(prev => {
+        const u = { ...prev, coins: res.data.coins };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setStoreData(prev => ({
+        ...prev,
+        userCoins: res.data.coins,
+        completedQuests: res.data.completedQuests
+      }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка получения награды');
     }
   };
 
@@ -1078,11 +1193,16 @@ const Chat = () => {
       {/* Левая панель */}
       <div className={`chat-sidebar ${showSidebarOnMobile ? 'mobile-visible' : 'mobile-hidden'}`}>
         <div className="sidebar-header">
-          <div className="current-user-info" onClick={() => setShowSettingsModal(true)} style={{cursor: 'pointer'}}>
+          <div className="current-user-info" onClick={() => setShowUserProfile(user)} style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px'}} title="Открыть мой профиль и полученные подарки">
             <UserAvatar usr={user} />
-            <span style={{fontWeight: 600}}>
-              {renderUsernameWithBadge(user.username, user.isVerified)}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{fontWeight: 600}}>
+                {renderUsernameWithBadge(user.username, user.isVerified)}
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800 }}>
+                🪙 {user.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (user.coins || 0).toLocaleString()} Coins
+              </span>
+            </div>
           </div>
           <div className="sidebar-actions">
             <button className="btn-icon" onClick={() => setDarkMode(!darkMode)} title="Сменить тему">
@@ -1667,17 +1787,17 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Telegram-Style User Profile Modal */}
+      {/* Telegram-Style User Profile Modal with Gift Showcase */}
       {showUserProfile && (
         <div className="tg-profile-overlay" onClick={() => setShowUserProfile(null)}>
-          <div className="tg-profile-card" onClick={e => e.stopPropagation()}>
+          <div className="tg-profile-card fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="tg-profile-header">
               <button className="tg-profile-close" onClick={() => setShowUserProfile(null)}><X size={18} /></button>
               <div className="tg-profile-avatar-box">
                 <UserAvatar usr={showUserProfile} size="large" />
               </div>
               <div className="tg-profile-name">
-                {renderUsernameWithBadge(showUserProfile, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges)}
+                {renderUsernameWithBadge(showUserProfile.username, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges)}
               </div>
               <div className="tg-profile-status">
                 {showUserProfile.status === 'online' ? '🟢 в сети' : '⚪ был(а) недавно'}
@@ -1705,67 +1825,121 @@ const Chat = () => {
                 <div className="tg-info-icon"><Coins size={18} /></div>
                 <div>
                   <div className="tg-info-label">Баланс монет</div>
-                  <div className="tg-info-val">🪙 {showUserProfile.coins || 0} Coins</div>
+                  <div className="tg-info-val" style={{ color: '#f59e0b', fontWeight: 800, fontSize: '1.1rem' }}>
+                    🪙 {showUserProfile.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (showUserProfile.coins || 0).toLocaleString()} Coins
+                  </div>
                 </div>
               </div>
 
-              {Array.isArray(showUserProfile.giftsReceived) && showUserProfile.giftsReceived.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                  <div className="tg-info-label" style={{ marginBottom: '8px' }}>🎁 Полученные подарки ({showUserProfile.giftsReceived.length}):</div>
-                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
+              {/* 🎁 Секция полученных подарков с подробным счетчиком */}
+              <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '14px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                    🎁 Коллекция подарков ({showUserProfile.giftsReceived?.length || 0})
+                  </span>
+                  {showUserProfile.giftsReceived?.length > 0 && (
+                    <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>
+                      🪙 {showUserProfile.giftsReceived.reduce((sum, g) => sum + (g.coins || 0), 0).toLocaleString()} coins
+                    </span>
+                  )}
+                </div>
+
+                {Array.isArray(showUserProfile.giftsReceived) && showUserProfile.giftsReceived.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
                     {showUserProfile.giftsReceived.map((g, idx) => (
-                      <div key={idx} style={{ background: 'var(--bg-secondary)', padding: '6px 10px', borderRadius: '12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid var(--border-color)' }} title={g.message}>
-                        <span>{g.giftIcon || '🎁'}</span>
-                        <span style={{ fontWeight: 600 }}>{g.giftName}</span>
+                      <div key={idx} style={{ background: 'var(--bg-primary)', padding: '8px', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '1.8rem', marginBottom: '2px' }}>{g.giftIcon || '🎁'}</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.giftName}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#3b82f6', fontWeight: 600 }}>От: @{g.fromUsername}</div>
+                        {g.message && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '2px' }}>"{g.message}"</div>}
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '15px 10px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                    🎁 У этого пользователя пока нет подарков.<br />
+                    {showUserProfile.username !== user.username && 'Будьте первым, кто подарит подарок!'}
+                  </div>
+                )}
+              </div>
 
-              <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
-                  handleStartChat(showUserProfile.id || showUserProfile._id);
-                  setShowUserProfile(null);
-                }}>
-                  💬 Сообщение
-                </button>
-                <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {
-                  setGiftRecipient(showUserProfile);
-                  setShowGiftModal(true);
-                }}>
-                  🎁 Подарить
-                </button>
+              {/* Кнопки действий */}
+              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                {showUserProfile.username === user.username ? (
+                  <>
+                    <button className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #f59e0b, #d97706)', fontWeight: 700 }} onClick={() => {
+                      setShowUserProfile(null);
+                      fetchStoreAndOpen();
+                    }}>
+                      🛍️ Открыть Магазин & Заработок
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => {
+                      setShowUserProfile(null);
+                      setShowSettingsModal(true);
+                    }}>
+                      ⚙️ Профиль
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
+                      handleStartChat(showUserProfile.id || showUserProfile._id);
+                      setShowUserProfile(null);
+                    }}>
+                      💬 Написать сообщение
+                    </button>
+                    <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none' }} onClick={() => {
+                      setGiftRecipient(showUserProfile);
+                      setShowGiftModal(true);
+                    }}>
+                      🎁 Подарить
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Магазин Кастомизации в стиле Telegram */}
+      {/* Халяльный Магазин и Заработок По Шариату */}
       {showStoreModal && (
         <div className="modal-overlay" onClick={() => setShowStoreModal(false)}>
-          <div className="modal-content store-modal-content fade-in" onClick={e => e.stopPropagation()}>
+          <div className="modal-content store-modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShoppingBag size={24} color="#f59e0b" />
-                <h2 style={{ margin: 0 }}>Магазин & Кастомизация</h2>
+                <h2 style={{ margin: 0 }}>🌙 Магазин & Халяльный Заработок</h2>
               </div>
               <button className="btn-icon" onClick={() => setShowStoreModal(false)}><X size={20} /></button>
             </div>
 
-            <div style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 15px', border: '1px solid var(--border-color)' }}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(245, 158, 11, 0.15))', padding: '14px 18px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 15px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               <div>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш баланс: </span>
-                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#f59e0b' }}>🪙 {storeData.userCoins} Coins</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
+                  🪙 {user?.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (storeData.userCoins || 0).toLocaleString()} Coins
+                </span>
+                {user?.username?.toLowerCase() === 'milkyvip' && (
+                  <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 800 }}>👑 MilkyVIP: Меценат & Разраб</div>
+                )}
               </div>
-              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '6px 12px' }} disabled={!storeData.canClaimDaily} onClick={handleClaimDaily}>
-                {storeData.canClaimDaily ? '🎁 Ежедневный бонус +25' : '✅ Бонус забран'}
+              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px', background: 'linear-gradient(135deg, #10b981, #059669)' }} disabled={!storeData.canClaimDaily} onClick={handleClaimDaily}>
+                {storeData.canClaimDaily ? '🌙 Ежедневный подарок (+100..1000 🪙)' : '✅ Подарок получен'}
               </button>
             </div>
 
-            {/* Вкладки Магазина */}
+            {/* Вкладки Магазина и Заработка */}
             <div className="store-tabs">
+              <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
+                ⚡ Честный Труд (Кликер)
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'quiz' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quiz')}>
+                📖 Викторина Знаний
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'quests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quests')}>
+                🌿 Благие Дела & Квесты
+              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
@@ -1780,99 +1954,253 @@ const Chat = () => {
               </button>
             </div>
 
-            {/* Карточки предметов */}
-            <div className="store-items-grid">
-              {storeData.catalog[activeStoreTab]?.map(item => {
-                const isOwned = storeData.userInventory?.includes(item.id);
-                const isEquipped = storeData.equippedFrame === item.id || storeData.equippedColor === item.id || storeData.equippedTheme === item.id;
+            {/* Вкладка 1: Честный Труд (Кликер) */}
+            {activeStoreTab === 'clicker' && (
+              <div className="clicker-container">
+                <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                  <h3 style={{ margin: '0 0 4px', fontSize: '1.2rem' }}>⚡ Заработок Честным Трудом</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Нажимая на монету, вы зарабатываете коины собственным честным трудом без обмана!
+                  </p>
+                </div>
 
-                return (
-                  <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
-                    <div style={{ margin: '10px 0', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {activeStoreTab === 'frames' && (
-                        <div className={`avatar-wrapper frame-${item.id}`}>
-                          <UserAvatar usr={user} size="default" />
+                <div className="tap-button-wrapper">
+                  <div className="tap-button" onClick={handleTapCoin}>
+                    🪙
+                  </div>
+                  {tapFloats.map(f => (
+                    <div key={f.id} className="tap-float-number" style={{ left: f.x, top: f.y }}>
+                      {f.text}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="miner-stats-bar">
+                  <div className="miner-stat-card">
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Уровень мастерства</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#3b82f6' }}>Lv. {storeData.clickerLevel || 1}</div>
+                  </div>
+                  <div className="miner-stat-card">
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Доход за труд</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981' }}>
+                      +{user?.username?.toLowerCase() === 'milkyvip' ? '10 000 000' : 1 + (storeData.clickerLevel || 1) * 2} 🪙
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  className="btn btn-primary"
+                  style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(135deg, #10b981, #059669)', fontWeight: 'bold' }}
+                  onClick={handleUpgradeClicker}
+                >
+                  ⚡ Прокачать мастерство (Стоимость: 🪙 {(storeData.clickerLevel || 1) * 200})
+                </button>
+              </div>
+            )}
+
+            {/* Вкладка 2: Викторина Полезных Знаний */}
+            {activeStoreTab === 'quiz' && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                  <h3 style={{ margin: '0 0 4px' }}>📖 Викторина Полезных Знаний</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Зарабатывайте коины умом! Отвечайте правильно на полезные вопросы.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {(storeData.quizQuestions || [
+                    { id: 1, question: 'Что является главным символом гостеприимства на Востоке?', options: ['Арабский кофе и финики', 'Кола', 'Чипсы'], correct: 0, reward: 150 },
+                    { id: 2, question: 'Какое приветствие означает пожелание мира?', options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'], correct: 0, reward: 150 },
+                    { id: 3, question: 'Как называется добровольная искренняя милостыня и подарок ради добра?', options: ['Садака', 'Кредит', 'Процент'], correct: 0, reward: 200 },
+                    { id: 4, question: 'Запрещена ли в Исламе азартная игра (Майсир) и ставка на случайность?', options: ['Да, запрещена (Харам)', 'Нет, разрешена', 'Не знаю'], correct: 0, reward: 250 }
+                  ]).map(q => (
+                    <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>
+                        📖 {q.question} <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>(+🪙 {q.reward})</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {q.options.map((opt, optIdx) => (
+                          <button
+                            key={optIdx}
+                            className="btn btn-secondary"
+                            style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                            onClick={() => handleAnswerQuiz(q.id, optIdx)}
+                          >
+                            <span>{opt}</span>
+                            <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Ответить →</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Вкладка 3: Благие Дела */}
+            {activeStoreTab === 'quests' && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                  <h3 style={{ margin: '0 0 4px' }}>🌿 Благие Дела & Квесты</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Совершайте хорошие дела и получайте заслуженную награду коинами!
+                  </p>
+                </div>
+
+                <div className="quests-list">
+                  {(storeData.quests || [
+                    { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 100, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+                    { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 250, icon: '🎁', desc: 'Подарите халяльный подарок другу' },
+                    { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 500, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
+                    { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 300, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+                    { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 1000, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
+                  ]).map(q => {
+                    const isDone = storeData.completedQuests?.includes(q.id);
+                    return (
+                      <div key={q.id} className="quest-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ fontSize: '1.8rem' }}>{q.icon}</div>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{q.title}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{q.desc}</div>
+                          </div>
                         </div>
-                      )}
-                      {activeStoreTab === 'nameColors' && (
-                        <span className={`name-color-${item.id}`} style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-                          {user.username}
-                        </span>
-                      )}
-                      {activeStoreTab === 'badges' && (
-                        <span className="badge-tag" style={{ fontSize: '1rem', padding: '4px 12px' }}>{item.badge}</span>
-                      )}
-                      {activeStoreTab === 'themes' && (
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--primary-color)' }}>{item.name}</div>
+
+                        <div>
+                          {isDone ? (
+                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Выполнено ✅</span>
+                          ) : (
+                            <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleClaimQuest(q.id)}>
+                              +🪙 {q.reward}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Карточки предметов Магазина (Рамки, Ник, Значки, Темы) */}
+            {['frames', 'nameColors', 'badges', 'themes'].includes(activeStoreTab) && (
+              <div className="store-items-grid">
+                {storeData.catalog[activeStoreTab]?.map(item => {
+                  const isOwned = storeData.userInventory?.includes(item.id);
+                  const isEquipped = storeData.equippedFrame === item.id || storeData.equippedColor === item.id || storeData.equippedTheme === item.id;
+
+                  return (
+                    <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
+                      <div style={{ margin: '10px 0', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {activeStoreTab === 'frames' && (
+                          <div className={`avatar-wrapper frame-${item.id}`}>
+                            <UserAvatar usr={user} size="default" />
+                          </div>
+                        )}
+                        {activeStoreTab === 'nameColors' && (
+                          <span className={`name-color-${item.id}`} style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                            {user.username}
+                          </span>
+                        )}
+                        {activeStoreTab === 'badges' && (
+                          <span className="badge-tag" style={{ fontSize: '1rem', padding: '4px 12px' }}>{item.badge}</span>
+                        )}
+                        {activeStoreTab === 'themes' && (
+                          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--primary-color)' }}>{item.name}</div>
+                        )}
+                      </div>
+
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>{item.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>{item.description || ''}</div>
+
+                      {isOwned ? (
+                        <button className="btn btn-secondary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} disabled={isEquipped} onClick={() => handleEquipItem(item.id, activeStoreTab)}>
+                          {isEquipped ? 'Надето ✅' : 'Надеть'}
+                        </button>
+                      ) : (
+                        <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleBuyItem(item.id, activeStoreTab)}>
+                          🪙 {item.price} Coins
+                        </button>
                       )}
                     </div>
-
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>{item.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>{item.description || ''}</div>
-
-                    {isOwned ? (
-                      <button className="btn btn-secondary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} disabled={isEquipped} onClick={() => handleEquipItem(item.id, activeStoreTab)}>
-                        {isEquipped ? 'Надето ✅' : 'Надеть'}
-                      </button>
-                    ) : (
-                      <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }} onClick={() => handleBuyItem(item.id, activeStoreTab)}>
-                        🪙 {item.price} Coins
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Модальное окно отправки подарка */}
+      {/* Модальное окно отправки подарка со ВСЕМИ халяльными подарками */}
       {showGiftModal && (
         <div className="modal-overlay" onClick={() => setShowGiftModal(false)}>
-          <div className="modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+          <div className="modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Gift size={22} color="#ec4899" />
-                <h2>Отправить подарок</h2>
+                <Gift size={22} color="#10b981" />
+                <h2>Преподнести халяльный подарок (Садака)</h2>
               </div>
               <button className="btn-icon" onClick={() => setShowGiftModal(false)}><X size={20} /></button>
             </div>
 
             <div style={{ margin: '15px 0' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>Выберите подарок:</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {[
-                  { id: 'gift_star', name: 'Звезда', price: 50, icon: '⭐' },
-                  { id: 'gift_heart', name: 'Сердце', price: 100, icon: '💖' },
-                  { id: 'gift_rocket', name: 'Ракета', price: 200, icon: '🚀' },
-                  { id: 'gift_crown', name: 'Корона', price: 500, icon: '👑' },
-                ].map(g => (
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>Выберите подарок из каталога:</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
+                {(storeData.catalog?.gifts || [
+                  { id: 'gift_dates', name: 'Пальма', price: 50, icon: '🌴' },
+                  { id: 'gift_coffee', name: 'Кахва Кофе', price: 100, icon: '☕' },
+                  { id: 'gift_rose', name: 'Букет Роз', price: 120, icon: '🌺' },
+                  { id: 'gift_pizza', name: 'Пицца', price: 150, icon: '🍕' },
+                  { id: 'gift_book', name: 'Книга Знаний', price: 200, icon: '📖' },
+                  { id: 'gift_cake', name: 'Торт', price: 250, icon: '🎂' },
+                  { id: 'gift_magic_box', name: 'Шкатулка', price: 300, icon: '🎁' },
+                  { id: 'gift_crescent', name: 'Полумесяц', price: 500, icon: '🌙' },
+                  { id: 'gift_trophy', name: 'Кубок', price: 750, icon: '🏆' },
+                  { id: 'gift_rocket', name: 'Ракета', price: 800, icon: '🚀' },
+                  { id: 'gift_mosque', name: 'Мечеть', price: 1000, icon: '🕌' },
+                  { id: 'gift_watch', name: 'Часы', price: 1500, icon: '⌚' },
+                  { id: 'gift_emerald', name: 'Изумруд', price: 2500, icon: '💎' },
+                  { id: 'gift_ring', name: 'Перстень', price: 3000, icon: '💍' },
+                  { id: 'gift_car', name: 'Автомобиль', price: 5000, icon: '🏎️' },
+                  { id: 'gift_tiger', name: 'Тигр', price: 7000, icon: '🐅' },
+                  { id: 'gift_horse', name: 'Скакун', price: 8500, icon: '🏇' },
+                  { id: 'gift_yacht', name: 'Яхта', price: 10000, icon: '🛥️' },
+                  { id: 'gift_sword', name: 'Меч Почета', price: 12000, icon: '🗡️' },
+                  { id: 'gift_palace', name: 'Дом', price: 15000, icon: '🏰' },
+                  { id: 'gift_airplane', name: 'Самолет', price: 25000, icon: '🛩️' },
+                  { id: 'gift_crown', name: 'Корона', price: 50000, icon: '👑' },
+                  { id: 'gift_planet', name: 'Планета', price: 100000, icon: '🪐' },
+                  { id: 'gift_supernova', name: 'Супернова', price: 200000, icon: '💫' },
+                  { id: 'gift_charity_box', name: 'Сокровищница', price: 250000, icon: '📦' },
+                  { id: 'gift_universe', name: 'Вселенная', price: 500000, icon: '🌌' }
+                ]).map(g => (
                   <div
                     key={g.id}
                     onClick={() => setSelectedGiftId(g.id)}
                     style={{
-                      padding: '10px',
+                      padding: '10px 6px',
                       borderRadius: '12px',
-                      border: selectedGiftId === g.id ? '2px solid #ec4899' : '1px solid var(--border-color)',
-                      background: selectedGiftId === g.id ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-secondary)',
+                      border: selectedGiftId === g.id ? '2px solid #10b981' : '1px solid var(--border-color)',
+                      background: selectedGiftId === g.id ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary)',
                       cursor: 'pointer',
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      transition: 'transform 0.15s'
                     }}
                   >
-                    <div style={{ fontSize: '1.8rem' }}>{g.icon}</div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{g.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#f59e0b', fontWeight: 700 }}>🪙 {g.price}</div>
+                    <div style={{ fontSize: '2rem' }}>{g.icon}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 800 }}>🪙 {g.price}</div>
                   </div>
                 ))}
               </div>
 
               <div className="form-group" style={{ marginTop: '15px' }}>
-                <label>Сообщение (необязательно)</label>
+                <label>Пожелание получателю (необязательно)</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="За отличную историю! 😊"
+                  placeholder="От чистого сердца! 😊"
                   value={giftMsg}
                   onChange={e => setGiftMsg(e.target.value)}
                 />
@@ -1881,8 +2209,8 @@ const Chat = () => {
 
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setShowGiftModal(false)}>Отмена</button>
-              <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)' }} onClick={handleSendGiftOrCoins}>
-                🎁 Подарить
+              <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={handleSendGiftOrCoins}>
+                🎁 Преподнести Подарок
               </button>
             </div>
           </div>
