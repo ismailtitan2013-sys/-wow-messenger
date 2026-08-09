@@ -140,7 +140,21 @@ const login = async (req, res) => {
   }
 };
 
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    logger.error(`getMe error: ${error.message}`, { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  getMe
 };

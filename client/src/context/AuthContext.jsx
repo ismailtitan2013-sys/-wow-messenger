@@ -38,18 +38,33 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // В реальном проекте здесь должен быть запрос /api/auth/me для проверки токена
-    // Для демо мы просто читаем из localStorage
-    const storedUser = localStorage.getItem('wow_user');
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      setToken(null);
-      setUser(null);
-      localStorage.removeItem('wow_token');
-      localStorage.removeItem('wow_user');
-    }
-    setLoading(false);
+    const fetchCurrentUser = async () => {
+      if (token) {
+        try {
+          const res = await axios.get('/api/auth/me');
+          setUser(res.data);
+          localStorage.setItem('wow_user', JSON.stringify(res.data));
+        } catch (err) {
+          const storedUser = localStorage.getItem('wow_user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            setToken(null);
+            setUser(null);
+            localStorage.removeItem('wow_token');
+            localStorage.removeItem('wow_user');
+          }
+        }
+      } else {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem('wow_token');
+        localStorage.removeItem('wow_user');
+      }
+      setLoading(false);
+    };
+
+    fetchCurrentUser();
   }, [token]);
 
   const login = async (username, password) => {
