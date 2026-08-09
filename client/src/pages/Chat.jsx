@@ -11,7 +11,8 @@ import {
   Search, Phone, Video, Paperclip, Smile, 
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
-  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload
+  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload,
+  ShoppingBag, Gift, Coins, Award
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
@@ -84,6 +85,132 @@ const Chat = () => {
     }
   });
   const [selectedFile, setSelectedFile] = useState(null);
+
+  // Store & Coins States
+  const [showStoreModal, setShowStoreModal] = useState(false);
+  const [activeStoreTab, setActiveStoreTab] = useState('frames');
+  const [storeData, setStoreData] = useState({
+    catalog: {},
+    userCoins: user.coins || 100,
+    userInventory: user.inventory || [],
+    equippedFrame: user.avatarFrame || 'none',
+    equippedColor: user.nameColor || 'default',
+    equippedTheme: user.activeTheme || 'default',
+    equippedBadges: user.badges || [],
+    giftsReceived: user.giftsReceived || [],
+    canClaimDaily: true
+  });
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [selectedGiftId, setSelectedGiftId] = useState('gift_star');
+  const [coinsToSend, setCoinsToSend] = useState(50);
+  const [giftMsg, setGiftMsg] = useState('');
+  const [giftRecipient, setGiftRecipient] = useState(null);
+
+  const fetchStoreAndOpen = async () => {
+    try {
+      const res = await axios.get('/api/coins/store', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStoreData(res.data);
+      setShowStoreModal(true);
+    } catch (err) {
+      toast.error('Ошибка загрузки магазина');
+    }
+  };
+
+  const handleClaimDaily = async () => {
+    try {
+      const res = await axios.post('/api/coins/claim-daily', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setUser(prev => {
+        const u = { ...prev, coins: res.data.coins };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setStoreData(prev => ({ ...prev, userCoins: res.data.coins, canClaimDaily: false }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка получения бонуса');
+    }
+  };
+
+  const handleBuyItem = async (itemId, category) => {
+    try {
+      const res = await axios.post('/api/coins/buy', { itemId, category }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setUser(prev => {
+        const u = { ...prev, ...res.data.user };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setStoreData(prev => ({
+        ...prev,
+        userCoins: res.data.coins,
+        userInventory: res.data.inventory,
+        equippedFrame: res.data.user.avatarFrame,
+        equippedColor: res.data.user.nameColor,
+        equippedTheme: res.data.user.activeTheme
+      }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка покупки');
+    }
+  };
+
+  const handleEquipItem = async (itemId, category) => {
+    try {
+      const res = await axios.post('/api/coins/equip', { itemId, category }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(res.data.message);
+      setUser(prev => {
+        const u = { ...prev, ...res.data.user };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setStoreData(prev => ({
+        ...prev,
+        equippedFrame: res.data.user.avatarFrame,
+        equippedColor: res.data.user.nameColor,
+        equippedTheme: res.data.user.activeTheme
+      }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка обновления');
+    }
+  };
+
+  const handleSendGiftOrCoins = async () => {
+    const targetUser = giftRecipient || showUserProfile || getPartner(currentChat);
+    if (!targetUser) return;
+
+    const recipientId = targetUser.id || targetUser._id;
+    const chatId = currentChat?._id || currentChat?.id;
+
+    try {
+      const res = await axios.post('/api/coins/send-gift', {
+        recipientId,
+        giftId: selectedGiftId,
+        coinsAmount: coinsToSend,
+        message: giftMsg,
+        chatId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success(res.data.message);
+      setUser(prev => {
+        const u = { ...prev, coins: res.data.senderCoins };
+        localStorage.setItem('wow_user', JSON.stringify(u));
+        return u;
+      });
+      setShowGiftModal(false);
+      setGiftMsg('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка отправки');
+    }
+  };
   
   // Dark mode
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
@@ -618,21 +745,67 @@ const Chat = () => {
     setContextMenu(null);
   };
 
+  const compressImageToBase64 = (file, maxWidth = 300, maxHeight = 300, quality = 0.85) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
     const toastId = toast.loading('Загрузка аватара...');
     try {
-      const res = await axios.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
-      });
-      const newAvatarUrl = res.data.url;
-      setProfileData({ ...profileData, avatarUrl: newAvatarUrl });
+      let newAvatarUrl = '';
+      try {
+        // Сжимаем аватарку в 300x300 JPEG Base64, чтобы она сохранялась прямо в БД
+        // и никогда не сбрасывалась при обновлениях сервера
+        newAvatarUrl = await compressImageToBase64(file, 300, 300, 0.85);
+      } catch (errCompress) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await axios.post('/api/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+        });
+        newAvatarUrl = res.data.url;
+      }
+
+      setProfileData(prev => ({ ...prev, avatarUrl: newAvatarUrl }));
       
-      // Авто-сохранение аватара
+      // Авто-сохранение аватара в профиле
       const updateRes = await axios.put('/api/users/profile', { ...profileData, avatarUrl: newAvatarUrl });
       setUser(prev => {
         const updatedUser = { ...prev, ...updateRes.data };
@@ -642,6 +815,7 @@ const Chat = () => {
 
       toast.success('Аватар загружен и сохранен!', { id: toastId });
     } catch (err) {
+      console.error('Ошибка загрузки аватара:', err);
       toast.error('Ошибка загрузки аватара', { id: toastId });
     }
   };
@@ -819,6 +993,7 @@ const Chat = () => {
   const UserAvatar = ({ usr, size = 'default' }) => {
     const [imgError, setImgError] = useState(false);
     const avatarUrl = usr?.avatarUrl;
+    const avatarFrame = usr?.avatarFrame || 'none';
 
     useEffect(() => {
       setImgError(false);
@@ -835,30 +1010,53 @@ const Chat = () => {
 
     const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
 
-    if (avatarUrl && !imgError) {
-      return (
-        <img
-          src={getFullUrl(avatarUrl)}
-          alt=""
-          className={`avatar-img ${size}`}
-          onError={() => setImgError(true)}
-        />
-      );
-    }
-
-    return (
+    const avatarNode = avatarUrl && !imgError ? (
+      <img
+        src={getFullUrl(avatarUrl)}
+        alt=""
+        className={`avatar-img ${size}`}
+        onError={() => setImgError(true)}
+      />
+    ) : (
       <div className={`avatar ${size}`}>
         {initial}
       </div>
     );
+
+    if (avatarFrame && avatarFrame !== 'none') {
+      return (
+        <div className={`avatar-wrapper frame-${avatarFrame}`}>
+          {avatarNode}
+        </div>
+      );
+    }
+
+    return avatarNode;
   };
 
-  const renderUsernameWithBadge = (username, isVerified) => (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-      {username}
-      {(isVerified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
-    </span>
-  );
+  const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges) => {
+    let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
+    let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
+    let colorClass = nameColor || (typeof usrOrName === 'object' ? usrOrName?.nameColor : 'default');
+    let userBadges = badges || (typeof usrOrName === 'object' ? usrOrName?.badges : []);
+
+    let colorCss = '';
+    if (colorClass && colorClass !== 'default') {
+      colorCss = `name-color-${colorClass}`;
+    }
+
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+        <span className={`${colorCss} ${username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>
+          {username}
+        </span>
+        {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
+        {Array.isArray(userBadges) && userBadges.map((b, idx) => (
+          <span key={idx} className="badge-tag">{b}</span>
+        ))}
+      </span>
+    );
+  };
 
   return (
     <div className="messenger-layout fade-in">
@@ -867,11 +1065,14 @@ const Chat = () => {
         <div className="sidebar-header">
           <div className="current-user-info" onClick={() => setShowSettingsModal(true)} style={{cursor: 'pointer'}}>
             <UserAvatar usr={user} />
-            <span style={{fontWeight: 600}} className={user.username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
-              {renderUsernameWithBadge(user.username, user.isVerified)}
+            <span style={{fontWeight: 600}}>
+              {renderUsernameWithBadge(user, user.isVerified, user.nameColor, user.badges)}
             </span>
           </div>
           <div className="sidebar-actions">
+            <button className="coins-badge-btn" onClick={fetchStoreAndOpen} title="Магазин и Кастомизация">
+              🪙 {user.coins || 0}
+            </button>
             <button className="btn-icon" onClick={() => setDarkMode(!darkMode)} title="Сменить тему">
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -1047,7 +1248,13 @@ const Chat = () => {
               </div>
               
               {!currentChat.isGroup && (
-                <div className="chat-call-actions">
+                <div className="chat-call-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button className="btn-icon" style={{ color: '#ec4899' }} title="Отправить подарок / монеты" onClick={() => {
+                    setGiftRecipient(getPartner(currentChat));
+                    setShowGiftModal(true);
+                  }}>
+                    <Gift size={20} />
+                  </button>
                   <button className="btn-icon call" onClick={() => callUser(getPartner(currentChat).id, false, user.username)}><Phone size={20} /></button>
                   <button className="btn-icon call" onClick={() => callUser(getPartner(currentChat).id, true, user.username)}><Video size={20} /></button>
                 </div>
@@ -1327,43 +1534,215 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Модальное окно просмотра чужого профиля */}
+      {/* Telegram-Style User Profile Modal */}
       {showUserProfile && (
-        <div className="modal-overlay" onClick={() => setShowUserProfile(null)}>
-          <div className="modal-content profile-modal fade-in" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Профиль пользователя</h2>
-              <button className="btn-icon" onClick={() => setShowUserProfile(null)}><X size={20} /></button>
-            </div>
-            
-            <div className="profile-view-details">
-              <div className="profile-view-avatar-container">
+        <div className="tg-profile-overlay" onClick={() => setShowUserProfile(null)}>
+          <div className="tg-profile-card" onClick={e => e.stopPropagation()}>
+            <div className="tg-profile-header">
+              <button className="tg-profile-close" onClick={() => setShowUserProfile(null)}><X size={18} /></button>
+              <div className="tg-profile-avatar-box">
                 <UserAvatar usr={showUserProfile} size="large" />
               </div>
-              <h3 className="profile-view-username" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '15px' }}>
-                {showUserProfile.username}
-                {showUserProfile.isVerified && <BadgeCheck size={20} color="#3b82f6" />}
-              </h3>
-              
-              <div className={`status-indicator ${showUserProfile.status === 'online' ? 'online' : 'offline'}`} style={{ textAlign: 'center', marginBottom: '20px' }}>
-                {showUserProfile.status === 'online' ? '🟢 В сети' : '⚪ Не в сети'}
+              <div className="tg-profile-name">
+                {renderUsernameWithBadge(showUserProfile, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges)}
+              </div>
+              <div className="tg-profile-status">
+                {showUserProfile.status === 'online' ? '🟢 в сети' : '⚪ был(а) недавно'}
+              </div>
+            </div>
+
+            <div className="tg-profile-body">
+              <div className="tg-info-row">
+                <div className="tg-info-icon"><MessageSquare size={18} /></div>
+                <div>
+                  <div className="tg-info-label">О себе (Bio)</div>
+                  <div className="tg-info-val">{showUserProfile.bio || 'Информация не указана'}</div>
+                </div>
               </div>
 
-              <div className="profile-view-info-box" style={{ background: 'var(--bg-secondary)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>О себе:</h4>
-                <p style={{ margin: 0, fontSize: '1rem', fontStyle: showUserProfile.bio ? 'normal' : 'italic', color: showUserProfile.bio ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                  {showUserProfile.bio || 'Информация не указана'}
-                </p>
+              <div className="tg-info-row">
+                <div className="tg-info-icon"><Coins size={18} /></div>
+                <div>
+                  <div className="tg-info-label">Баланс монет</div>
+                  <div className="tg-info-val">🪙 {showUserProfile.coins || 0} Coins</div>
+                </div>
               </div>
-              
-              <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button className="btn btn-primary" onClick={() => {
+
+              {Array.isArray(showUserProfile.giftsReceived) && showUserProfile.giftsReceived.length > 0 && (
+                <div style={{ marginTop: '16px' }}>
+                  <div className="tg-info-label" style={{ marginBottom: '8px' }}>🎁 Полученные подарки ({showUserProfile.giftsReceived.length}):</div>
+                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px' }}>
+                    {showUserProfile.giftsReceived.map((g, idx) => (
+                      <div key={idx} style={{ background: 'var(--bg-secondary)', padding: '6px 10px', borderRadius: '12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid var(--border-color)' }} title={g.message}>
+                        <span>{g.giftIcon || '🎁'}</span>
+                        <span style={{ fontWeight: 600 }}>{g.giftName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
                   handleStartChat(showUserProfile.id || showUserProfile._id);
                   setShowUserProfile(null);
                 }}>
-                  Написать сообщение
+                  💬 Сообщение
+                </button>
+                <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {
+                  setGiftRecipient(showUserProfile);
+                  setShowGiftModal(true);
+                }}>
+                  🎁 Подарить
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Магазин Кастомизации в стиле Telegram */}
+      {showStoreModal && (
+        <div className="modal-overlay" onClick={() => setShowStoreModal(false)}>
+          <div className="modal-content store-modal-content fade-in" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ShoppingBag size={24} color="#f59e0b" />
+                <h2 style={{ margin: 0 }}>Магазин & Кастомизация</h2>
+              </div>
+              <button className="btn-icon" onClick={() => setShowStoreModal(false)}><X size={20} /></button>
+            </div>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 15px', border: '1px solid var(--border-color)' }}>
+              <div>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш баланс: </span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#f59e0b' }}>🪙 {storeData.userCoins} Coins</span>
+              </div>
+              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '6px 12px' }} disabled={!storeData.canClaimDaily} onClick={handleClaimDaily}>
+                {storeData.canClaimDaily ? '🎁 Ежедневный бонус +25' : '✅ Бонус забран'}
+              </button>
+            </div>
+
+            {/* Вкладки Магазина */}
+            <div className="store-tabs">
+              <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
+                🖼️ Рамки
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'nameColors' ? 'active' : ''}`} onClick={() => setActiveStoreTab('nameColors')}>
+                🎨 Цвет ника
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'badges' ? 'active' : ''}`} onClick={() => setActiveStoreTab('badges')}>
+                🏅 Значки
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'themes' ? 'active' : ''}`} onClick={() => setActiveStoreTab('themes')}>
+                🎨 Темы
+              </button>
+            </div>
+
+            {/* Карточки предметов */}
+            <div className="store-items-grid">
+              {storeData.catalog[activeStoreTab]?.map(item => {
+                const isOwned = storeData.userInventory?.includes(item.id);
+                const isEquipped = storeData.equippedFrame === item.id || storeData.equippedColor === item.id || storeData.equippedTheme === item.id;
+
+                return (
+                  <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
+                    <div style={{ margin: '10px 0', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {activeStoreTab === 'frames' && (
+                        <div className={`avatar-wrapper frame-${item.id}`}>
+                          <UserAvatar usr={user} size="default" />
+                        </div>
+                      )}
+                      {activeStoreTab === 'nameColors' && (
+                        <span className={`name-color-${item.id}`} style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                          {user.username}
+                        </span>
+                      )}
+                      {activeStoreTab === 'badges' && (
+                        <span className="badge-tag" style={{ fontSize: '1rem', padding: '4px 12px' }}>{item.badge}</span>
+                      )}
+                      {activeStoreTab === 'themes' && (
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--primary-color)' }}>{item.name}</div>
+                      )}
+                    </div>
+
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>{item.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>{item.description || ''}</div>
+
+                    {isOwned ? (
+                      <button className="btn btn-secondary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px' }} disabled={isEquipped} onClick={() => handleEquipItem(item.id, activeStoreTab)}>
+                        {isEquipped ? 'Надето ✅' : 'Надеть'}
+                      </button>
+                    ) : (
+                      <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }} onClick={() => handleBuyItem(item.id, activeStoreTab)}>
+                        🪙 {item.price} Coins
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно отправки подарка */}
+      {showGiftModal && (
+        <div className="modal-overlay" onClick={() => setShowGiftModal(false)}>
+          <div className="modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Gift size={22} color="#ec4899" />
+                <h2>Отправить подарок</h2>
+              </div>
+              <button className="btn-icon" onClick={() => setShowGiftModal(false)}><X size={20} /></button>
+            </div>
+
+            <div style={{ margin: '15px 0' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>Выберите подарок:</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {[
+                  { id: 'gift_star', name: 'Звезда', price: 50, icon: '⭐' },
+                  { id: 'gift_heart', name: 'Сердце', price: 100, icon: '💖' },
+                  { id: 'gift_rocket', name: 'Ракета', price: 200, icon: '🚀' },
+                  { id: 'gift_crown', name: 'Корона', price: 500, icon: '👑' },
+                ].map(g => (
+                  <div
+                    key={g.id}
+                    onClick={() => setSelectedGiftId(g.id)}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '12px',
+                      border: selectedGiftId === g.id ? '2px solid #ec4899' : '1px solid var(--border-color)',
+                      background: selectedGiftId === g.id ? 'rgba(236, 72, 153, 0.1)' : 'var(--bg-secondary)',
+                      cursor: 'pointer',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <div style={{ fontSize: '1.8rem' }}>{g.icon}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{g.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#f59e0b', fontWeight: 700 }}>🪙 {g.price}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="form-group" style={{ marginTop: '15px' }}>
+                <label>Сообщение (необязательно)</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="За отличную историю! 😊"
+                  value={giftMsg}
+                  onChange={e => setGiftMsg(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowGiftModal(false)}>Отмена</button>
+              <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #ec4899, #8b5cf6)' }} onClick={handleSendGiftOrCoins}>
+                🎁 Подарить
+              </button>
             </div>
           </div>
         </div>

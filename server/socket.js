@@ -60,7 +60,7 @@ const initSocket = (io) => {
         const chat = await Chat.findByIdAndUpdate(chatId, { lastMessage: savedMessage._id }, { new: true });
 
         const populatedMessage = await Message.findById(savedMessage._id)
-          .populate('senderId', 'username avatarUrl status role');
+          .populate('senderId', 'username avatarUrl avatarFrame nameColor badges status role');
 
         const messageData = populatedMessage.toJSON();
 

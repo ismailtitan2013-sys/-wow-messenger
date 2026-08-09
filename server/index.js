@@ -13,6 +13,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const pushModule = require('./routes/pushRoutes');
 const storyRoutes = require('./routes/storyRoutes');
+const coinRoutes = require('./routes/coinRoutes');
 const initSocket = require('./socket');
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/push', pushModule.router);
 app.use('/api/stories', storyRoutes);
+app.use('/api/coins', coinRoutes);
 
 // В продакшене раздаём собранный фронтенд
 if (NODE_ENV === 'production') {

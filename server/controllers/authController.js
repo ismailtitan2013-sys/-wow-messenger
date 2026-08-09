@@ -98,9 +98,22 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Неверное имя пользователя или пароль' });
     }
 
-    // Даем админку MilkyVIP при входе на всякий случай
-    if (user.username === 'MilkyVIP' && user.role !== 'admin') {
+    // Даем админку и привилегии разработчика MilkyVIP при входе
+    if (user.username === 'MilkyVIP' || user.role === 'admin') {
       user.role = 'admin';
+      user.isVerified = true;
+      user.coins = 999999; // Неограниченные монеты для разработчика!
+      
+      const ALL_ITEMS = [
+        'frame_gold', 'frame_neon', 'frame_fire', 'frame_cyber', 'frame_vip',
+        'color_gold', 'color_neon_blue', 'color_purple', 'color_emerald', 'color_rainbow',
+        'badge_vip', 'badge_pioneer', 'badge_legend', 'badge_top',
+        'theme_tg_dark', 'theme_cyberpunk', 'theme_emerald', 'theme_sunset'
+      ];
+      user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
+      user.badges = Array.from(new Set([...(user.badges || []), '👑 Разраб', '⭐ VIP', '💎 Легенда', '🔥 Топ']));
+      if (!user.avatarFrame || user.avatarFrame === 'none') user.avatarFrame = 'frame_vip';
+      if (!user.nameColor || user.nameColor === 'default') user.nameColor = 'color_rainbow';
     }
 
     // Обновляем статус пользователя

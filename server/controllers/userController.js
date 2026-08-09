@@ -31,7 +31,7 @@ const searchUsers = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { username, bio, avatarUrl, settings } = req.body;
+    const { username, bio, avatarUrl, avatarFrame, nameColor, activeTheme, settings } = req.body;
     const user = await User.findById(req.user.id);
     
     if (!user) {
@@ -41,6 +41,9 @@ const updateProfile = async (req, res) => {
     if (username) user.username = username;
     if (bio !== undefined) user.bio = bio;
     if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+    if (avatarFrame !== undefined) user.avatarFrame = avatarFrame;
+    if (nameColor !== undefined) user.nameColor = nameColor;
+    if (activeTheme !== undefined) user.activeTheme = activeTheme;
     
     if (settings) {
       user.settings = { ...user.settings, ...settings };

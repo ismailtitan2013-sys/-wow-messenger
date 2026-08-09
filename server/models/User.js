@@ -42,6 +42,43 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  coins: {
+    type: Number,
+    default: 100, // Каждый пользователь получает 100 стартовых монет
+  },
+  avatarFrame: {
+    type: String,
+    default: 'none',
+  },
+  nameColor: {
+    type: String,
+    default: 'default',
+  },
+  badges: {
+    type: [String],
+    default: ['Участник'],
+  },
+  inventory: {
+    type: [String],
+    default: ['frame_none', 'color_default'],
+  },
+  activeTheme: {
+    type: String,
+    default: 'default',
+  },
+  giftsReceived: [{
+    fromUserId: String,
+    fromUsername: String,
+    giftType: String,
+    giftName: String,
+    giftIcon: String,
+    coins: Number,
+    message: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  lastDailyClaim: {
+    type: Date,
+  },
   pushSubscriptions: [{
     endpoint: String,
     expirationTime: Date,
