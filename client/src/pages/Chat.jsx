@@ -18,6 +18,58 @@ import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
 import { requestFCMToken, onForegroundMessage } from '../firebase';
 
+// Top-level Helper Components to prevent React unmount/remount crashes
+const UserAvatar = ({ usr, size = 'default' }) => {
+  const [imgError, setImgError] = useState(false);
+  const avatarUrl = usr?.avatarUrl;
+
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarUrl]);
+
+  const getFullUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    const baseUrl = import.meta.env.VITE_API_URL || '';
+    return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+  };
+
+  const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
+
+  if (avatarUrl && !imgError) {
+    return (
+      <img
+        src={getFullUrl(avatarUrl)}
+        alt=""
+        className={`avatar-img ${size}`}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div className={`avatar ${size}`}>
+      {initial}
+    </div>
+  );
+};
+
+const renderUsernameWithBadge = (usrOrName, isVerified) => {
+  let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
+  let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
+
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+      <span className={username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
+        {username || 'Пользователь'}
+      </span>
+      {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
+    </span>
+  );
+};
+
 const Chat = () => {
   const { user, token, logout, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -99,10 +151,10 @@ const Chat = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsTab, setSettingsTab] = useState('profile');
   const [profileData, setProfileData] = useState({ 
-    username: user.username, 
-    bio: user.bio || '', 
-    avatarUrl: user.avatarUrl || '',
-    settings: user.settings || { 
+    username: user?.username || '', 
+    bio: user?.bio || '', 
+    avatarUrl: user?.avatarUrl || '',
+    settings: user?.settings || { 
       showOnlineStatus: true, 
       showLastSeen: true, 
       allowPushNotifications: true, 
@@ -1174,57 +1226,6 @@ const Chat = () => {
     );
   };
 
-  const UserAvatar = ({ usr, size = 'default' }) => {
-    const [imgError, setImgError] = useState(false);
-    const avatarUrl = usr?.avatarUrl;
-
-    useEffect(() => {
-      setImgError(false);
-    }, [avatarUrl]);
-
-    const getFullUrl = (url) => {
-      if (!url) return '';
-      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-        return url;
-      }
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
-    };
-
-    const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
-
-    if (avatarUrl && !imgError) {
-      return (
-        <img
-          src={getFullUrl(avatarUrl)}
-          alt=""
-          className={`avatar-img ${size}`}
-          onError={() => setImgError(true)}
-        />
-      );
-    }
-
-    return (
-      <div className={`avatar ${size}`}>
-        {initial}
-      </div>
-    );
-  };
-
-  const renderUsernameWithBadge = (usrOrName, isVerified) => {
-    let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
-    let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
-
-    return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-        <span className={username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
-          {username}
-        </span>
-        {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
-      </span>
-    );
-  };
-
   return (
     <div className="messenger-layout fade-in">
       {/* Левая панель */}
@@ -1895,14 +1896,14 @@ const Chat = () => {
                 ) : (
                   <div style={{ textAlign: 'center', padding: '15px 10px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                     🎁 У этого пользователя пока нет подарков.<br />
-                    {showUserProfile.username !== user.username && 'Будьте первым, кто подарит подарок!'}
+                    {showUserProfile?.username !== user?.username && 'Будьте первым, кто подарит подарок!'}
                   </div>
                 )}
               </div>
 
               {/* Кнопки действий */}
               <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                {showUserProfile.username === user.username ? (
+                {showUserProfile?.username === user?.username ? (
                   <>
                     <button className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #f59e0b, #d97706)', fontWeight: 700 }} onClick={() => {
                       setShowUserProfile(null);
