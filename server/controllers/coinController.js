@@ -20,10 +20,10 @@ const STORE_ITEMS = {
     { id: 'color_rainbow', name: 'Радужный Градиент', price: 300, color: 'rainbow', cssClass: 'name-color-rainbow', description: 'Переливающийся всеми цветами радуги' },
   ],
   badges: [
-    { id: 'badge_vip', name: '⭐ VIP', price: 200, badge: '⭐ VIP' },
-    { id: 'badge_pioneer', name: '🚀 Пионер', price: 150, badge: '🚀 Пионер' },
-    { id: 'badge_legend', name: '💎 Легенда', price: 400, badge: '💎 Легенда' },
-    { id: 'badge_top', name: '🔥 Топ', price: 250, badge: '🔥 Топ' },
+    { id: 'badge_vip', name: 'VIP', price: 200, badge: 'VIP' },
+    { id: 'badge_pioneer', name: 'Пионер', price: 150, badge: 'Пионер' },
+    { id: 'badge_legend', name: 'Легенда', price: 400, badge: 'Легенда' },
+    { id: 'badge_top', name: 'Топ', price: 250, badge: 'Топ' },
   ],
   themes: [
     { id: 'theme_tg_dark', name: 'Telegram Dark', price: 100, description: 'Классическая тёмная тема в стиле Telegram' },
@@ -55,7 +55,7 @@ const getStoreCatalog = async (req, res) => {
           'theme_tg_dark', 'theme_cyberpunk', 'theme_emerald', 'theme_sunset'
         ];
         user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
-        user.badges = Array.from(new Set([...(user.badges || []), '👑 Разраб', '⭐ VIP', '💎 Легенда', '🔥 Топ']));
+        user.badges = Array.from(new Set([...(user.badges || []), 'Разраб', 'VIP', 'Легенда', 'Топ']));
         await user.save();
       }
     }

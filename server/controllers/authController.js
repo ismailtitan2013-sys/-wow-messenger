@@ -111,7 +111,7 @@ const login = async (req, res) => {
         'theme_tg_dark', 'theme_cyberpunk', 'theme_emerald', 'theme_sunset'
       ];
       user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
-      user.badges = Array.from(new Set([...(user.badges || []), '👑 Разраб', '⭐ VIP', '💎 Легенда', '🔥 Топ']));
+      user.badges = Array.from(new Set([...(user.badges || []), 'Разраб', 'VIP', 'Легенда', 'Топ']));
       if (!user.avatarFrame || user.avatarFrame === 'none') user.avatarFrame = 'frame_vip';
       if (!user.nameColor || user.nameColor === 'default') user.nameColor = 'color_rainbow';
     }

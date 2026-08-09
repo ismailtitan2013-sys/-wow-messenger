@@ -12,7 +12,7 @@ import {
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
   Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload,
-  ShoppingBag, Gift, Coins, Award
+  ShoppingBag, Gift, Coins, Award, Crown
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
@@ -1034,7 +1034,7 @@ const Chat = () => {
     return avatarNode;
   };
 
-  const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges) => {
+  const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, showAllBadges = false) => {
     let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
     let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
     let colorClass = nameColor || (typeof usrOrName === 'object' ? usrOrName?.nameColor : 'default');
@@ -1045,13 +1045,16 @@ const Chat = () => {
       colorCss = `name-color-${colorClass}`;
     }
 
+    const isDev = username === 'MilkyVIP' || (typeof usrOrName === 'object' && usrOrName?.role === 'admin');
+
     return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
         <span className={`${colorCss} ${username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>
           {username}
         </span>
+        {isDev && <Crown size={15} color="#f59e0b" title="Разработчик" />}
         {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
-        {Array.isArray(userBadges) && userBadges.map((b, idx) => (
+        {showAllBadges && Array.isArray(userBadges) && userBadges.map((b, idx) => (
           <span key={idx} className="badge-tag">{b}</span>
         ))}
       </span>
