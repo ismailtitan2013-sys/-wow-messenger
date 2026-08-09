@@ -57,6 +57,31 @@ const Chat = () => {
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedGroupUsers, setSelectedGroupUsers] = useState([]);
+  const [isChannelCreation, setIsChannelCreation] = useState(false);
+
+  const handleToggleGroupUser = (userId) => {
+    setSelectedGroupUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
+  };
+
+  const handleCreateGroup = async () => {
+    if (!groupName.trim()) return;
+    try {
+      const res = await axios.post('/api/chats/group', {
+        name: groupName,
+        users: selectedGroupUsers,
+        isChannel: isChannelCreation
+      });
+      setChats(prev => [res.data, ...prev]);
+      setCurrentChat(res.data);
+      setShowGroupModal(false);
+      setGroupName('');
+      setSelectedGroupUsers([]);
+      setIsChannelCreation(false);
+      toast.success(isChannelCreation ? '📢 Канал успешно создан!' : '👥 Группа успешно создана!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Ошибка при создании');
+    }
+  };
 
   // Stories States
   const [storiesFeed, setStoriesFeed] = useState([]);
@@ -619,26 +644,6 @@ const Chat = () => {
     } catch (error) {
       console.error('Ошибка при создании чата:', error);
     }
-  };
-
-  const handleCreateGroup = async () => {
-    if (!groupName || selectedGroupUsers.length === 0) return;
-    try {
-      const res = await axios.post('/api/chats/group', { name: groupName, users: selectedGroupUsers });
-      const chat = res.data;
-      setChats([chat, ...chats]);
-      setCurrentChat(chat);
-      setShowGroupModal(false);
-      setGroupName('');
-      setSelectedGroupUsers([]);
-      setShowSidebarOnMobile(false);
-    } catch (error) {
-      console.error('Ошибка создания группы:', error);
-    }
-  };
-
-  const handleToggleGroupUser = (userId) => {
-    setSelectedGroupUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
   };
 
   const handleFileChange = (e) => {
@@ -1573,27 +1578,75 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Group Modal */}
+      {/* Group / Channel Modal */}
       {showGroupModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Создать группу</h3>
-            <input type="text" className="form-control" placeholder="Название группы" value={groupName} onChange={(e) => setGroupName(e.target.value)}/>
+        <div className="modal-overlay" onClick={() => setShowGroupModal(false)}>
+          <div className="modal-content slide-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0 }}>Создание</h3>
+              <button className="btn-icon" onClick={() => setShowGroupModal(false)}><X size={20} /></button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+              <button
+                type="button"
+                className={`btn ${!isChannelCreation ? 'btn-primary' : 'btn-outline'}`}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                onClick={() => setIsChannelCreation(false)}
+              >
+                <Users size={16} /> 👥 Группа
+              </button>
+              <button
+                type="button"
+                className={`btn ${isChannelCreation ? 'btn-primary' : 'btn-outline'}`}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                onClick={() => setIsChannelCreation(true)}
+              >
+                <MessageSquare size={16} /> 📢 Канал
+              </button>
+            </div>
+
+            {isChannelCreation && (
+              <div style={{ fontSize: '0.85rem', color: '#3b82f6', background: 'rgba(59, 130, 246, 0.12)', padding: '10px 14px', borderRadius: '10px', marginBottom: '14px', borderLeft: '4px solid #3b82f6' }}>
+                📢 <b>Режим канала:</b> Публиковать сообщения в канал сможете только вы и назначенные администраторы. Обычные участники читают посты.
+              </div>
+            )}
+
+            <div className="form-group" style={{ marginBottom: '14px' }}>
+              <label style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px', display: 'block' }}>
+                {isChannelCreation ? 'Название канала' : 'Название группы'}
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder={isChannelCreation ? 'Например: 📢 Канал Новинок' : 'Например: 💬 Общий Чат'}
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+              />
+            </div>
+
             <div className="group-users-list">
-              <h4>Выберите участников (поиск из контактов)</h4>
-              <input type="text" className="form-control" placeholder="Поиск..." onChange={(e) => setSearchQuery(e.target.value)}/>
-              <div className="group-search-results">
+              <h4 style={{ fontSize: '0.9rem', margin: '10px 0 6px 0' }}>Выберите участников из контактов</h4>
+              <input type="text" className="form-control" placeholder="Поиск участников..." onChange={(e) => setSearchQuery(e.target.value)}/>
+              <div className="group-search-results" style={{ maxHeight: '180px', overflowY: 'auto', marginTop: '8px' }}>
                 {searchResults.map(u => (
-                  <label key={u.id} className="group-user-item">
+                  <label key={u.id} className="group-user-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', cursor: 'pointer' }}>
                     <input type="checkbox" checked={selectedGroupUsers.includes(u.id)} onChange={() => handleToggleGroupUser(u.id)}/>
                     {renderUsernameWithBadge(u.username, u.isVerified)}
                   </label>
                 ))}
               </div>
             </div>
-            <div className="modal-actions">
+
+            <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button className="btn btn-secondary" onClick={() => setShowGroupModal(false)}>Отмена</button>
-              <button className="btn btn-primary" onClick={handleCreateGroup} disabled={!groupName || selectedGroupUsers.length === 0}>Создать</button>
+              <button
+                className="btn btn-primary"
+                onClick={handleCreateGroup}
+                disabled={!groupName.trim()}
+              >
+                ➕ Создать {isChannelCreation ? 'Канал' : 'Группу'}
+              </button>
             </div>
           </div>
         </div>
