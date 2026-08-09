@@ -1958,15 +1958,19 @@ const Chat = () => {
             {activeStoreTab === 'clicker' && (
               <div className="clicker-container">
                 <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                  <h3 style={{ margin: '0 0 4px', fontSize: '1.2rem' }}>⚡ Заработок Честным Трудом</h3>
+                  <h3 style={{ margin: '0 0 4px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <Zap size={22} color="#f59e0b" /> Заработок Честным Трудом
+                  </h3>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     Нажимая на монету, вы зарабатываете коины собственным честным трудом без обмана!
                   </p>
                 </div>
 
                 <div className="tap-button-wrapper">
-                  <div className="tap-button" onClick={handleTapCoin}>
-                    🪙
+                  <div className="tap-button" onClick={handleTapCoin} title="Нажмите для работы!">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', width: '88px', height: '88px', borderRadius: '50%', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+                      <Coins size={54} color="#ffffff" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }} />
+                    </div>
                   </div>
                   {tapFloats.map(f => (
                     <div key={f.id} className="tap-float-number" style={{ left: f.x, top: f.y }}>
@@ -1982,18 +1986,21 @@ const Chat = () => {
                   </div>
                   <div className="miner-stat-card">
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Доход за труд</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981' }}>
-                      +{user?.username?.toLowerCase() === 'milkyvip' ? '10 000 000' : 1 + (storeData.clickerLevel || 1) * 2} 🪙
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                      <span>+{user?.username?.toLowerCase() === 'milkyvip' ? '10 000 000' : 1 + ((storeData.clickerLevel || 1) - 1)}</span>
+                      <Coins size={18} color="#10b981" />
                     </div>
                   </div>
                 </div>
 
                 <button
                   className="btn btn-primary"
-                  style={{ width: '100%', marginTop: '15px', padding: '10px', background: 'linear-gradient(135deg, #10b981, #059669)', fontWeight: 'bold' }}
+                  style={{ width: '100%', marginTop: '15px', padding: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   onClick={handleUpgradeClicker}
                 >
-                  ⚡ Прокачать мастерство (Стоимость: 🪙 {(storeData.clickerLevel || 1) * 200})
+                  <Zap size={18} />
+                  <span>Прокачать мастерство (Стоимость: {Math.round(Math.pow(storeData.clickerLevel || 1, 1.8) * 500)})</span>
+                  <Coins size={18} color="#fbbf24" />
                 </button>
               </div>
             )}

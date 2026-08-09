@@ -67,13 +67,13 @@ const STORE_ITEMS = {
   ]
 };
 
-// Задания для заработка
+// Сбалансированный список заданий
 const QUESTS_LIST = [
-  { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 100, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-  { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 250, icon: '🎁', desc: 'Подарите халяльный подарок другу' },
-  { id: 'quest_click_100', title: '⚡ Заработать 100 монет честным трудом', reward: 500, icon: '⚡', desc: 'Натапайте 100 монет в кликере труда' },
-  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 300, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-  { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 1000, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
+  { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 50, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+  { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 100, icon: '🎁', desc: 'Подарите подарок другу' },
+  { id: 'quest_click_100', title: '⚡ Заработать 100 монет трудом', reward: 150, icon: '⚡', desc: 'Натапайте 100 монет в кликере' },
+  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 200, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+  { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 500, icon: '👑', desc: 'Отдайте дань уважения MilkyVIP' },
 ];
 
 // Вопросы для Викторины Полезных Знаний
@@ -83,28 +83,28 @@ const QUIZ_QUESTIONS = [
     question: 'Что является главным символом гостеприимства на Востоке?',
     options: ['Арабский кофе и финики', 'Кола', 'Чипсы'],
     correct: 0,
-    reward: 150
+    reward: 50
   },
   {
     id: 2,
     question: 'Какое приветствие означает пожелание мира?',
     options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'],
     correct: 0,
-    reward: 150
+    reward: 50
   },
   {
     id: 3,
     question: 'Как называется добровольная искренняя милостыня и подарок ради добра?',
     options: ['Садака', 'Кредит', 'Процент'],
     correct: 0,
-    reward: 200
+    reward: 100
   },
   {
     id: 4,
     question: 'Запрещена ли в Исламе азартная игра (Майсир) и ставка на случайность?',
     options: ['Да, запрещена (Харам)', 'Нет, разрешена', 'Не знаю'],
     correct: 0,
-    reward: 250
+    reward: 150
   }
 ];
 
@@ -159,7 +159,7 @@ const getStoreCatalog = async (req, res) => {
   }
 };
 
-// Ежедневный бонус
+// Сбалансированный ежедневный бонус
 const claimDailyBonus = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -179,7 +179,8 @@ const claimDailyBonus = async (req, res) => {
       streak = 1;
     }
 
-    const bonusAmount = Math.min(1000, 100 * streak);
+    // Реалистичный сбалансированный бонус: 50 * стрик (макс 300 монет)
+    const bonusAmount = Math.min(300, 50 * streak);
     user.coins = (user.coins || 0) + bonusAmount;
     user.lastDailyClaim = now;
     user.dailyStreak = streak;
@@ -200,16 +201,19 @@ const claimDailyBonus = async (req, res) => {
   }
 };
 
-// Честный кликер труда
+// Сбалансированный кликер честного труда (1 тап = +1 + level - 1 монета)
 const tapCoins = async (req, res) => {
   try {
     const { count = 1 } = req.body;
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
-    const safeCount = Math.min(30, Math.max(1, Number(count)));
+    const isMilky = user.username.toLowerCase() === 'milkyvip';
+    const safeCount = Math.min(20, Math.max(1, Number(count)));
     const level = user.clickerLevel || 1;
-    const coinsPerTap = 1 + level * 2;
+    
+    // Сбалансированная доходность: Lv.1 -> +1, Lv.2 -> +2, Lv.3 -> +3
+    const coinsPerTap = isMilky ? 10000000 : (1 + (level - 1));
     const earned = safeCount * coinsPerTap;
 
     user.coins = (user.coins || 0) + earned;
@@ -227,14 +231,15 @@ const tapCoins = async (req, res) => {
   }
 };
 
-// Прокачка уровня
+// Прокачка уровня кликера (Реалистичная экономическая прогрессия)
 const upgradeClicker = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
     const currentLevel = user.clickerLevel || 1;
-    const upgradeCost = currentLevel * 200;
+    // Стоимость прокачки: Lv.1 -> Lv.2: 500, Lv.2 -> Lv.3: 1500, Lv.3 -> Lv.4: 4500
+    const upgradeCost = Math.round(Math.pow(currentLevel, 1.8) * 500);
 
     if ((user.coins || 0) < upgradeCost && user.username.toLowerCase() !== 'milkyvip') {
       return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
@@ -274,7 +279,7 @@ const answerQuiz = async (req, res) => {
       return res.status(400).json({ message: 'Неверный ответ! Попробуйте еще раз.' });
     }
 
-    const reward = q.reward || 150;
+    const reward = q.reward || 50;
     user.coins = (user.coins || 0) + reward;
 
     if (user.completedQuests && !user.completedQuests.includes('quest_quiz')) {
@@ -453,7 +458,7 @@ const sendGiftOrCoins = async (req, res) => {
       });
       if (sender.completedQuests && !sender.completedQuests.includes('quest_send_gift')) {
         sender.completedQuests.push('quest_send_gift');
-        sender.coins += 250;
+        sender.coins += 100;
       }
     }
 
