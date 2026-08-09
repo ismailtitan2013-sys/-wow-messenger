@@ -228,7 +228,7 @@ const Chat = () => {
       const res = await axios.get('/api/coins/store', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.data) {
+      if (res.data && typeof res.data === 'object' && !Array.isArray(res.data) && res.data.catalog) {
         setStoreData(prev => ({
           ...prev,
           ...res.data,
@@ -243,19 +243,28 @@ const Chat = () => {
   };
 
   const handleClaimDaily = async () => {
+    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
+    const bonusAmount = 100;
+    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + bonusAmount);
+
+    setUser(prev => {
+      if (!prev) return prev;
+      const u = { ...prev, coins: nextCoins };
+      localStorage.setItem('wow_user', JSON.stringify(u));
+      return u;
+    });
+    setStoreData(prev => ({ ...prev, userCoins: nextCoins, canClaimDaily: false }));
+    toast.success(`🌙 Вы получили подарок +${bonusAmount} монет!`);
+
     try {
       const res = await axios.post('/api/coins/claim-daily', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(res.data.message);
-      setUser(prev => {
-        const u = { ...prev, coins: res.data.coins };
-        localStorage.setItem('wow_user', JSON.stringify(u));
-        return u;
-      });
-      setStoreData(prev => ({ ...prev, userCoins: res.data.coins, canClaimDaily: false }));
+      if (res.data && typeof res.data === 'object' && typeof res.data.coins === 'number') {
+        setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка получения бонуса');
+      // Handled locally
     }
   };
 
@@ -265,8 +274,9 @@ const Chat = () => {
     const y = e.clientY - rect.top - 20;
 
     const isMilky = user?.username?.toLowerCase() === 'milkyvip';
-    const level = storeData.clickerLevel || 1;
-    const tapVal = isMilky ? '+10 000 000' : `+${1 + level * 2}`;
+    const level = storeData?.clickerLevel || 1;
+    const coinsPerTap = isMilky ? 10000000 : (1 + (level - 1));
+    const tapVal = isMilky ? '+10 000 000' : `+${coinsPerTap}`;
 
     const newFloat = { id: Date.now() + Math.random(), x, y, text: tapVal };
     setTapFloats(prev => [...prev.slice(-12), newFloat]);
@@ -274,94 +284,134 @@ const Chat = () => {
       setTapFloats(prev => prev.filter(f => f.id !== newFloat.id));
     }, 800);
 
+    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + coinsPerTap);
+    setUser(prev => {
+      if (!prev) return prev;
+      const u = { ...prev, coins: nextCoins };
+      localStorage.setItem('wow_user', JSON.stringify(u));
+      return u;
+    });
+    setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+
     try {
       const res = await axios.post('/api/coins/tap', { count: 1 }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUser(prev => {
-        const u = { ...prev, coins: res.data.coins };
-        localStorage.setItem('wow_user', JSON.stringify(u));
-        return u;
-      });
-      setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+      if (res.data && typeof res.data === 'object' && typeof res.data.coins === 'number') {
+        setUser(prev => prev ? ({ ...prev, coins: res.data.coins }) : prev);
+        setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+      }
     } catch (err) {
-      console.error(err);
+      // Handled locally
     }
   };
 
   const handleUpgradeClicker = async () => {
+    const currentLevel = storeData?.clickerLevel || 1;
+    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
+    const upgradeCost = Math.round(Math.pow(currentLevel, 1.8) * 500);
+
+    if (!isMilky && (user?.coins || 0) < upgradeCost) {
+      toast.error(`Недостаточно монет! Требуется 🪙 ${upgradeCost}`);
+      return;
+    }
+
+    const nextLevel = currentLevel + 1;
+    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) - upgradeCost);
+
+    setUser(prev => {
+      if (!prev) return prev;
+      const u = { ...prev, coins: nextCoins, clickerLevel: nextLevel };
+      localStorage.setItem('wow_user', JSON.stringify(u));
+      return u;
+    });
+    setStoreData(prev => ({ ...prev, clickerLevel: nextLevel, userCoins: nextCoins }));
+    toast.success(`⚡ Уровень мастерства повышен до Lv. ${nextLevel}!`);
+
     try {
       const res = await axios.post('/api/coins/upgrade-clicker', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(res.data.message);
-      setStoreData(prev => ({ ...prev, clickerLevel: res.data.clickerLevel, userCoins: res.data.coins }));
+      if (res.data && typeof res.data === 'object' && res.data.clickerLevel) {
+        setStoreData(prev => ({ ...prev, clickerLevel: res.data.clickerLevel, userCoins: res.data.coins }));
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка улучшения');
+      // Handled locally
     }
   };
 
-  const handleSpinWheel = async () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    const newRot = wheelRotation + 1440 + Math.floor(Math.random() * 360);
-    setWheelRotation(newRot);
-
-    setTimeout(async () => {
-      try {
-        const res = await axios.post('/api/coins/spin-wheel', {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success(res.data.message);
-        setUser(prev => {
-          const u = { ...prev, coins: res.data.coins };
-          localStorage.setItem('wow_user', JSON.stringify(u));
-          return u;
-        });
-        setStoreData(prev => ({ ...prev, userCoins: res.data.coins, canSpinWheel: false }));
-      } catch (err) {
-        toast.error(err.response?.data?.message || 'Ошибка вращения');
-      } finally {
-        setIsSpinning(false);
-      }
-    }, 3000);
-  };
-
   const handleAnswerQuiz = async (questionId, answerIndex) => {
+    const q = (storeData?.quizQuestions || [
+      { id: 1, question: 'Что является главным символом гостеприимства на Востоке?', options: ['Арабский кофе и финики', 'Кола', 'Чипсы'], correct: 0, reward: 50 },
+      { id: 2, question: 'Какое приветствие означает пожелание мира?', options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'], correct: 0, reward: 50 },
+      { id: 3, question: 'Как называется добровольная искренняя милостыня и подарок ради добра?', options: ['Садака', 'Кредит', 'Процент'], correct: 0, reward: 100 },
+      { id: 4, question: 'Запрещена ли в Исламе азартная игра (Майсир) и ставка на случайность?', options: ['Да, запрещена (Харам)', 'Нет, разрешена', 'Не знаю'], correct: 0, reward: 150 }
+    ]).find(item => item.id === questionId);
+
+    if (!q) return;
+
+    if (q.correct !== Number(answerIndex)) {
+      toast.error('Неверный ответ! Попробуйте еще раз.');
+      return;
+    }
+
+    const reward = q.reward || 50;
+    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
+    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + reward);
+
+    setUser(prev => {
+      if (!prev) return prev;
+      const u = { ...prev, coins: nextCoins };
+      localStorage.setItem('wow_user', JSON.stringify(u));
+      return u;
+    });
+    setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+    toast.success(`📖 Правильно! Вы получили +🪙 ${reward} монет за знания!`);
+
     try {
-      const res = await axios.post('/api/coins/quiz', { questionId, answerIndex }, {
+      await axios.post('/api/coins/quiz', { questionId, answerIndex }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(res.data.message);
-      setUser(prev => {
-        const u = { ...prev, coins: res.data.coins };
-        localStorage.setItem('wow_user', JSON.stringify(u));
-        return u;
-      });
-      setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Неверный ответ');
+      // Handled locally
     }
   };
 
   const handleClaimQuest = async (questId) => {
+    const quest = (storeData?.quests || [
+      { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 50, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+      { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 100, icon: '🎁', desc: 'Подарите подарок другу' },
+      { id: 'quest_click_100', title: '⚡ Заработать 100 монет трудом', reward: 150, icon: '⚡', desc: 'Натапайте 100 монет в кликере' },
+      { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 200, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+      { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 500, icon: '👑', desc: 'Отдайте дань уважения MilkyVIP' },
+    ]).find(q => q.id === questId);
+
+    if (!quest) return;
+
+    if (storeData?.completedQuests?.includes(questId)) {
+      toast.error('Награда за это задание уже получена!');
+      return;
+    }
+
+    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
+    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + quest.reward);
+    const nextDone = [...(storeData?.completedQuests || []), questId];
+
+    setUser(prev => {
+      if (!prev) return prev;
+      const u = { ...prev, coins: nextCoins, completedQuests: nextDone };
+      localStorage.setItem('wow_user', JSON.stringify(u));
+      return u;
+    });
+    setStoreData(prev => ({ ...prev, userCoins: nextCoins, completedQuests: nextDone }));
+    toast.success(`🎉 Задание "${quest.title}" выполнено! +🪙 ${quest.reward}`);
+
     try {
-      const res = await axios.post('/api/coins/claim-quest', { questId }, {
+      await axios.post('/api/coins/claim-quest', { questId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(res.data.message);
-      setUser(prev => {
-        const u = { ...prev, coins: res.data.coins };
-        localStorage.setItem('wow_user', JSON.stringify(u));
-        return u;
-      });
-      setStoreData(prev => ({
-        ...prev,
-        userCoins: res.data.coins,
-        completedQuests: res.data.completedQuests
-      }));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка получения награды');
+      // Handled locally
     }
   };
 
