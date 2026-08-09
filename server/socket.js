@@ -47,10 +47,12 @@ const initSocket = (io) => {
       const { chatId, text, receiverId, attachments } = data;
       
       try {
+        const messageText = text || data.content || '';
         const newMessage = new Message({
           chatId,
           senderId: socket.user.id,
-          text,
+          text: messageText,
+          content: messageText,
           attachments: attachments || [],
           status: 'sent'
         });

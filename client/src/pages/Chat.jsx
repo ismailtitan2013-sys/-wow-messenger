@@ -1245,6 +1245,7 @@ const Chat = () => {
               {messages.map((msg) => {
                 const actualSenderId = typeof msg.senderId === 'object' ? (msg.senderId.id || msg.senderId._id) : msg.senderId;
                 const isOwn = actualSenderId === user.id;
+                const msgTextContent = msg.text || msg.content || '';
                 
                 if (msg.deletedForEveryone) {
                   const isMilkyOrAdmin = user?.role === 'admin' || user?.username === 'MilkyVIP';
@@ -1256,8 +1257,8 @@ const Chat = () => {
                             <span>🚫 Удалено (Видно вам как MilkyVIP / Админ)</span>
                           </div>
                           {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
-                          {msg.text ? (
-                            <div className="message-text" style={{ textDecoration: 'line-through', opacity: 0.9 }}>{msg.text}</div>
+                          {msgTextContent ? (
+                            <div className="message-text" style={{ textDecoration: 'line-through', opacity: 0.9 }}>{msgTextContent}</div>
                           ) : (
                             <div style={{ fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>[Содержимое сообщения не было сохранено]</div>
                           )}
@@ -1283,7 +1284,7 @@ const Chat = () => {
                     <div className="message-bubble">
                       {sender && <div className="message-sender-name" onClick={() => setShowUserProfile(sender)} style={{cursor: 'pointer'}}>{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
                       {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
-                      {msg.text && <div className="message-text">{msg.text}</div>}
+                      {msgTextContent && <div className="message-text">{msgTextContent}</div>}
                       {renderReactions(msg.reactions)}
                       <div className="message-meta">
                         {msg.isEdited && <span className="msg-edited">изменено </span>}
