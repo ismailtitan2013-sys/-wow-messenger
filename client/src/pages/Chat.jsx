@@ -12,7 +12,7 @@ import {
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
   Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload,
-  ShoppingBag, Gift, Coins, Award, Crown, User, AtSign, Reply, CornerUpLeft
+  ShoppingBag, Gift, Coins, Award, Crown, User, AtSign, Reply, CornerUpLeft, Zap
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
