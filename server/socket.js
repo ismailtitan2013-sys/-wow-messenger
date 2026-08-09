@@ -47,6 +47,16 @@ const initSocket = (io) => {
       const { chatId, text, receiverId, attachments, replyTo } = data;
       
       try {
+        const chatObj = await Chat.findById(chatId);
+        if (!chatObj) return;
+
+        if (chatObj.isChannel || chatObj.isReadOnly) {
+          const isMilkyOrAdmin = socket.user.role === 'admin' || socket.user.username === 'MilkyVIP' || (chatObj.admins && chatObj.admins.some(a => a.toString() === socket.user.id));
+          if (!isMilkyOrAdmin) {
+            return socket.emit('error_message', 'В этот канал могут писать только администраторы');
+          }
+        }
+
         const messageText = text || data.content || '';
         const newMessage = new Message({
           chatId,

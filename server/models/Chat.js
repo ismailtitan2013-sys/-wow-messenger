@@ -14,6 +14,14 @@ const chatSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isChannel: {
+    type: Boolean,
+    default: false
+  },
+  isReadOnly: {
+    type: Boolean,
+    default: false
+  },
   groupName: {
     type: String
   },

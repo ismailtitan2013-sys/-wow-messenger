@@ -1408,28 +1408,57 @@ const Chat = () => {
 
               {showEmojiPicker && <div className="emoji-picker-container" ref={emojiPickerRef}><EmojiPicker onEmojiClick={onEmojiClick} theme={darkMode ? 'dark' : 'light'} /></div>}
 
-              {isRecording ? (
-                <div className="recording-ui">
-                  <div className="recording-indicator"></div>
-                  <div className="recording-time">{formatRecordingTime(recordingTime)}</div>
-                  <button className="btn-trash" onClick={cancelRecording}><Trash size={20} /></button>
-                  <button className="btn-send" onClick={stopRecordingAndSend}><Send size={20} /></button>
-                </div>
-              ) : (
-                <form onSubmit={(e) => handleSendMessage(e)} className="message-form">
-                  <input type="file" ref={fileInputRef} style={{display: 'none'}} onChange={handleFileChange} />
-                  <button type="button" className="btn-icon" onClick={() => fileInputRef.current.click()}><Paperclip size={20} /></button>
-                  <button type="button" className="btn-icon" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); }}><Smile size={20} /></button>
-                  <input type="text" placeholder="Напишите сообщение..." value={newMessage} onChange={handleTyping} />
-                  {newMessage.trim() || selectedFile ? (
-                    <button type="submit" className="btn-send">
-                      {editingMessage ? <Check size={20} /> : <Send size={20} />}
-                    </button>
-                  ) : (
-                    <button type="button" className="btn-icon" onClick={startRecording}><Mic size={20} /></button>
-                  )}
-                </form>
-              )}
+              {(() => {
+                const isChannelOrReadOnly = currentChat?.isChannel || currentChat?.isReadOnly;
+                const canWriteInChat = !isChannelOrReadOnly || user?.role === 'admin' || user?.username === 'MilkyVIP' || (currentChat?.admins && currentChat.admins.some(a => (a.id || a._id || a) === user?.id));
+
+                if (!canWriteInChat) {
+                  return (
+                    <div style={{
+                      padding: '14px 20px',
+                      textAlign: 'center',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-secondary)',
+                      borderRadius: '12px',
+                      fontWeight: '600',
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      <span>📢 Только администраторы могут отправлять сообщения в этот канал</span>
+                    </div>
+                  );
+                }
+
+                if (isRecording) {
+                  return (
+                    <div className="recording-ui">
+                      <div className="recording-indicator"></div>
+                      <div className="recording-time">{formatRecordingTime(recordingTime)}</div>
+                      <button className="btn-trash" onClick={cancelRecording}><Trash size={20} /></button>
+                      <button className="btn-send" onClick={stopRecordingAndSend}><Send size={20} /></button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <form onSubmit={(e) => handleSendMessage(e)} className="message-form">
+                    <input type="file" ref={fileInputRef} style={{display: 'none'}} onChange={handleFileChange} />
+                    <button type="button" className="btn-icon" onClick={() => fileInputRef.current.click()}><Paperclip size={20} /></button>
+                    <button type="button" className="btn-icon" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); }}><Smile size={20} /></button>
+                    <input type="text" placeholder="Напишите сообщение..." value={newMessage} onChange={handleTyping} />
+                    {newMessage.trim() || selectedFile ? (
+                      <button type="submit" className="btn-send">
+                        {editingMessage ? <Check size={20} /> : <Send size={20} />}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn-icon" onClick={startRecording}><Mic size={20} /></button>
+                    )}
+                  </form>
+                );
+              })()}
             </div>
           </>
         ) : (
