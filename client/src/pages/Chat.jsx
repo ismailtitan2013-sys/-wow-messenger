@@ -2006,14 +2006,14 @@ const Chat = () => {
               <div>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш баланс: </span>
                 <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
-                  🪙 {user?.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (storeData.userCoins || 0).toLocaleString()} Coins
+                  🪙 {user?.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (storeData?.userCoins || 0).toLocaleString()} Coins
                 </span>
                 {user?.username?.toLowerCase() === 'milkyvip' && (
                   <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 800 }}>👑 MilkyVIP: Меценат & Разраб</div>
                 )}
               </div>
-              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px', background: 'linear-gradient(135deg, #10b981, #059669)' }} disabled={!storeData.canClaimDaily} onClick={handleClaimDaily}>
-                {storeData.canClaimDaily ? '🌙 Ежедневный подарок (+100..1000 🪙)' : '✅ Подарок получен'}
+              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px', background: 'linear-gradient(135deg, #10b981, #059669)' }} disabled={!storeData?.canClaimDaily} onClick={handleClaimDaily}>
+                {storeData?.canClaimDaily ? '🌙 Ежедневный подарок (+100..1000 🪙)' : '✅ Подарок получен'}
               </button>
             </div>
 
@@ -2070,12 +2070,12 @@ const Chat = () => {
                 <div className="miner-stats-bar">
                   <div className="miner-stat-card">
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Уровень мастерства</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#3b82f6' }}>Lv. {storeData.clickerLevel || 1}</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#3b82f6' }}>Lv. {storeData?.clickerLevel || 1}</div>
                   </div>
                   <div className="miner-stat-card">
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Доход за труд</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                      <span>+{user?.username?.toLowerCase() === 'milkyvip' ? '10 000 000' : 1 + ((storeData.clickerLevel || 1) - 1)}</span>
+                      <span>+{user?.username?.toLowerCase() === 'milkyvip' ? '10 000 000' : 1 + ((storeData?.clickerLevel || 1) - 1)}</span>
                       <Coins size={18} color="#10b981" />
                     </div>
                   </div>
@@ -2087,7 +2087,7 @@ const Chat = () => {
                   onClick={handleUpgradeClicker}
                 >
                   <Zap size={18} />
-                  <span>Прокачать мастерство (Стоимость: {Math.round(Math.pow(storeData.clickerLevel || 1, 1.8) * 500)})</span>
+                  <span>Прокачать мастерство (Стоимость: {Math.round(Math.pow(storeData?.clickerLevel || 1, 1.8) * 500)})</span>
                   <Coins size={18} color="#fbbf24" />
                 </button>
               </div>
@@ -2104,7 +2104,7 @@ const Chat = () => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {(storeData.quizQuestions || [
+                  {(storeData?.quizQuestions || [
                     { id: 1, question: 'Что является главным символом гостеприимства на Востоке?', options: ['Арабский кофе и финики', 'Кола', 'Чипсы'], correct: 0, reward: 150 },
                     { id: 2, question: 'Какое приветствие означает пожелание мира?', options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'], correct: 0, reward: 150 },
                     { id: 3, question: 'Как называется добровольная искренняя милостыня и подарок ради добра?', options: ['Садака', 'Кредит', 'Процент'], correct: 0, reward: 200 },
@@ -2144,14 +2144,14 @@ const Chat = () => {
                 </div>
 
                 <div className="quests-list">
-                  {(storeData.quests || [
+                  {(storeData?.quests || [
                     { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 100, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
                     { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 250, icon: '🎁', desc: 'Подарите халяльный подарок другу' },
                     { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 500, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
                     { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 300, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
                     { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 1000, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
                   ]).map(q => {
-                    const isDone = storeData.completedQuests?.includes(q.id);
+                    const isDone = storeData?.completedQuests?.includes(q.id);
                     return (
                       <div key={q.id} className="quest-card">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -2182,8 +2182,8 @@ const Chat = () => {
             {['frames', 'nameColors', 'badges', 'themes'].includes(activeStoreTab) && (
               <div className="store-items-grid">
                 {(storeData?.catalog?.[activeStoreTab] || []).map(item => {
-                  const isOwned = storeData.userInventory?.includes(item.id);
-                  const isEquipped = storeData.equippedFrame === item.id || storeData.equippedColor === item.id || storeData.equippedTheme === item.id;
+                  const isOwned = storeData?.userInventory?.includes(item.id);
+                  const isEquipped = storeData?.equippedFrame === item.id || storeData?.equippedColor === item.id || storeData?.equippedTheme === item.id;
 
                   return (
                     <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
@@ -2195,7 +2195,7 @@ const Chat = () => {
                         )}
                         {activeStoreTab === 'nameColors' && (
                           <span className={`name-color-${item.id}`} style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-                            {user.username}
+                            {user?.username || 'Пользователь'}
                           </span>
                         )}
                         {activeStoreTab === 'badges' && (
