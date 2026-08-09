@@ -113,25 +113,55 @@ const Chat = () => {
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Store & Coins States
+  const DEFAULT_CATALOG = {
+    frames: [
+      { id: 'frame_gold', name: 'Золотая Аура', price: 150, icon: '✨' },
+      { id: 'frame_neon', name: 'Неоновый Всплеск', price: 200, icon: '⚡' },
+      { id: 'frame_fire', name: 'Пламенный Огонь', price: 250, icon: '🔥' },
+      { id: 'frame_cyber', name: 'Киберпанк', price: 300, icon: '🤖' },
+      { id: 'frame_vip', name: 'Корона Мецената', price: 500, icon: '👑' },
+      { id: 'frame_diamond', name: 'Изумрудный Свет', price: 1000, icon: '💎' },
+      { id: 'frame_galaxy', name: 'Звездный Свет', price: 2500, icon: '🌌' }
+    ],
+    nameColors: [
+      { id: 'color_gold', name: 'Золотой', price: 100 },
+      { id: 'color_neon_blue', name: 'Неоновый Синий', price: 120 },
+      { id: 'color_purple', name: 'Пурпурный', price: 150 },
+      { id: 'color_emerald', name: 'Изумрудный', price: 200 },
+      { id: 'color_rainbow', name: 'Радужный', price: 300 }
+    ],
+    badges: [
+      { id: 'badge_vip', name: 'VIP Меценат', price: 200, badge: 'VIP' },
+      { id: 'badge_pioneer', name: 'Пионер', price: 150, badge: 'Пионер' },
+      { id: 'badge_legend', name: 'Легенда', price: 400, badge: 'Легенда' },
+      { id: 'badge_billionaire', name: 'Щедрый Меценат', price: 5000, badge: 'Меценат' }
+    ],
+    themes: [
+      { id: 'theme_tg_dark', name: 'Telegram Dark', price: 100 },
+      { id: 'theme_emerald', name: 'Изумрудный Оазис', price: 150 }
+    ],
+    gifts: []
+  };
+
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [activeStoreTab, setActiveStoreTab] = useState('clicker');
   const [storeData, setStoreData] = useState({
-    catalog: {},
+    catalog: DEFAULT_CATALOG,
     quests: [],
-    userCoins: user.coins || 100,
-    userInventory: user.inventory || [],
-    equippedFrame: user.avatarFrame || 'none',
-    equippedColor: user.nameColor || 'default',
-    equippedTheme: user.activeTheme || 'default',
-    equippedBadges: user.badges || [],
-    giftsReceived: user.giftsReceived || [],
-    completedQuests: user.completedQuests || [],
-    clickerLevel: user.clickerLevel || 1,
+    userCoins: user?.coins || 100,
+    userInventory: user?.inventory || [],
+    equippedFrame: user?.avatarFrame || 'none',
+    equippedColor: user?.nameColor || 'default',
+    equippedTheme: user?.activeTheme || 'default',
+    equippedBadges: user?.badges || [],
+    giftsReceived: user?.giftsReceived || [],
+    completedQuests: user?.completedQuests || [],
+    clickerLevel: user?.clickerLevel || 1,
     canClaimDaily: true,
     canSpinWheel: true
   });
   const [showGiftModal, setShowGiftModal] = useState(false);
-  const [selectedGiftId, setSelectedGiftId] = useState('gift_star');
+  const [selectedGiftId, setSelectedGiftId] = useState('gift_dates');
   const [coinsToSend, setCoinsToSend] = useState(50);
   const [giftMsg, setGiftMsg] = useState('');
   const [giftRecipient, setGiftRecipient] = useState(null);
@@ -146,10 +176,17 @@ const Chat = () => {
       const res = await axios.get('/api/coins/store', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStoreData(res.data);
-      setShowStoreModal(true);
+      if (res.data) {
+        setStoreData(prev => ({
+          ...prev,
+          ...res.data,
+          catalog: { ...DEFAULT_CATALOG, ...(res.data.catalog || {}) }
+        }));
+      }
     } catch (err) {
-      toast.error('Ошибка загрузки магазина');
+      console.warn('Store API fallback:', err);
+    } finally {
+      setShowStoreModal(true);
     }
   };
 
@@ -2093,7 +2130,7 @@ const Chat = () => {
             {/* Карточки предметов Магазина (Рамки, Ник, Значки, Темы) */}
             {['frames', 'nameColors', 'badges', 'themes'].includes(activeStoreTab) && (
               <div className="store-items-grid">
-                {storeData.catalog[activeStoreTab]?.map(item => {
+                {(storeData?.catalog?.[activeStoreTab] || []).map(item => {
                   const isOwned = storeData.userInventory?.includes(item.id);
                   const isEquipped = storeData.equippedFrame === item.id || storeData.equippedColor === item.id || storeData.equippedTheme === item.id;
 
