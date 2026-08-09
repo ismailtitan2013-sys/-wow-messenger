@@ -38,6 +38,11 @@ const messageSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  replyTo: {
+    id: String,
+    senderName: String,
+    text: String
+  },
   reactions: [{
     emoji: String,
     userId: {

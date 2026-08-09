@@ -44,7 +44,7 @@ const initSocket = (io) => {
 
     // Отправка сообщения
     socket.on('send_message', async (data) => {
-      const { chatId, text, receiverId, attachments } = data;
+      const { chatId, text, receiverId, attachments, replyTo } = data;
       
       try {
         const messageText = text || data.content || '';
@@ -54,6 +54,7 @@ const initSocket = (io) => {
           text: messageText,
           content: messageText,
           attachments: attachments || [],
+          replyTo: replyTo || null,
           status: 'sent'
         });
         const savedMessage = await newMessage.save();

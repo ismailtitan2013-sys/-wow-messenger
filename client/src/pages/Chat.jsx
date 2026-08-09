@@ -12,7 +12,7 @@ import {
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
   Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload,
-  ShoppingBag, Gift, Coins, Award, Crown, User, AtSign
+  ShoppingBag, Gift, Coins, Award, Crown, User, AtSign, Reply, CornerUpLeft
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
@@ -49,6 +49,7 @@ const Chat = () => {
   // States for Phase 3
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
+  const [replyingMessage, setReplyingMessage] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [showUserProfile, setShowUserProfile] = useState(null);
   
@@ -697,9 +698,11 @@ const Chat = () => {
         chatId: currentChat.id,
         text: newMessage,
         receiverId: currentChat.isGroup ? null : getPartner(currentChat).id,
-        attachments: attachmentData ? [attachmentData] : []
+        attachments: attachmentData ? [attachmentData] : [],
+        replyTo: replyingMessage || null
       };
       socketRef.current.emit('send_message', messageData);
+      setReplyingMessage(null);
     }
     
     socketRef.current.emit('typing', { chatId: currentChat.id, isTyping: false });
@@ -728,15 +731,24 @@ const Chat = () => {
 
   const handleContextMenu = (e, msg) => {
     e.preventDefault();
-    const actualSenderId = typeof msg.senderId === 'object' ? (msg.senderId.id || msg.senderId._id) : msg.senderId;
-    if ((actualSenderId === user.id || user.role === 'admin') && !msg.deletedForEveryone) {
+    if (!msg.deletedForEveryone) {
       setContextMenu({ message: msg, x: e.clientX, y: e.clientY });
     }
   };
 
+  const handleReplyClick = (msg) => {
+    const senderName = typeof msg.senderId === 'object' ? msg.senderId.username : (msg.senderId === user.id ? user.username : (getPartner(currentChat)?.username || 'Пользователь'));
+    setReplyingMessage({
+      id: msg.id || msg._id,
+      senderName,
+      text: msg.text || msg.content || (msg.attachments?.length ? 'Файл' : 'Сообщение')
+    });
+    setContextMenu(null);
+  };
+
   const handleEditClick = () => {
     setEditingMessage(contextMenu.message);
-    setNewMessage(contextMenu.message.text);
+    setNewMessage(contextMenu.message.text || contextMenu.message.content || '');
     setContextMenu(null);
   };
 
@@ -1283,9 +1295,32 @@ const Chat = () => {
                 const sender = currentChat.isGroup && !isOwn ? currentChat.participants.find(p => p && (p.id === actualSenderId || p._id === actualSenderId)) : null;
 
                 return (
-                  <div key={msg.id || Math.random()} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
+                  <div key={msg.id || msg._id || Math.random()} id={`msg-${msg.id || msg._id}`} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
                     <div className="message-bubble">
                       {sender && <div className="message-sender-name" onClick={() => setShowUserProfile(sender)} style={{cursor: 'pointer'}}>{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
+                      {msg.replyTo && (
+                        <div
+                          className="quoted-reply-box"
+                          onClick={() => {
+                            const el = document.getElementById(`msg-${msg.replyTo.id}`);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}
+                          style={{
+                            borderLeft: '3px solid var(--primary-color)',
+                            padding: '4px 10px',
+                            marginBottom: '6px',
+                            background: 'rgba(99, 102, 241, 0.12)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: '0.78rem' }}>{msg.replyTo.senderName}</div>
+                          <div style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '260px', opacity: 0.9 }}>
+                            {msg.replyTo.text}
+                          </div>
+                        </div>
+                      )}
                       {msg.attachments?.map((att, i) => <div key={i}>{renderAttachment(att)}</div>)}
                       {msgTextContent && <div className="message-text">{msgTextContent}</div>}
                       {renderReactions(msg.reactions)}
@@ -1323,14 +1358,19 @@ const Chat = () => {
                           </span>
                         ))}
                       </div>
+                      <div className="context-item" onClick={() => handleReplyClick(contextMenu.message)} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                        <Reply size={16} /> Ответить
+                      </div>
                       {isAuthor && (
                         <div className="context-item" onClick={handleEditClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
                           <Edit2 size={16} /> Редактировать
                         </div>
                       )}
-                      <div className="context-item delete" onClick={handleDeleteClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                        <Trash2 size={16} /> Удалить у всех
-                      </div>
+                      {(isAuthor || user?.role === 'admin' || user?.username === 'MilkyVIP') && (
+                        <div className="context-item delete" onClick={handleDeleteClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                          <Trash2 size={16} /> Удалить у всех
+                        </div>
+                      )}
                     </>
                   );
                 })()}
@@ -1342,6 +1382,18 @@ const Chat = () => {
                 <div className="file-preview-banner">
                   <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}><Paperclip size={16} /> {selectedFile.name}</span>
                   <button className="btn-cancel-file" onClick={() => setSelectedFile(null)}><X size={18} /></button>
+                </div>
+              )}
+              {replyingMessage && (
+                <div className="reply-banner" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'var(--bg-secondary)', borderLeft: '4px solid var(--primary-color)', borderRadius: '8px', marginBottom: '0.5rem'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden'}}>
+                    <Reply size={16} color="var(--primary-color)" />
+                    <div style={{fontSize: '0.85rem'}}>
+                      <div style={{fontWeight: 700, color: 'var(--primary-color)'}}>Ответ для {replyingMessage.senderName}</div>
+                      <div style={{color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '300px'}}>{replyingMessage.text}</div>
+                    </div>
+                  </div>
+                  <button className="btn-cancel-edit btn-icon" onClick={() => setReplyingMessage(null)}><X size={16} /></button>
                 </div>
               )}
               {editingMessage && (
