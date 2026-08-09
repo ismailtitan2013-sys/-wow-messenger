@@ -12,7 +12,7 @@ import {
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
   Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload,
-  ShoppingBag, Gift, Coins, Award, Crown
+  ShoppingBag, Gift, Coins, Award, Crown, User, AtSign
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
@@ -1136,7 +1136,10 @@ const Chat = () => {
               {searchResults.map(foundUser => (
                 <div key={foundUser.id} className={`chat-item ${foundUser.username === 'MilkyVIP' ? 'milky-vip-chat' : ''}`} onClick={() => handleStartChat(foundUser.id)}>
                   <UserAvatar usr={foundUser} />
-                  <div className="chat-item-info"><div className="chat-item-name">{renderUsernameWithBadge(foundUser.username, foundUser.isVerified)}</div></div>
+                  <div className="chat-item-info">
+                    <div className="chat-item-name">{renderUsernameWithBadge(foundUser.username, foundUser.isVerified)}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: 600, marginTop: '2px' }}>@{foundUser.username}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1533,6 +1536,14 @@ const Chat = () => {
             </div>
 
             <div className="tg-profile-body">
+              <div className="tg-info-row">
+                <div className="tg-info-icon"><AtSign size={18} /></div>
+                <div>
+                  <div className="tg-info-label">Имя пользователя (Username)</div>
+                  <div className="tg-info-val" style={{ color: '#3b82f6', fontWeight: 700 }}>@{showUserProfile.username}</div>
+                </div>
+              </div>
+
               <div className="tg-info-row">
                 <div className="tg-info-icon"><MessageSquare size={18} /></div>
                 <div>

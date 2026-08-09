@@ -1,12 +1,17 @@
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
-// Поиск пользователей по имени для начала нового чата
+// Поиск пользователей по имени или @username для начала нового чата
 const searchUsers = async (req, res) => {
   try {
-    const keyword = req.query.search
+    let searchTerm = (req.query.search || '').trim();
+    if (searchTerm.startsWith('@')) {
+      searchTerm = searchTerm.slice(1).trim();
+    }
+
+    const keyword = searchTerm
       ? {
-          username: { $regex: req.query.search, $options: 'i' }
+          username: { $regex: searchTerm, $options: 'i' }
         }
       : {};
 
