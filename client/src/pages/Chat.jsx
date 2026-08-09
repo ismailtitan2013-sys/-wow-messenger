@@ -993,7 +993,6 @@ const Chat = () => {
   const UserAvatar = ({ usr, size = 'default' }) => {
     const [imgError, setImgError] = useState(false);
     const avatarUrl = usr?.avatarUrl;
-    const avatarFrame = usr?.avatarFrame || 'none';
 
     useEffect(() => {
       setImgError(false);
@@ -1010,53 +1009,34 @@ const Chat = () => {
 
     const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
 
-    const avatarNode = avatarUrl && !imgError ? (
-      <img
-        src={getFullUrl(avatarUrl)}
-        alt=""
-        className={`avatar-img ${size}`}
-        onError={() => setImgError(true)}
-      />
-    ) : (
+    if (avatarUrl && !imgError) {
+      return (
+        <img
+          src={getFullUrl(avatarUrl)}
+          alt=""
+          className={`avatar-img ${size}`}
+          onError={() => setImgError(true)}
+        />
+      );
+    }
+
+    return (
       <div className={`avatar ${size}`}>
         {initial}
       </div>
     );
-
-    if (avatarFrame && avatarFrame !== 'none') {
-      return (
-        <div className={`avatar-wrapper frame-${avatarFrame}`}>
-          {avatarNode}
-        </div>
-      );
-    }
-
-    return avatarNode;
   };
 
-  const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, showAllBadges = false) => {
+  const renderUsernameWithBadge = (usrOrName, isVerified) => {
     let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
     let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
-    let colorClass = nameColor || (typeof usrOrName === 'object' ? usrOrName?.nameColor : 'default');
-    let userBadges = badges || (typeof usrOrName === 'object' ? usrOrName?.badges : []);
-
-    let colorCss = '';
-    if (colorClass && colorClass !== 'default') {
-      colorCss = `name-color-${colorClass}`;
-    }
-
-    const isDev = username === 'MilkyVIP' || (typeof usrOrName === 'object' && usrOrName?.role === 'admin');
 
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-        <span className={`${colorCss} ${username === 'MilkyVIP' ? 'milky-vip-name' : ''}`}>
+        <span className={username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
           {username}
         </span>
-        {isDev && <Crown size={15} color="#f59e0b" title="Разработчик" />}
         {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
-        {showAllBadges && Array.isArray(userBadges) && userBadges.map((b, idx) => (
-          <span key={idx} className="badge-tag">{b}</span>
-        ))}
       </span>
     );
   };
@@ -1069,13 +1049,10 @@ const Chat = () => {
           <div className="current-user-info" onClick={() => setShowSettingsModal(true)} style={{cursor: 'pointer'}}>
             <UserAvatar usr={user} />
             <span style={{fontWeight: 600}}>
-              {renderUsernameWithBadge(user, user.isVerified, user.nameColor, user.badges)}
+              {renderUsernameWithBadge(user.username, user.isVerified)}
             </span>
           </div>
           <div className="sidebar-actions">
-            <button className="coins-badge-btn" onClick={fetchStoreAndOpen} title="Магазин и Кастомизация">
-              🪙 {user.coins || 0}
-            </button>
             <button className="btn-icon" onClick={() => setDarkMode(!darkMode)} title="Сменить тему">
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
