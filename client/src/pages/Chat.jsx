@@ -764,54 +764,58 @@ const Chat = () => {
 
   const compressImageToBase64 = (file, maxWidth = 300, maxHeight = 300, quality = 0.85) => {
     return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error('No file provided'));
       const reader = new FileReader();
-      reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
-        img.src = event.target.result;
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
 
-          if (width > height) {
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
             }
-          } else {
-            if (height > maxHeight) {
-              width = Math.round((width * maxHeight) / height);
-              height = maxHeight;
-            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(dataUrl);
+          } catch (err) {
+            reject(err);
           }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(dataUrl);
         };
-        img.onerror = (err) => reject(err);
+        img.onerror = (err) => reject(err || new Error('Image load failed'));
+        img.src = event.target.result;
       };
-      reader.onerror = (err) => reject(err);
+      reader.onerror = (err) => reject(err || new Error('File read failed'));
+      reader.readAsDataURL(file);
     });
   };
 
   const handleAvatarUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     const toastId = toast.loading('Загрузка аватара...');
     try {
       let newAvatarUrl = '';
       try {
-        // Сжимаем аватарку в 300x300 JPEG Base64, чтобы она сохранялась прямо в БД
-        // и никогда не сбрасывалась при обновлениях сервера
         newAvatarUrl = await compressImageToBase64(file, 300, 300, 0.85);
       } catch (errCompress) {
+        console.warn('Base64 compression failed, falling back to upload endpoint:', errCompress);
         const formData = new FormData();
         formData.append('file', file);
         const res = await axios.post('/api/upload', formData, {
@@ -822,8 +826,17 @@ const Chat = () => {
 
       setProfileData(prev => ({ ...prev, avatarUrl: newAvatarUrl }));
       
-      // Авто-сохранение аватара в профиле
-      const updateRes = await axios.put('/api/users/profile', { ...profileData, avatarUrl: newAvatarUrl });
+      const payload = {
+        username: profileData.username || user.username,
+        bio: profileData.bio || user.bio || '',
+        avatarUrl: newAvatarUrl,
+        settings: profileData.settings || user.settings
+      };
+
+      const updateRes = await axios.put('/api/users/profile', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       setUser(prev => {
         const updatedUser = { ...prev, ...updateRes.data };
         localStorage.setItem('wow_user', JSON.stringify(updatedUser));
@@ -833,7 +846,9 @@ const Chat = () => {
       toast.success('Аватар загружен и сохранен!', { id: toastId });
     } catch (err) {
       console.error('Ошибка загрузки аватара:', err);
-      toast.error('Ошибка загрузки аватара', { id: toastId });
+      toast.error(err.response?.data?.message || 'Ошибка загрузки аватара', { id: toastId });
+    } finally {
+      if (e.target) e.target.value = '';
     }
   };
 
