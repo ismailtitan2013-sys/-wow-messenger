@@ -76,10 +76,10 @@ const checkMilkyVIP = async (user) => {
       'frame_gold', 'frame_neon', 'frame_fire', 'frame_cyber', 'frame_vip', 'frame_diamond', 'frame_galaxy',
       'color_gold', 'color_neon_blue', 'color_purple', 'color_emerald', 'color_rainbow', 'color_fire',
       'badge_vip', 'badge_pioneer', 'badge_legend', 'badge_top', 'badge_billionaire', 'badge_creator',
-      'title_sultan', 'title_oligarch', 'aura_gold', 'aura_cosmic', 'chat_gold'
+      'aura_gold', 'aura_cosmic', 'chat_gold'
     ];
     user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
-    user.badges = Array.from(new Set([...(user.badges || []), 'Создатель', 'MilkyVIP', 'Меценат', 'Разраб', 'VIP', 'Легенда']));
+    user.badges = ['Создатель'];
     await user.save();
   }
 };

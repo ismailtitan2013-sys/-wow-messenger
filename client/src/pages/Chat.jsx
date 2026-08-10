@@ -66,6 +66,7 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
   const colorClass = nameColor || (isObj ? usrOrName.nameColor : '');
   const title = userTitle || (isObj ? usrOrName.userTitle : '');
   const userBadges = badges || (isObj ? usrOrName.badges : []);
+  const primaryBadge = Array.isArray(userBadges) && userBadges.length > 0 ? userBadges[0] : null;
 
   let nameStyleClass = '';
   if (colorClass && colorClass !== 'default' && colorClass !== 'none') {
@@ -75,17 +76,17 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
   }
 
   return (
-    <span className="user-name-wrapper" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', border: 'none', outline: 'none' }}>
+    <span className="user-name-wrapper" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', whiteSpace: 'nowrap', border: 'none', outline: 'none' }}>
       <span className={nameStyleClass} style={{ fontWeight: 800, border: 'none', outline: 'none' }}>
         {username || 'Пользователь'}
       </span>
       {title && <span className="user-title-tag">{title}</span>}
-      {userBadges && Array.isArray(userBadges) && userBadges.map((b, idx) => (
-        <span key={idx} className="badge-tag" style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', fontWeight: 800 }}>
-          {b}
+      {primaryBadge && (
+        <span className="badge-tag" style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', fontWeight: 800 }}>
+          {primaryBadge}
         </span>
-      ))}
-      {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
+      )}
+      {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" style={{ flexShrink: 0 }} />}
     </span>
   );
 };
