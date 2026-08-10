@@ -264,6 +264,39 @@ const Chat = () => {
   const [giftMsg, setGiftMsg] = useState('');
   const [giftRecipient, setGiftRecipient] = useState(null);
 
+  const [comboInput, setComboInput] = useState('');
+  const [leaderboardData, setLeaderboardData] = useState([]);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await axios.get('/api/coins/leaderboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && res.data.leaderboard) {
+        setLeaderboardData(res.data.leaderboard);
+      }
+    } catch (err) {
+      // Ignored
+    }
+  };
+
+  const handleClaimCombo = async () => {
+    if (!comboInput.trim()) return toast.error('Введите шифр комбо');
+    try {
+      const res = await axios.post('/api/coins/claim-combo', { comboCode: comboInput }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && typeof res.data.coins === 'number') {
+        setUser(prev => prev ? ({ ...prev, coins: res.data.coins }) : prev);
+        setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+        toast.success(res.data.message || 'Комбо награда получена!');
+        setComboInput('');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Неверный шифр Комбо');
+    }
+  };
+
   // Clicker & Mini-Games States
   const [tapFloats, setTapFloats] = useState([]);
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -2117,6 +2150,9 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'nfts' ? 'active' : ''}`} onClick={() => setActiveStoreTab('nfts')}>
                 🎨 NFT Маркет
               </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'leaderboard' ? 'active' : ''}`} onClick={() => { setActiveStoreTab('leaderboard'); fetchLeaderboard(); }}>
+                🏆 Топ Игроков
+              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
@@ -2143,6 +2179,29 @@ const Chat = () => {
             {/* Вкладка 1: Telegram Clicker (Тапер + Энергия + ТГ Бусты) */}
             {activeStoreTab === 'clicker' && (
               <div style={{ textAlign: 'center', padding: '10px 5px' }}>
+                {/* 🐹 Ежедневный Секретный Комбо-Шифр в стиле ТГ */}
+                <div style={{ background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(168, 85, 247, 0.15))', padding: '14px 16px', borderRadius: '16px', border: '1px solid rgba(234, 179, 8, 0.4)', marginBottom: '16px' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <Sparkles size={18} color="#eab308" /> 🐹 Daily Combo Шифр (+5,000 🪙)
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                    Введите секретный дневной код (Подсказка: <b>WOW2026</b>)
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Введите шифр (например WOW2026)..."
+                      value={comboInput}
+                      onChange={e => setComboInput(e.target.value)}
+                      style={{ borderRadius: '10px', fontSize: '0.85rem' }}
+                    />
+                    <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)', padding: '6px 14px', fontSize: '0.82rem', fontWeight: 800, borderRadius: '10px', whiteSpace: 'nowrap' }} onClick={handleClaimCombo}>
+                      Ввести 🎁
+                    </button>
+                  </div>
+                </div>
+
                 {/* Индикатор Энергии */}
                 <div style={{ background: 'var(--bg-secondary)', borderRadius: '16px', padding: '14px 18px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 800 }}>
@@ -2346,6 +2405,45 @@ const Chat = () => {
                             Купить 🪙 {nft.price}
                           </button>
                         )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Вкладка 4: Топ Лидеров и Игроков */}
+            {activeStoreTab === 'leaderboard' && (
+              <div style={{ padding: '10px 5px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: '0 0 4px', color: '#f59e0b' }}>🏆 Зал Славы & Лидерборд Кликеров</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Топ пользователей по заработанным монетам и коллекционным NFT!
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {(leaderboardData.length > 0 ? leaderboardData : [
+                    { username: user?.username || 'Вы', coins: user?.coins || 100, nfts: user?.nfts || [] }
+                  ]).map((u, index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = medals[index] || `#${index + 1}`;
+                    return (
+                      <div key={u.username + index} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ fontSize: '1.3rem', fontWeight: 900, minWidth: '30px' }}>{medal}</div>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: index === 0 ? '#f59e0b' : 'var(--text-primary)' }}>
+                              {u.username}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              NFT Коллекций: {u.nfts?.length || 0} 💎
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 900, fontSize: '1.05rem', color: '#f59e0b' }}>
+                          🪙 {(u.coins || 0).toLocaleString()}
+                        </div>
                       </div>
                     );
                   })}

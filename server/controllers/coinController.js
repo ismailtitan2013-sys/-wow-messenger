@@ -156,6 +156,52 @@ const getStoreCatalog = async (req, res) => {
   }
 };
 
+// Топ игроков (Лидерборд)
+const getLeaderboard = async (req, res) => {
+  try {
+    const topUsers = await User.find({})
+      .select('username avatarUrl avatarFrame nameColor coins nfts clickerStats')
+      .sort({ coins: -1 })
+      .limit(10);
+
+    res.status(200).json({ leaderboard: topUsers });
+  } catch (error) {
+    logger.error('Ошибка получения лидерборда:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Ввод секретного Daily Combo кода (+5,000 монет)
+const claimDailyCombo = async (req, res) => {
+  try {
+    const { comboCode } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const validCombo = 'WOW2026';
+    if (!comboCode || comboCode.toUpperCase().trim() !== validCombo) {
+      return res.status(400).json({ message: '❌ Неверный шифр Комбо! Подсказка: WOW2026' });
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (user.lastComboClaimDate === todayStr) {
+      return res.status(400).json({ message: 'Вы уже забрали сегодняшнее комбо +5,000 🪙!' });
+    }
+
+    user.lastComboClaimDate = todayStr;
+    user.coins = (user.coins || 0) + 5000;
+    await user.save();
+
+    res.status(200).json({
+      message: '🎉 БИНГО! Вы отгадали секретное комбо и получили +5,000 🪙!',
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка комбо:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
 // Ежедневный бонус (+50 монет)
 const claimDailyBonus = async (req, res) => {
   try {
@@ -712,6 +758,8 @@ const sendGiftOrCoins = async (req, res) => {
 module.exports = {
   getStoreCatalog,
   claimDailyBonus,
+  getLeaderboard,
+  claimDailyCombo,
   tapCoins,
   upgradeClicker,
   buyBusiness,
