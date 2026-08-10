@@ -2375,6 +2375,7 @@ const Chat = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                   {(storeData?.nfts || [
+                    { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Amulet', rarity: 'Mythic', price: 15000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Амулет "Velvet Dusk" с символом Добермана (French Violet)' },
                     { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Dragon', rarity: 'Rare', price: 1500, icon: '🐲', desc: 'Легендарный дух Космического Дракона' },
                     { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
                     { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
@@ -2394,7 +2395,13 @@ const Chat = () => {
                         <div style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.72rem', fontWeight: 800, color, background: `${color}22`, padding: '2px 8px', borderRadius: '8px' }}>
                           {nft.serial}
                         </div>
-                        <div style={{ fontSize: '2.8rem', margin: '12px 0 8px', filter: `drop-shadow(0 0 10px ${color})` }}>{nft.icon}</div>
+                        {nft.imageUrl ? (
+                          <div style={{ margin: '12px auto 8px', width: '80px', height: '80px', borderRadius: '14px', overflow: 'hidden', border: `2px solid ${color}`, boxShadow: `0 0 12px ${color}` }}>
+                            <img src={nft.imageUrl} alt={nft.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '2.8rem', margin: '12px 0 8px', filter: `drop-shadow(0 0 10px ${color})` }}>{nft.icon}</div>
+                        )}
                         <div style={{ fontWeight: 800, fontSize: '0.95rem', color }}>{nft.name}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '4px 0 12px' }}>{nft.desc}</div>
 
