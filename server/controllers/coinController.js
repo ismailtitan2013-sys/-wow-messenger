@@ -90,6 +90,10 @@ const getStoreCatalog = async (req, res) => {
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
+    const now = Date.now();
+    const lastDaily = user.lastDailyClaim ? new Date(user.lastDailyClaim).getTime() : 0;
+    const canClaimDaily = (now - lastDaily) >= 24 * 60 * 60 * 1000;
+
     res.status(200).json({
       catalog: STORE_ITEMS,
       userCoins: user.coins || 0,
@@ -101,10 +105,62 @@ const getStoreCatalog = async (req, res) => {
       equippedAura: user.profileAura || 'none',
       equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
-      giftsReceived: user.giftsReceived || []
+      giftsReceived: user.giftsReceived || [],
+      canClaimDaily
     });
   } catch (error) {
     logger.error('Ошибка получения магазина:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Ежедневный бонус (+50 монет)
+const claimDailyBonus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const now = new Date();
+    const lastClaim = user.lastDailyClaim ? new Date(user.lastDailyClaim) : null;
+
+    if (lastClaim && (now.getTime() - lastClaim.getTime() < 24 * 60 * 60 * 1000)) {
+      return res.status(400).json({ message: 'Ежедневный подарок уже получен! Приходите завтра.' });
+    }
+
+    const bonusAmount = 50;
+    user.coins = (user.coins || 0) + bonusAmount;
+    user.lastDailyClaim = now;
+    await user.save();
+
+    res.status(200).json({
+      message: `🎉 Вы получили +${bonusAmount} монет!`,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка получения бонуса:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Кликер монет
+const tapCoins = async (req, res) => {
+  try {
+    const { count = 1 } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const safeCount = Math.min(20, Math.max(1, Number(count)));
+    const earned = safeCount;
+
+    user.coins = (user.coins || 0) + earned;
+    await user.save();
+
+    res.status(200).json({
+      earned,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка кликера:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };

@@ -24,6 +24,7 @@ const UserAvatar = ({ usr, size = 'default' }) => {
   const [imgError, setImgError] = useState(false);
   const avatarUrl = usr?.avatarUrl;
   const frameClass = usr?.avatarFrame && usr?.avatarFrame !== 'none' ? (usr.avatarFrame.startsWith('frame-') ? usr.avatarFrame : `frame-${usr.avatarFrame}`) : '';
+  const auraClass = usr?.profileAura && usr?.profileAura !== 'none' ? (usr.profileAura.startsWith('aura-') ? usr.profileAura : `aura-${usr.profileAura}`) : '';
 
   useEffect(() => {
     setImgError(false);
@@ -41,7 +42,7 @@ const UserAvatar = ({ usr, size = 'default' }) => {
   const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
 
   return (
-    <div className={`avatar-wrapper ${size} ${frameClass}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'all 0.3s ease' }}>
+    <div className={`avatar-wrapper ${size} ${frameClass} ${auraClass}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'all 0.3s ease' }}>
       {avatarUrl && !imgError ? (
         <img
           src={getFullUrl(avatarUrl)}
@@ -64,7 +65,6 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
   const verified = isVerified !== undefined ? isVerified : (isObj ? usrOrName.isVerified : false);
   const colorClass = nameColor || (isObj ? usrOrName.nameColor : '');
   const title = userTitle || (isObj ? usrOrName.userTitle : '');
-  const aura = isObj ? usrOrName.profileAura : '';
 
   let nameStyleClass = '';
   if (username === 'MilkyVIP') {
@@ -74,8 +74,8 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
   }
 
   return (
-    <span className={`user-name-wrapper ${aura && aura !== 'none' ? (aura.startsWith('aura-') ? aura : `aura-${aura}`) : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-      <span className={nameStyleClass} style={{ fontWeight: 800 }}>
+    <span className="user-name-wrapper" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', border: 'none', outline: 'none' }}>
+      <span className={nameStyleClass} style={{ fontWeight: 800, border: 'none', outline: 'none' }}>
         {username || 'Пользователь'}
       </span>
       {title && <span className="user-title-tag">{title}</span>}
@@ -1354,8 +1354,8 @@ const Chat = () => {
               <span style={{fontWeight: 600}}>
                 {renderUsernameWithBadge(user)}
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800 }}>
-                🪙 {(user?.coins || 0).toLocaleString()} Coins
+              <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                <Coins size={14} color="#f59e0b" /> {(user?.coins || 0).toLocaleString()} Coins
               </span>
             </div>
           </div>
@@ -2110,9 +2110,12 @@ const Chat = () => {
               </div>
             </div>
 
-            {/* Вкладки Магазина Предметов */}
+            {/* Вкладки Магазина Предметов & Заработка */}
             <div className="store-tabs">
-              <button className={`store-tab-btn ${activeStoreTab === 'frames' || activeStoreTab === 'clicker' || activeStoreTab === 'quiz' || activeStoreTab === 'quests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
+              <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
+                ⚡ Заработок Монет
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'nameColors' ? 'active' : ''}`} onClick={() => setActiveStoreTab('nameColors')}>
@@ -2134,6 +2137,66 @@ const Chat = () => {
                 🎁 Подарки
               </button>
             </div>
+
+            {/* Вкладка Заработок Монет */}
+            {activeStoreTab === 'clicker' && (
+              <div style={{ textAlign: 'center', padding: '10px 5px' }}>
+                <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.15))', borderRadius: '18px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '16px' }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <Coins size={22} color="#f59e0b" /> Ежедневная Награда
+                  </h3>
+                  <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    Забирайте бесплатные монеты каждые 24 часа!
+                  </p>
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: '10px 20px', fontSize: '0.9rem', fontWeight: 800, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                    disabled={!storeData?.canClaimDaily}
+                    onClick={handleClaimDaily}
+                  >
+                    <Sparkles size={18} />
+                    {storeData?.canClaimDaily ? 'Забрать +50 Монет 🎁' : 'Забрано на сегодня ✅'}
+                  </button>
+                </div>
+
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: '18px', padding: '20px', border: '1px solid var(--border-color)' }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <Zap size={22} color="#3b82f6" /> Монетный Тапер
+                  </h3>
+                  <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    Нажимайте на золотую монету для заработка коинов!
+                  </p>
+
+                  <div className="tap-button-wrapper" style={{ position: 'relative', display: 'inline-block', margin: '15px 0' }}>
+                    <div
+                      className="tap-button"
+                      onClick={handleTapCoin}
+                      style={{
+                        width: '105px',
+                        height: '105px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, #fbbf24 0%, #d97706 70%, #92400e 100%)',
+                        boxShadow: '0 0 25px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        margin: '0 auto',
+                        transition: 'transform 0.1s ease',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <Coins size={54} color="#ffffff" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))' }} />
+                    </div>
+                    {tapFloats.map(f => (
+                      <div key={f.id} className="tap-float-number" style={{ position: 'absolute', left: f.x, top: f.y, color: '#f59e0b', fontWeight: 900, fontSize: '1.2rem', pointerEvents: 'none' }}>
+                        {f.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Карточки предметов Магазина (Рамки, Ник, Значки, Титулы, Ауры, Стили сообщений) */}
             {['frames', 'nameColors', 'badges', 'titles', 'auras', 'chatStyles'].includes(activeStoreTab) && (
