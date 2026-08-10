@@ -314,30 +314,30 @@ const Chat = () => {
     }
   };
 
-  const handleTapCoin = async (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left - 20;
-    const y = e.clientY - rect.top - 20;
+  const handleTapCoin = async () => {
+    const currentEnergy = storeData?.clickerStats?.energy ?? 1000;
+    const multitapPower = storeData?.clickerStats?.multitapLevel || 1;
 
-    const level = storeData?.clickerLevel || 1;
-    // 10 тапов = 1 монета на Lv.1
-    const coinsPerTap = Math.max(1, Math.round(1 * 0.1 * level));
-    const tapVal = `+${coinsPerTap}`;
+    if (currentEnergy < multitapPower) {
+      toast.error('⚡ Энергия закончилась! Подождите восстановления');
+      return;
+    }
 
-    const newFloat = { id: Date.now() + Math.random(), x, y, text: tapVal };
-    setTapFloats(prev => [...prev.slice(-12), newFloat]);
+    const nextCoins = (user?.coins || 0) + multitapPower;
+    const nextEnergy = Math.max(0, currentEnergy - multitapPower);
+
+    const id = Date.now() + Math.random();
+    setTapFloats(prev => [...prev, { id, x: Math.random() * 40 - 20, y: Math.random() * -20 - 10, text: `+${multitapPower}` }]);
     setTimeout(() => {
-      setTapFloats(prev => prev.filter(f => f.id !== newFloat.id));
+      setTapFloats(prev => prev.filter(item => item.id !== id));
     }, 800);
 
-    const nextCoins = (user?.coins || 0) + coinsPerTap;
-    setUser(prev => {
-      if (!prev) return prev;
-      const u = { ...prev, coins: nextCoins };
-      localStorage.setItem('wow_user', JSON.stringify(u));
-      return u;
-    });
-    setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+    setUser(prev => prev ? ({ ...prev, coins: nextCoins }) : prev);
+    setStoreData(prev => ({
+      ...prev,
+      userCoins: nextCoins,
+      clickerStats: { ...(prev.clickerStats || {}), energy: nextEnergy }
+    }));
 
     try {
       const res = await axios.post('/api/coins/tap', { count: 1 }, {
@@ -392,45 +392,23 @@ const Chat = () => {
     }
   };
 
-  const handleClaimAchievement = async (achievementId) => {
+  const handleBuyBoost = async (boostType) => {
     try {
-      const res = await axios.post('/api/coins/claim-achievement', { achievementId }, {
+      const res = await axios.post('/api/coins/buy-boost', { boostType }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.data && res.data.coins) {
-        const nextCoins = res.data.coins;
-        const nextDone = res.data.completedAchievements || [];
+      if (res.data && res.data.clickerStats) {
         setUser(prev => {
           if (!prev) return prev;
-          const u = { ...prev, coins: nextCoins, completedAchievements: nextDone };
+          const u = { ...prev, coins: res.data.coins, clickerStats: res.data.clickerStats };
           localStorage.setItem('wow_user', JSON.stringify(u));
           return u;
         });
-        setStoreData(prev => ({ ...prev, userCoins: nextCoins, completedAchievements: nextDone }));
-        toast.success(res.data.message || 'Достижение получено!');
+        setStoreData(prev => ({ ...prev, clickerStats: res.data.clickerStats, userCoins: res.data.coins }));
+        toast.success(res.data.message || 'Буст активирован!');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка забора достижения');
-    }
-  };
-
-  const handleClaimJob = async (jobId) => {
-    try {
-      const res = await axios.post('/api/coins/claim-job', { jobId }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data && res.data.coins) {
-        setUser(prev => {
-          if (!prev) return prev;
-          const u = { ...prev, coins: res.data.coins };
-          localStorage.setItem('wow_user', JSON.stringify(u));
-          return u;
-        });
-        setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
-        toast.success(res.data.message || 'Контракт выполнен!');
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка выполнения контракта');
+      toast.error(err.response?.data?.message || 'Ошибка покупки буста');
     }
   };
 
@@ -2101,12 +2079,6 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'business' ? 'active' : ''}`} onClick={() => setActiveStoreTab('business')}>
                 📈 Бизнес (ТГ)
               </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveStoreTab('achievements')}>
-                🏆 Достижения
-              </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'jobs' ? 'active' : ''}`} onClick={() => setActiveStoreTab('jobs')}>
-                🛠️ Работа
-              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
@@ -2130,71 +2102,113 @@ const Chat = () => {
               </button>
             </div>
 
-            {/* Вкладка 1: Заработок Монет (Труд / Кликер) */}
+            {/* Вкладка 1: Telegram Clicker (Тапер + Энергия + ТГ Бусты) */}
             {activeStoreTab === 'clicker' && (
               <div style={{ textAlign: 'center', padding: '10px 5px' }}>
-                <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.15))', borderRadius: '18px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '16px' }}>
-                  <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <Coins size={22} color="#f59e0b" /> Ежедневная Награда
-                  </h3>
-                  <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    Забирайте честные монеты каждые 24 часа!
-                  </p>
-                  <button
-                    className="btn btn-primary"
-                    style={{ padding: '10px 20px', fontSize: '0.9rem', fontWeight: 800, background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-                    disabled={!storeData?.canClaimDaily}
-                    onClick={handleClaimDaily}
-                  >
-                    <Sparkles size={18} />
-                    {storeData?.canClaimDaily ? 'Забрать +50 Монет 🎁' : 'Забрано на сегодня ✅'}
-                  </button>
+                {/* Индикатор Энергии */}
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: '16px', padding: '14px 18px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 800 }}>
+                    <span style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Zap size={18} color="#f59e0b" /> Запас Энергии
+                    </span>
+                    <span style={{ color: 'var(--text-primary)' }}>
+                      ⚡ {Math.floor(storeData?.clickerStats?.energy ?? 1000)} / {storeData?.clickerStats?.maxEnergy ?? 1000}
+                    </span>
+                  </div>
+
+                  <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${Math.min(100, Math.max(0, ((storeData?.clickerStats?.energy ?? 1000) / (storeData?.clickerStats?.maxEnergy ?? 1000)) * 100))}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #f59e0b, #eab308)',
+                      borderRadius: '10px',
+                      transition: 'width 0.2s ease'
+                    }} />
+                  </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-secondary)', borderRadius: '18px', padding: '20px', border: '1px solid var(--border-color)' }}>
-                  <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <Zap size={22} color="#3b82f6" /> Монетный Тапер (Lv. {storeData?.clickerLevel || 1})
-                  </h3>
-                  <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    Зарабатывайте собственным трудом! Доход: +{storeData?.clickerLevel || 1} 🪙 за нажатие!
-                  </p>
+                {/* Монетный Тапер */}
+                <div style={{ background: 'var(--bg-secondary)', borderRadius: '20px', padding: '20px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '10px', fontWeight: 600 }}>
+                    Нажимайте на монету для заработка! Доход: <b style={{ color: '#f59e0b' }}>+{storeData?.clickerStats?.multitapLevel || 1} 🪙</b> / клик
+                  </div>
 
-                  <div className="tap-button-wrapper" style={{ position: 'relative', display: 'inline-block', margin: '15px 0' }}>
+                  <div className="tap-button-wrapper" style={{ position: 'relative', display: 'inline-block', margin: '10px 0' }}>
                     <div
                       className="tap-button"
                       onClick={handleTapCoin}
                       style={{
-                        width: '105px',
-                        height: '105px',
+                        width: '115px',
+                        height: '115px',
                         borderRadius: '50%',
                         background: 'radial-gradient(circle, #fbbf24 0%, #d97706 70%, #92400e 100%)',
-                        boxShadow: '0 0 25px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.4)',
+                        boxShadow: '0 0 30px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.4)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
                         margin: '0 auto',
-                        transition: 'transform 0.1s ease',
+                        transition: 'transform 0.08s ease',
                         userSelect: 'none'
                       }}
                     >
-                      <Coins size={54} color="#ffffff" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))' }} />
+                      <Coins size={60} color="#ffffff" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))' }} />
                     </div>
                     {tapFloats.map(f => (
-                      <div key={f.id} className="tap-float-number" style={{ position: 'absolute', left: f.x, top: f.y, color: '#f59e0b', fontWeight: 900, fontSize: '1.2rem', pointerEvents: 'none' }}>
+                      <div key={f.id} className="tap-float-number" style={{ position: 'absolute', left: f.x, top: f.y, color: '#f59e0b', fontWeight: 900, fontSize: '1.3rem', pointerEvents: 'none' }}>
                         {f.text}
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  <button
-                    className="btn btn-primary"
-                    style={{ width: '100%', marginTop: '10px', padding: '10px', background: 'linear-gradient(135deg, #10b981, #059669)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '12px' }}
-                    onClick={handleUpgradeClicker}
-                  >
-                    <Zap size={18} />
-                    <span>Прокачать мастерство (Стоимость: {storeData?.nextClickerUpgradeCost || Math.round(100 * Math.pow(1.6, (storeData?.clickerLevel || 1) - 1))} 🪙)</span>
-                  </button>
+                {/* ТГ Бусты */}
+                <div style={{ textAlign: 'left' }}>
+                  <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Sparkles size={18} color="#3b82f6" /> Улучшения и Бустеры (в стиле ТГ)
+                  </h4>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '10px' }}>
+                    <div style={{ background: 'var(--bg-secondary)', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>🚀 Мульти-клик (Lv. {storeData?.clickerStats?.multitapLevel || 1})</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>+{ (storeData?.clickerStats?.multitapLevel || 1) + 1 } 🪙 за каждое нажатие</div>
+                      </div>
+                      <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', borderRadius: '10px' }} onClick={() => handleBuyBoost('multitap')}>
+                        🪙 {Math.round(150 * Math.pow(2, (storeData?.clickerStats?.multitapLevel || 1) - 1))}
+                      </button>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-secondary)', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>🔋 Запас энергии (Lv. {storeData?.clickerStats?.energyLevel || 1})</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>+{ (500 + ((storeData?.clickerStats?.energyLevel || 1) * 500)) }⚡ Макс. энергия</div>
+                      </div>
+                      <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '10px' }} onClick={() => handleBuyBoost('energyLimit')}>
+                        🪙 {Math.round(150 * Math.pow(2, (storeData?.clickerStats?.energyLevel || 1) - 1))}
+                      </button>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-secondary)', padding: '12px 14px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>⚡ Зарядка (Lv. {storeData?.clickerStats?.rechargeLevel || 1})</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>+{ 3 + ((storeData?.clickerStats?.rechargeLevel || 1) * 2) }⚡ в секунду</div>
+                      </div>
+                      <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px' }} onClick={() => handleBuyBoost('recharge')}>
+                        🪙 {Math.round(200 * Math.pow(2.2, (storeData?.clickerStats?.rechargeLevel || 1) - 1))}
+                      </button>
+                    </div>
+
+                    <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15))', padding: '12px 14px', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#10b981' }}>⚡ Полный Восстановитель</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Восстановить энергию до 100%</div>
+                      </div>
+                      <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px' }} onClick={() => handleBuyBoost('refill')}>
+                        Бесплатно ⚡
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

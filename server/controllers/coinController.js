@@ -120,12 +120,10 @@ const getStoreCatalog = async (req, res) => {
     const now = Date.now();
     const lastDaily = user.lastDailyClaim ? new Date(user.lastDailyClaim).getTime() : 0;
     const canClaimDaily = (now - lastDaily) >= 24 * 60 * 60 * 1000;
-    const clickerLevel = user.clickerLevel || 1;
+    const clickerStats = updateAndGetEnergy(user);
 
     res.status(200).json({
       catalog: STORE_ITEMS,
-      achievements: ACHIEVEMENTS_LIST,
-      jobs: JOBS_LIST,
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -136,10 +134,10 @@ const getStoreCatalog = async (req, res) => {
       equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
       giftsReceived: user.giftsReceived || [],
-      completedAchievements: user.completedAchievements || [],
       clickerLevel,
+      clickerStats,
       nextClickerUpgradeCost: getClickerUpgradeCost(clickerLevel),
-      businesses: user.businesses || { channelLevel: 0, agencyLevel: 0, fundLevel: 0 },
+      businesses: user.businesses || { channelLevel: 0, agencyLevel: 0, fundLevel: 0, botLevel: 0 },
       canClaimDaily
     });
   } catch (error) {
@@ -177,53 +175,69 @@ const claimDailyBonus = async (req, res) => {
 };
 
 // Забор награды за активность
-const claimAchievement = async (req, res) => {
-  try {
-    const { achievementId } = req.body;
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
+const updateAndGetEnergy = (user) => {
+  user.clickerStats = user.clickerStats || {
+    energy: 1000,
+    maxEnergy: 1000,
+    energyLevel: 1,
+    multitapLevel: 1,
+    rechargeLevel: 1,
+    lastEnergyUpdate: new Date()
+  };
 
-    const ach = ACHIEVEMENTS_LIST.find(a => a.id === achievementId);
-    if (!ach) return res.status(404).json({ message: 'Достижение не найдено' });
+  const stats = user.clickerStats;
+  const maxEng = 500 + ((stats.energyLevel || 1) * 500);
+  const rechargeRate = 3 + ((stats.rechargeLevel || 1) * 2);
 
-    user.completedAchievements = user.completedAchievements || [];
-    if (user.completedAchievements.includes(achievementId)) {
-      return res.status(400).json({ message: 'Награда за это достижение уже получена!' });
-    }
+  const now = Date.now();
+  const lastUpdate = stats.lastEnergyUpdate ? new Date(stats.lastEnergyUpdate).getTime() : now;
+  const secondsPassed = Math.max(0, Math.floor((now - lastUpdate) / 1000));
 
-    user.completedAchievements.push(achievementId);
-    user.coins = (user.coins || 0) + ach.reward;
-    await user.save();
-
-    res.status(200).json({
-      message: `🏆 Достижение "${ach.title}" получено! +${ach.reward} монет`,
-      coins: user.coins,
-      completedAchievements: user.completedAchievements
-    });
-  } catch (error) {
-    logger.error('Ошибка забора достижения:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  if (secondsPassed > 0) {
+    const restored = secondsPassed * rechargeRate;
+    stats.energy = Math.min(maxEng, (stats.energy || 0) + restored);
+    stats.lastEnergyUpdate = new Date(now);
   }
+  stats.maxEnergy = maxEng;
+  return stats;
 };
 
-// Кликер монет
+// Кликер монет в стиле ТГ (Tap + Energy System)
 const tapCoins = async (req, res) => {
   try {
     const { count = 1 } = req.body;
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
+    const stats = updateAndGetEnergy(user);
     const safeCount = Math.min(20, Math.max(1, Number(count)));
-    const level = user.clickerLevel || 1;
-    const earned = safeCount * level;
+    const multitapPower = stats.multitapLevel || 1;
+    const energyNeeded = safeCount * multitapPower;
 
+    if (stats.energy < energyNeeded) {
+      if (stats.energy <= 0) {
+        return res.status(400).json({ message: '⚡ Энергия закончилась! Подождите восстановления', energy: 0, maxEnergy: stats.maxEnergy });
+      }
+      const actualTaps = Math.floor(stats.energy / multitapPower);
+      if (actualTaps < 1) {
+        return res.status(400).json({ message: '⚡ Недостаточно энергии на клик', energy: stats.energy, maxEnergy: stats.maxEnergy });
+      }
+      const earned = actualTaps * multitapPower;
+      stats.energy -= actualTaps * multitapPower;
+      user.coins = (user.coins || 0) + earned;
+      await user.save();
+      return res.status(200).json({ earned, coins: user.coins, clickerStats: stats });
+    }
+
+    const earned = safeCount * multitapPower;
+    stats.energy -= energyNeeded;
     user.coins = (user.coins || 0) + earned;
     await user.save();
 
     res.status(200).json({
       earned,
       coins: user.coins,
-      clickerLevel: level
+      clickerStats: stats
     });
   } catch (error) {
     logger.error('Ошибка кликера:', { error });
@@ -231,32 +245,54 @@ const tapCoins = async (req, res) => {
   }
 };
 
-// Улучшение кликера
-const upgradeClicker = async (req, res) => {
+// Покупка ТГ-бустов (Мульти-клик, Лимит энергии, Скорость зарядки, Восстановление)
+const buyBoost = async (req, res) => {
   try {
+    const { boostType } = req.body; // 'multitap', 'energyLimit', 'recharge', 'refill'
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
-    const currentLevel = user.clickerLevel || 1;
-    const upgradeCost = getClickerUpgradeCost(currentLevel);
+    const stats = updateAndGetEnergy(user);
+    let cost = 200;
+    let message = '';
 
-    if ((user.coins || 0) < upgradeCost) {
-      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
+    if (boostType === 'multitap') {
+      const lvl = stats.multitapLevel || 1;
+      cost = Math.round(150 * Math.pow(2, lvl - 1));
+      if ((user.coins || 0) < cost) return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${cost}` });
+      user.coins -= cost;
+      stats.multitapLevel = lvl + 1;
+      message = `🚀 Мульти-клик прокачан до Lv. ${stats.multitapLevel}! (+${stats.multitapLevel} 🪙 за клик)`;
+    } else if (boostType === 'energyLimit') {
+      const lvl = stats.energyLevel || 1;
+      cost = Math.round(150 * Math.pow(2, lvl - 1));
+      if ((user.coins || 0) < cost) return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${cost}` });
+      user.coins -= cost;
+      stats.energyLevel = lvl + 1;
+      stats.maxEnergy = 500 + (stats.energyLevel * 500);
+      stats.energy = stats.maxEnergy;
+      message = `🔋 Запас энергии увеличен до ${stats.maxEnergy}⚡!`;
+    } else if (boostType === 'recharge') {
+      const lvl = stats.rechargeLevel || 1;
+      cost = Math.round(200 * Math.pow(2.2, lvl - 1));
+      if ((user.coins || 0) < cost) return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${cost}` });
+      user.coins -= cost;
+      stats.rechargeLevel = lvl + 1;
+      message = `⚡ Скорость восстановления повышена! (+${3 + (stats.rechargeLevel * 2)}⚡ / сек)`;
+    } else if (boostType === 'refill') {
+      stats.energy = stats.maxEnergy;
+      message = `⚡ Энергия полностью восстановлена (100%)!`;
     }
 
-    user.coins -= upgradeCost;
-    user.clickerLevel = currentLevel + 1;
     await user.save();
 
-    const nextCost = getClickerUpgradeCost(user.clickerLevel);
     res.status(200).json({
-      message: `⚡ Уровень прокачан до Lv. ${user.clickerLevel}!`,
-      clickerLevel: user.clickerLevel,
-      nextClickerUpgradeCost: nextCost,
-      coins: user.coins
+      message,
+      coins: user.coins,
+      clickerStats: stats
     });
   } catch (error) {
-    logger.error('Ошибка прокачки кликера:', { error });
+    logger.error('Ошибка покупки буста:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
@@ -605,12 +641,9 @@ module.exports = {
   tapCoins,
   upgradeClicker,
   buyBusiness,
-  claimAchievement,
-  claimJob,
+  buyBoost,
   buyItem,
   equipItem,
   sendGiftOrCoins,
-  STORE_ITEMS,
-  ACHIEVEMENTS_LIST,
-  JOBS_LIST
+  STORE_ITEMS
 };

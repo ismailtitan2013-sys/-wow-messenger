@@ -105,10 +105,19 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
+  clickerStats: {
+    energy: { type: Number, default: 1000 },
+    maxEnergy: { type: Number, default: 1000 },
+    energyLevel: { type: Number, default: 1 },
+    multitapLevel: { type: Number, default: 1 },
+    rechargeLevel: { type: Number, default: 1 },
+    lastEnergyUpdate: { type: Date, default: Date.now }
+  },
   businesses: {
     channelLevel: { type: Number, default: 0 },
     agencyLevel: { type: Number, default: 0 },
     fundLevel: { type: Number, default: 0 },
+    botLevel: { type: Number, default: 0 },
     lastCollected: { type: Date, default: Date.now }
   },
   pushSubscriptions: [{

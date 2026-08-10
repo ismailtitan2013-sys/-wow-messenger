@@ -7,8 +7,7 @@ const {
   tapCoins,
   upgradeClicker,
   buyBusiness,
-  claimAchievement,
-  claimJob,
+  buyBoost,
   buyItem,
   equipItem,
   sendGiftOrCoins
@@ -19,8 +18,7 @@ router.post('/claim-daily', authMiddleware, claimDailyBonus);
 router.post('/tap', authMiddleware, tapCoins);
 router.post('/upgrade-clicker', authMiddleware, upgradeClicker);
 router.post('/buy-business', authMiddleware, buyBusiness);
-router.post('/claim-achievement', authMiddleware, claimAchievement);
-router.post('/claim-job', authMiddleware, claimJob);
+router.post('/buy-boost', authMiddleware, buyBoost);
 router.post('/buy', authMiddleware, buyItem);
 router.post('/equip', authMiddleware, equipItem);
 router.post('/send-gift', authMiddleware, sendGiftOrCoins);
