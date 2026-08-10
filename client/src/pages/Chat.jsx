@@ -385,45 +385,25 @@ const Chat = () => {
     }
   };
 
-  const handleSpinWheel = async () => {
+  const handleClaimAchievement = async (achievementId) => {
     try {
-      const res = await axios.post('/api/coins/spin-wheel', {}, {
+      const res = await axios.post('/api/coins/claim-achievement', { achievementId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.data && res.data.winAmount) {
+      if (res.data && res.data.coins) {
         const nextCoins = res.data.coins;
+        const nextDone = res.data.completedAchievements || [];
         setUser(prev => {
           if (!prev) return prev;
-          const u = { ...prev, coins: nextCoins };
+          const u = { ...prev, coins: nextCoins, completedAchievements: nextDone };
           localStorage.setItem('wow_user', JSON.stringify(u));
           return u;
         });
-        setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
-        toast.success(res.data.message || `🎰 Вы выиграли +🪙 ${res.data.winAmount} монет!`);
+        setStoreData(prev => ({ ...prev, userCoins: nextCoins, completedAchievements: nextDone }));
+        toast.success(res.data.message || 'Достижение получено!');
       }
     } catch (err) {
-      toast.error('Ошибка вращения Колеса');
-    }
-  };
-
-  const handleOpenChest = async (chestType) => {
-    try {
-      const res = await axios.post('/api/coins/open-chest', { chestType }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data && res.data.winAmount) {
-        const nextCoins = res.data.coins;
-        setUser(prev => {
-          if (!prev) return prev;
-          const u = { ...prev, coins: nextCoins };
-          localStorage.setItem('wow_user', JSON.stringify(u));
-          return u;
-        });
-        setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
-        toast.success(res.data.message || `📦 Вы выиграли +🪙 ${res.data.winAmount} монет!`);
-      }
-    } catch (err) {
-      toast.error('Ошибка открытия сундука');
+      toast.error(err.response?.data?.message || 'Ошибка забора достижения');
     }
   };
 
@@ -2091,11 +2071,8 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
                 ⚡ Кликер
               </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'wheel' ? 'active' : ''}`} onClick={() => setActiveStoreTab('wheel')}>
-                🎰 Колесо Фортуны
-              </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'chests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('chests')}>
-                📦 Сундуки
+              <button className={`store-tab-btn ${activeStoreTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveStoreTab('achievements')}>
+                🏆 Достижения
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
@@ -2120,7 +2097,7 @@ const Chat = () => {
               </button>
             </div>
 
-            {/* Вкладка 1: Заработок Монет (Кликер) */}
+            {/* Вкладка 1: Заработок Монет (Труд / Кликер) */}
             {activeStoreTab === 'clicker' && (
               <div style={{ textAlign: 'center', padding: '10px 5px' }}>
                 <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.15))', borderRadius: '18px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '16px' }}>
@@ -2128,7 +2105,7 @@ const Chat = () => {
                     <Coins size={22} color="#f59e0b" /> Ежедневная Награда
                   </h3>
                   <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    Забирайте бесплатные монеты каждые 24 часа!
+                    Забирайте честные монеты каждые 24 часа!
                   </p>
                   <button
                     className="btn btn-primary"
@@ -2146,7 +2123,7 @@ const Chat = () => {
                     <Zap size={22} color="#3b82f6" /> Монетный Тапер (Lv. {storeData?.clickerLevel || 1})
                   </h3>
                   <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    Нажимайте на монету! Каждая прокачка увеличивает доход на +1 🪙 за клик!
+                    Зарабатывайте собственным трудом! Каждая прокачка увеличивает доход на +1 🪙 за нажатие!
                   </p>
 
                   <div className="tap-button-wrapper" style={{ position: 'relative', display: 'inline-block', margin: '15px 0' }}>
@@ -2183,75 +2160,52 @@ const Chat = () => {
                     onClick={handleUpgradeClicker}
                   >
                     <Zap size={18} />
-                    <span>Прокачать доход за клик (Стоимость: {Math.round(Math.pow(storeData?.clickerLevel || 1, 1.5) * 100)} 🪙)</span>
+                    <span>Прокачать мастерство (Стоимость: {Math.round(Math.pow(storeData?.clickerLevel || 1, 1.5) * 100)} 🪙)</span>
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Вкладка 2: Колесо Фортуны */}
-            {activeStoreTab === 'wheel' && (
-              <div style={{ textAlign: 'center', padding: '10px 5px' }}>
-                <div style={{ background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15))', borderRadius: '18px', padding: '24px', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
-                  <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem', color: '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    🎰 Колесо Удачи и Фортуны
-                  </h3>
-                  <p style={{ margin: '0 0 20px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-                    Вращайте колесо и выигрывайте суперпризы от 🪙 25 до 🪙 1000 монет!
-                  </p>
-
-                  <div style={{ margin: '20px auto', width: '120px', height: '120px', borderRadius: '50%', background: 'radial-gradient(circle, #a855f7 0%, #ec4899 60%, #3b82f6 100%)', boxShadow: '0 0 30px rgba(236, 72, 153, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>
-                    🎰
-                  </div>
-
-                  <button
-                    className="btn btn-primary"
-                    style={{ padding: '12px 28px', fontSize: '1rem', fontWeight: 800, background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', borderRadius: '14px', margin: '10px 0' }}
-                    onClick={handleSpinWheel}
-                  >
-                    <Sparkles size={20} /> Вращать Колесо!
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Вкладка 3: Сундуки Сокровищ */}
-            {activeStoreTab === 'chests' && (
+            {/* Вкладка 2: Награды и Достижения (Халяль) */}
+            {activeStoreTab === 'achievements' && (
               <div style={{ padding: '10px 5px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#f59e0b' }}>📦 Сундуки Сокровищ</h3>
+                  <h3 style={{ margin: '0 0 4px', color: '#10b981' }}>🏆 Почётные Достижения за Активность</h3>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Открывайте секретные сундуки со случайной наградой!
+                    Получайте награды за полезную активность и проявление уважения!
                   </p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
-                  <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🥉</div>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Бронзовый</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>+30 ... +100 🪙</div>
-                    <button className="btn btn-secondary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800 }} onClick={() => handleOpenChest('bronze')}>
-                      Открыть 📦
-                    </button>
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {(storeData?.achievements || [
+                    { id: 'ach_welcome', title: '🌟 Первые шаги', reward: 50, icon: '🌟', desc: 'Успешный вход в мессенджер' },
+                    { id: 'ach_chat_active', title: '💬 Дружеское общение', reward: 25, icon: '💬', desc: 'Активное общение в диалогах' },
+                    { id: 'ach_gift_giver', title: '🎁 Щедрый подарок', reward: 50, icon: '🎁', desc: 'Подарок другу или участнику' },
+                    { id: 'ach_respect_milky', title: '👑 Уважение Меценату', reward: 100, icon: '👑', desc: 'Приветствие Создателя MilkyVIP' }
+                  ]).map(ach => {
+                    const isClaimed = storeData?.completedAchievements?.includes(ach.id);
+                    return (
+                      <div key={ach.id} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ fontSize: '1.8rem' }}>{ach.icon}</div>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{ach.title}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{ach.desc}</div>
+                          </div>
+                        </div>
 
-                  <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(59, 130, 246, 0.4)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🥈</div>
-                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#3b82f6' }}>Серебряный</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>+80 ... +250 🪙</div>
-                    <button className="btn btn-secondary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800, borderColor: '#3b82f6', color: '#3b82f6' }} onClick={() => handleOpenChest('silver')}>
-                      Открыть 📦
-                    </button>
-                  </div>
-
-                  <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.1))', padding: '16px', borderRadius: '16px', border: '1px solid rgba(245, 158, 11, 0.5)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🥇</div>
-                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#f59e0b' }}>Золотой VIP</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>+200 ... +600 🪙</div>
-                    <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800, background: 'linear-gradient(135deg, #f59e0b, #d97706)' }} onClick={() => handleOpenChest('gold')}>
-                      Открыть 📦
-                    </button>
-                  </div>
+                        <div>
+                          {isClaimed ? (
+                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Получено ✅</span>
+                          ) : (
+                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px' }} onClick={() => handleClaimAchievement(ach.id)}>
+                              +🪙 {ach.reward}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

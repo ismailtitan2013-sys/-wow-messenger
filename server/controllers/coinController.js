@@ -84,6 +84,14 @@ const checkMilkyVIP = async (user) => {
   }
 };
 
+// Дозволенные награды за полезную активность (100% Халяль)
+const ACHIEVEMENTS_LIST = [
+  { id: 'ach_welcome', title: '🌟 Первые шаги', reward: 50, icon: '🌟', desc: 'Успешный вход в мессенджер' },
+  { id: 'ach_chat_active', title: '💬 Дружеское общение', reward: 25, icon: '💬', desc: 'Активное общение в диалогах' },
+  { id: 'ach_gift_giver', title: '🎁 Щедрый подарок', reward: 50, icon: '🎁', desc: 'Подарок другу или участнику' },
+  { id: 'ach_respect_milky', title: '👑 Уважение Меценату', reward: 100, icon: '👑', desc: 'Приветствие Создателя MilkyVIP' }
+];
+
 // Получение каталога магазина и данных о балансе
 const getStoreCatalog = async (req, res) => {
   try {
@@ -96,6 +104,7 @@ const getStoreCatalog = async (req, res) => {
 
     res.status(200).json({
       catalog: STORE_ITEMS,
+      achievements: ACHIEVEMENTS_LIST,
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -106,6 +115,7 @@ const getStoreCatalog = async (req, res) => {
       equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
       giftsReceived: user.giftsReceived || [],
+      completedAchievements: user.completedAchievements || [],
       clickerLevel: user.clickerLevel || 1,
       canClaimDaily
     });
@@ -143,51 +153,32 @@ const claimDailyBonus = async (req, res) => {
   }
 };
 
-// Колесо Фортуны (Рулетка Удачи)
-const spinWheel = async (req, res) => {
+// Забор награды за активность
+const claimAchievement = async (req, res) => {
   try {
+    const { achievementId } = req.body;
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
-    const rewards = [25, 50, 75, 100, 150, 250, 500, 1000];
-    const winAmount = rewards[Math.floor(Math.random() * rewards.length)];
+    const ach = ACHIEVEMENTS_LIST.find(a => a.id === achievementId);
+    if (!ach) return res.status(404).json({ message: 'Достижение не найдено' });
 
-    user.coins = (user.coins || 0) + winAmount;
+    user.completedAchievements = user.completedAchievements || [];
+    if (user.completedAchievements.includes(achievementId)) {
+      return res.status(400).json({ message: 'Награда за это достижение уже получена!' });
+    }
+
+    user.completedAchievements.push(achievementId);
+    user.coins = (user.coins || 0) + ach.reward;
     await user.save();
 
     res.status(200).json({
-      message: `🎰 Вы выиграли +${winAmount} монет в Колесе Фортуны!`,
-      winAmount,
-      coins: user.coins
+      message: `🏆 Достижение "${ach.title}" получено! +${ach.reward} монет`,
+      coins: user.coins,
+      completedAchievements: user.completedAchievements
     });
   } catch (error) {
-    logger.error('Ошибка колеса фортуны:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-  }
-};
-
-// Открытие Сундука Сокровищ
-const openChest = async (req, res) => {
-  try {
-    const { chestType = 'bronze' } = req.body;
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
-
-    let minWin = 30, maxWin = 100;
-    if (chestType === 'silver') { minWin = 80; maxWin = 250; }
-    if (chestType === 'gold') { minWin = 200; maxWin = 600; }
-
-    const winAmount = Math.floor(Math.random() * (maxWin - minWin + 1)) + minWin;
-    user.coins = (user.coins || 0) + winAmount;
-    await user.save();
-
-    res.status(200).json({
-      message: `📦 Вы открыли ${chestType === 'gold' ? 'Золотой' : chestType === 'silver' ? 'Серебряный' : 'Бронзовый'} Сундук и получили +${winAmount} монет!`,
-      winAmount,
-      coins: user.coins
-    });
-  } catch (error) {
-    logger.error('Ошибка открытия сундука:', { error });
+    logger.error('Ошибка забора достижения:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
@@ -518,10 +509,10 @@ module.exports = {
   claimDailyBonus,
   tapCoins,
   upgradeClicker,
-  spinWheel,
-  openChest,
+  claimAchievement,
   buyItem,
   equipItem,
   sendGiftOrCoins,
-  STORE_ITEMS
+  STORE_ITEMS,
+  ACHIEVEMENTS_LIST
 };

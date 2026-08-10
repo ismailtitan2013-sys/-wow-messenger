@@ -6,8 +6,7 @@ const {
   claimDailyBonus,
   tapCoins,
   upgradeClicker,
-  spinWheel,
-  openChest,
+  claimAchievement,
   buyItem,
   equipItem,
   sendGiftOrCoins
@@ -17,8 +16,7 @@ router.get('/store', authMiddleware, getStoreCatalog);
 router.post('/claim-daily', authMiddleware, claimDailyBonus);
 router.post('/tap', authMiddleware, tapCoins);
 router.post('/upgrade-clicker', authMiddleware, upgradeClicker);
-router.post('/spin-wheel', authMiddleware, spinWheel);
-router.post('/open-chest', authMiddleware, openChest);
+router.post('/claim-achievement', authMiddleware, claimAchievement);
 router.post('/buy', authMiddleware, buyItem);
 router.post('/equip', authMiddleware, equipItem);
 router.post('/send-gift', authMiddleware, sendGiftOrCoins);
