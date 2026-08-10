@@ -245,6 +245,36 @@ const tapCoins = async (req, res) => {
   }
 };
 
+// Улучшение кликера
+const upgradeClicker = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const currentLevel = user.clickerLevel || 1;
+    const upgradeCost = getClickerUpgradeCost(currentLevel);
+
+    if ((user.coins || 0) < upgradeCost) {
+      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
+    }
+
+    user.coins -= upgradeCost;
+    user.clickerLevel = currentLevel + 1;
+    await user.save();
+
+    const nextCost = getClickerUpgradeCost(user.clickerLevel);
+    res.status(200).json({
+      message: `⚡ Уровень прокачан до Lv. ${user.clickerLevel}!`,
+      clickerLevel: user.clickerLevel,
+      nextClickerUpgradeCost: nextCost,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка прокачки кликера:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
 // Покупка ТГ-бустов (Мульти-клик, Лимит энергии, Скорость зарядки, Восстановление)
 const buyBoost = async (req, res) => {
   try {
