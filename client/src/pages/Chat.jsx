@@ -67,10 +67,10 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
   const title = userTitle || (isObj ? usrOrName.userTitle : '');
 
   let nameStyleClass = '';
-  if (username === 'MilkyVIP') {
-    nameStyleClass = 'milky-vip-name';
-  } else if (colorClass && colorClass !== 'default' && colorClass !== 'none') {
+  if (colorClass && colorClass !== 'default' && colorClass !== 'none') {
     nameStyleClass = colorClass.startsWith('name-color-') ? colorClass : `name-color-${colorClass}`;
+  } else if (username === 'MilkyVIP') {
+    nameStyleClass = 'milky-vip-name';
   }
 
   return (

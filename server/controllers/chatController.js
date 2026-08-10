@@ -68,7 +68,7 @@ const getUserChats = async (req, res) => {
 
     // Находим все чаты, где участвует этот пользователь
     const chats = await Chat.find({ participants: { $in: [userId] } })
-      .populate('participants', 'username avatarUrl avatarFrame nameColor badges coins activeTheme giftsReceived status bio role isVerified')
+      .populate('participants', 'username avatarUrl avatarFrame nameColor userTitle profileAura chatStyle badges coins activeTheme giftsReceived status bio role isVerified')
       .populate('lastMessage')
       .sort({ updatedAt: -1 });
 
@@ -100,7 +100,7 @@ const createOrGetChat = async (req, res) => {
     let chat = await Chat.findOne({
       isGroup: { $ne: true },
       participants: { $all: [currentUserId, targetUserId] }
-    }).populate('participants', 'username avatarUrl avatarFrame nameColor badges coins activeTheme giftsReceived status bio role isVerified');
+    }).populate('participants', 'username avatarUrl avatarFrame nameColor userTitle profileAura chatStyle badges coins activeTheme giftsReceived status bio role isVerified');
 
     if (!chat) {
       // Создаем новый чат
@@ -108,7 +108,7 @@ const createOrGetChat = async (req, res) => {
         participants: [currentUserId, targetUserId]
       });
       await chat.save();
-      chat = await chat.populate('participants', 'username avatarUrl avatarFrame nameColor badges coins activeTheme giftsReceived status bio role isVerified');
+      chat = await chat.populate('participants', 'username avatarUrl avatarFrame nameColor userTitle profileAura chatStyle badges coins activeTheme giftsReceived status bio role isVerified');
     }
 
     res.status(200).json(chat);
@@ -159,7 +159,7 @@ const createGroupChat = async (req, res) => {
     });
 
     const fullGroupChat = await Chat.findById(groupChat._id)
-      .populate('participants', 'username avatarUrl avatarFrame nameColor badges coins activeTheme giftsReceived status bio role isVerified')
+      .populate('participants', 'username avatarUrl avatarFrame nameColor userTitle profileAura chatStyle badges coins activeTheme giftsReceived status bio role isVerified')
       .populate('admins', 'username avatarUrl status isVerified');
 
     res.status(200).json(fullGroupChat);
