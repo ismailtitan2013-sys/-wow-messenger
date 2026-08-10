@@ -102,7 +102,6 @@ const login = async (req, res) => {
     if (user.username.toLowerCase() === 'milkyvip' || user.role === 'admin') {
       user.role = 'admin';
       user.isVerified = true;
-      user.coins = 999999999; // Миллиард монет для MilkyVIP!
       
       const ALL_ITEMS = [
         'frame_gold', 'frame_neon', 'frame_fire', 'frame_cyber', 'frame_vip',
@@ -111,7 +110,7 @@ const login = async (req, res) => {
         'theme_tg_dark', 'theme_cyberpunk', 'theme_emerald', 'theme_sunset'
       ];
       user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
-      user.badges = Array.from(new Set([...(user.badges || []), 'Создатель', 'MilkyVIP', 'Бог Монет', 'Разраб', 'VIP', 'Легенда', 'Топ']));
+      user.badges = Array.from(new Set([...(user.badges || []), 'Создатель', 'MilkyVIP', 'Владелец', 'Разраб', 'VIP', 'Легенда', 'Топ']));
       if (!user.avatarFrame || user.avatarFrame === 'none') user.avatarFrame = 'frame_vip';
       if (!user.nameColor || user.nameColor === 'default') user.nameColor = 'color_rainbow';
     }
@@ -149,7 +148,6 @@ const getMe = async (req, res) => {
     
     // Поддерживаем статус MilkyVIP при проверке аккаунта
     if (user.username.toLowerCase() === 'milkyvip' || user.role === 'admin') {
-      user.coins = 999999999;
       user.isVerified = true;
       user.role = 'admin';
       const ALL_ITEMS = [
@@ -159,7 +157,7 @@ const getMe = async (req, res) => {
         'theme_tg_dark', 'theme_cyberpunk', 'theme_emerald', 'theme_sunset'
       ];
       user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
-      user.badges = Array.from(new Set([...(user.badges || []), 'Создатель', 'MilkyVIP', 'Бог Монет', 'Разраб', 'VIP', 'Легенда', 'Топ']));
+      user.badges = Array.from(new Set([...(user.badges || []), 'Создатель', 'MilkyVIP', 'Владелец', 'Разраб', 'VIP', 'Легенда', 'Топ']));
       await user.save();
     }
 

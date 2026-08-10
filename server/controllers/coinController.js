@@ -3,43 +3,59 @@ const Message = require('../models/Message');
 const Chat = require('../models/Chat');
 const logger = require('../utils/logger');
 
-// Исламский расширенный каталог халяльных предметов и 26+ разных подарков
+// Расширенный каталог предметов и 26+ разных подарков
 const STORE_ITEMS = {
   frames: [
-    { id: 'frame_gold', name: 'Золотая Аура', price: 150, icon: '✨', description: 'Золотистый светящийся контур' },
-    { id: 'frame_neon', name: 'Неоновый Всплеск', price: 200, icon: '⚡', description: 'Чистое неон-голубое свечение' },
-    { id: 'frame_fire', name: 'Пламенный Огонь', price: 250, icon: '🔥', description: 'Теплое огненное обрамление' },
-    { id: 'frame_cyber', name: 'Киберпанк', price: 300, icon: '🤖', description: 'Футуристический технологичный контур' },
-    { id: 'frame_vip', name: 'Корона Мецената', price: 500, icon: '👑', description: 'Почетная корона над аватаркой' },
-    { id: 'frame_diamond', name: 'Изумрудный Свет', price: 1000, icon: '💎', description: 'Сияющие грани добродетели' },
-    { id: 'frame_galaxy', name: 'Звездный Свет', price: 2500, icon: '🌌', description: 'Свет ночного неба' },
+    { id: 'frame_gold', name: 'Золотая Аура', price: 1500, icon: '✨', description: 'Золотистый светящийся контур' },
+    { id: 'frame_neon', name: 'Неоновый Всплеск', price: 2500, icon: '⚡', description: 'Чистое неон-голубое свечение' },
+    { id: 'frame_fire', name: 'Пламенный Огонь', price: 4000, icon: '🔥', description: 'Теплое огненное обрамление' },
+    { id: 'frame_cyber', name: 'Киберпанк', price: 6000, icon: '🤖', description: 'Футуристический технологичный контур' },
+    { id: 'frame_vip', name: 'Корона Мецената', price: 10000, icon: '👑', description: 'Почетная корона над аватаркой' },
+    { id: 'frame_diamond', name: 'Изумрудный Свет', price: 25000, icon: '💎', description: 'Сияющие грани добродетели' },
+    { id: 'frame_galaxy', name: 'Звездный Свет', price: 50000, icon: '🌌', description: 'Свет ночного неба' },
   ],
   nameColors: [
-    { id: 'color_gold', name: 'Благородный Золотой', price: 100, color: '#f59e0b', cssClass: 'name-color-gold', description: 'Золотистый цвет ника' },
-    { id: 'color_neon_blue', name: 'Неоновый Синий', price: 120, color: '#3b82f6', cssClass: 'name-color-neon-blue', description: 'Яркий небесно-синий цвет' },
-    { id: 'color_purple', name: 'Пурпурный Глянец', price: 150, color: '#a855f7', cssClass: 'name-color-purple', description: 'Благородный пурпурный' },
-    { id: 'color_emerald', name: 'Изумрудный (Священный)', price: 200, color: '#10b981', cssClass: 'name-color-emerald', description: 'Благородный зеленый изумруд' },
-    { id: 'color_rainbow', name: 'Радужный Градиент', price: 300, color: 'rainbow', cssClass: 'name-color-rainbow', description: 'Красочный градиент' },
-    { id: 'color_fire', name: 'Огненный Градиент', price: 500, color: 'fire', cssClass: 'name-color-fire', description: 'Яркий красно-оранжевый ник' },
+    { id: 'color_gold', name: 'Благородный Золотой', price: 1000, color: '#f59e0b', cssClass: 'name-color-gold', description: 'Золотистый цвет ника' },
+    { id: 'color_neon_blue', name: 'Неоновый Синий', price: 1500, color: '#3b82f6', cssClass: 'name-color-neon-blue', description: 'Яркий небесно-синий цвет' },
+    { id: 'color_purple', name: 'Пурпурный Глянец', price: 2000, color: '#a855f7', cssClass: 'name-color-purple', description: 'Благородный пурпурный' },
+    { id: 'color_emerald', name: 'Изумрудный (Священный)', price: 3000, color: '#10b981', cssClass: 'name-color-emerald', description: 'Благородный зеленый изумруд' },
+    { id: 'color_rainbow', name: 'Радужный Градиент', price: 7500, color: 'rainbow', cssClass: 'name-color-rainbow', description: 'Красочный градиент' },
+    { id: 'color_fire', name: 'Огненный Градиент', price: 10000, color: 'fire', cssClass: 'name-color-fire', description: 'Яркий красно-оранжевый ник' },
   ],
   badges: [
-    { id: 'badge_vip', name: 'VIP Меценат', price: 200, badge: 'VIP' },
-    { id: 'badge_pioneer', name: 'Пионер', price: 150, badge: 'Пионер' },
-    { id: 'badge_legend', name: 'Легенда', price: 400, badge: 'Легенда' },
-    { id: 'badge_top', name: 'Почетный Участник', price: 250, badge: 'Топ' },
-    { id: 'badge_billionaire', name: 'Щедрый Меценат', price: 5000, badge: 'Меценат' },
-    { id: 'badge_god', name: 'Создатель & Хранитель', price: 10000, badge: 'Создатель' },
+    { id: 'badge_pioneer', name: 'Пионер', price: 2000, badge: 'Пионер' },
+    { id: 'badge_vip', name: 'VIP Меценат', price: 2500, badge: 'VIP' },
+    { id: 'badge_top', name: 'Почетный Участник', price: 5000, badge: 'Топ' },
+    { id: 'badge_legend', name: 'Легенда', price: 15000, badge: 'Легенда' },
+    { id: 'badge_billionaire', name: 'Щедрый Меценат', price: 50000, badge: 'Меценат' },
+    { id: 'badge_creator', name: 'Создатель & Хранитель', price: 150000, badge: 'Создатель' },
   ],
-  themes: [
-    { id: 'theme_tg_dark', name: 'Telegram Dark', price: 100, description: 'Тёмная гармоничная тема' },
-    { id: 'theme_cyberpunk', name: 'Cyber Neon', price: 200, description: 'Неоновая тема' },
-    { id: 'theme_emerald', name: 'Изумрудный Оазис', price: 150, description: 'Умиротворяющие зеленые тона' },
-    { id: 'theme_sunset', name: 'Теплый Закат', price: 150, description: 'Теплые градиенты заката' },
-    { id: 'theme_gold', name: 'Золотой Люкс', price: 500, description: 'Премиальное золотое оформление' },
+  titles: [
+    { id: 'title_vladyka', name: '👑 Владыка', price: 50000, title: '👑 Владыка', description: 'Абсолютный верховный правитель' },
+    { id: 'title_phoenix', name: '💎 Феникс', price: 30000, title: '💎 Феникс', description: 'Бессмертный священный огонь' },
+    { id: 'title_cybergod', name: '⚡ Кибер-Мастер', price: 25000, title: '⚡ Кибер-Мастер', description: 'Повелитель виртуальной реальности' },
+    { id: 'title_cosmos', name: '🌌 Космос', price: 20000, title: '🌌 Космос', description: 'Бесконечная галактическая сила' },
+    { id: 'title_archon', name: '⚔️ Архонт', price: 15000, title: '⚔️ Архонт', description: 'Великий страж и воин света' },
+    { id: 'title_sheikh', name: '👑 Шейх', price: 12000, title: '👑 Шейх', description: 'Почетный мудрый правитель' },
+    { id: 'title_dragon', name: '🔥 Дракон', price: 10000, title: '🔥 Дракон', description: 'Несокрушимое пламя дракона' },
+    { id: 'title_phantom', name: '☠️ Призрак', price: 7500, title: '☠️ Призрак', description: 'Теневой повелитель ночи' },
+    { id: 'title_starlord', name: '🛸 Старлорд', price: 5000, title: '🛸 Старлорд', description: 'Капитан звездного флота' },
+    { id: 'title_titan', name: '✨ Титан', price: 3000, title: '✨ Титан', description: 'Могущественный древний гигант' },
+  ],
+  auras: [
+    { id: 'aura_gold', name: '✨ Золотая Аура', price: 3000, description: 'Сияющие золотистые частицы вокруг профиля' },
+    { id: 'aura_neon', name: '⚡ Неоновый Пульс', price: 5000, description: 'Пульсирующее неон-свечение профиля' },
+    { id: 'aura_fire', name: '🔥 Огненный Всплеск', price: 10000, description: 'Пламенная пылающая аура вокруг профиля' },
+    { id: 'aura_cosmic', name: '🌌 Космический Взрыв', price: 30000, description: 'Звездная галактическая аура' },
+  ],
+  chatStyles: [
+    { id: 'chat_gold', name: '👑 Золотые Сообщения', price: 5000, description: 'Премиальный золотой градиент ваших сообщений' },
+    { id: 'chat_neon', name: '⚡ Неоновый Чат', price: 7500, description: 'Яркое неоновое свечение облачка сообщения' },
+    { id: 'chat_emerald', name: '🌿 Изумрудные Сообщения', price: 3500, description: 'Благородный изумрудно-зеленый стиль' },
   ],
   gifts: [
-    { id: 'gift_dates', name: 'Финиковая Пальма', price: 50, icon: '🌴', description: 'Символ благословения (Баракат)' },
-    { id: 'gift_coffee', name: 'Арабский Кофе', price: 100, icon: '☕', description: 'Символ гостеприимства' },
+    { id: 'gift_dates', name: 'Финиковая Пальма', price: 50, icon: '🌴', description: 'Символ благополучия и процветания' },
+    { id: 'gift_coffee', name: 'Премиум Кофе', price: 100, icon: '☕', description: 'Символ гостеприимства' },
     { id: 'gift_rose', name: 'Букет Алых Роз', price: 120, icon: '🌺', description: 'Искреннее уважение' },
     { id: 'gift_pizza', name: 'Вкусная Пицца', price: 150, icon: '🍕', description: 'Дружеское угощение' },
     { id: 'gift_book', name: 'Книга Знаний', price: 200, icon: '📖', description: 'Полезные знания' },
@@ -48,7 +64,7 @@ const STORE_ITEMS = {
     { id: 'gift_crescent', name: 'Свет Полумесяца', price: 500, icon: '🌙', description: 'Свет гармонии' },
     { id: 'gift_trophy', name: 'Золотой Кубок', price: 750, icon: '🏆', description: 'Награда за достоинство' },
     { id: 'gift_rocket', name: 'Космическая Ракета', price: 800, icon: '🚀', description: 'Стремление к вышине' },
-    { id: 'gift_mosque', name: 'Благородная Мечеть', price: 1000, icon: '🕌', description: 'Символ мира и духовности' },
+    { id: 'gift_mosque', name: 'Замок Мира', price: 1000, icon: '🏰', description: 'Символ мира и гармонии' },
     { id: 'gift_watch', name: 'Швейцарские Часы', price: 1500, icon: '⌚', description: 'Ценность времени' },
     { id: 'gift_emerald', name: 'Сияющий Изумруд', price: 2500, icon: '💎', description: 'Честный драгоценный камень' },
     { id: 'gift_ring', name: 'Алмазный Перстень', price: 3000, icon: '💍', description: 'Символ верности' },
@@ -62,49 +78,49 @@ const STORE_ITEMS = {
     { id: 'gift_crown', name: 'Корона Почета', price: 50000, icon: '👑', description: 'Знак высочайшего уважения' },
     { id: 'gift_planet', name: 'Собственная Планета', price: 100000, icon: '🪐', description: 'Целый мир' },
     { id: 'gift_supernova', name: 'Вспышка Суперновой', price: 200000, icon: '💫', description: 'Великий свет' },
-    { id: 'gift_charity_box', name: 'Сокровищница Садака', price: 250000, icon: '📦', description: 'Великое меценатство' },
+    { id: 'gift_charity_box', name: 'Сокровищница Добра', price: 250000, icon: '📦', description: 'Великое меценатство' },
     { id: 'gift_universe', name: 'Вселенная Мечты', price: 500000, icon: '🌌', description: 'Бесконечный космос' }
   ]
 };
 
-// Сбалансированный список заданий
+// Сбалансированный список заданий с реалистичными сложными наградами
 const QUESTS_LIST = [
-  { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 50, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-  { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 100, icon: '🎁', desc: 'Подарите подарок другу' },
-  { id: 'quest_click_100', title: '⚡ Заработать 100 монет трудом', reward: 150, icon: '⚡', desc: 'Натапайте 100 монет в кликере' },
-  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 200, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-  { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 500, icon: '👑', desc: 'Отдайте дань уважения MilkyVIP' },
+  { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 5, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+  { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 10, icon: '🎁', desc: 'Подарите подарок другу' },
+  { id: 'quest_click_100', title: '⚡ Заработать 100 монет трудом', reward: 15, icon: '⚡', desc: 'Натапайте 100 монет в кликере' },
+  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 15, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+  { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 25, icon: '👑', desc: 'Отдайте дань уважения MilkyVIP' },
 ];
 
 // Вопросы для Викторины Полезных Знаний
 const QUIZ_QUESTIONS = [
   {
     id: 1,
-    question: 'Что является главным символом гостеприимства на Востоке?',
-    options: ['Арабский кофе и финики', 'Кола', 'Чипсы'],
+    question: 'Что является традиционным символом уюта и гостеприимства?',
+    options: ['Горячий ароматный кофе', 'Кола', 'Чипсы'],
     correct: 0,
-    reward: 50
+    reward: 3
   },
   {
     id: 2,
-    question: 'Какое приветствие означает пожелание мира?',
-    options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'],
+    question: 'Какое приветствие означает дружеское пожелание мира?',
+    options: ['Приветствие мира', 'Привет', 'Хеллоу'],
     correct: 0,
-    reward: 50
+    reward: 3
   },
   {
     id: 3,
-    question: 'Как называется добровольная искренняя милостыня и подарок ради добра?',
-    options: ['Садака', 'Кредит', 'Процент'],
+    question: 'Как называется добровольная поддержка и милостыня ради добра?',
+    options: ['Благотворительность', 'Кредит', 'Процент'],
     correct: 0,
-    reward: 100
+    reward: 5
   },
   {
     id: 4,
-    question: 'Запрещена ли в Исламе азартная игра (Майсир) и ставка на случайность?',
-    options: ['Да, запрещена (Харам)', 'Нет, разрешена', 'Не знаю'],
+    question: 'Честны ли азартные игры и быстрые рискованные ставки?',
+    options: ['Нет, это опасный риск и обман', 'Да, вполне', 'Не знаю'],
     correct: 0,
-    reward: 150
+    reward: 10
   }
 ];
 
@@ -112,14 +128,13 @@ const QUIZ_QUESTIONS = [
 const checkMilkyVIP = async (user) => {
   if (!user) return;
   if (user.username.toLowerCase() === 'milkyvip' || user.role === 'admin') {
-    user.coins = 999999999;
     user.isVerified = true;
     user.role = 'admin';
     const ALL_ITEMS = [
       'frame_gold', 'frame_neon', 'frame_fire', 'frame_cyber', 'frame_vip', 'frame_diamond', 'frame_galaxy',
       'color_gold', 'color_neon_blue', 'color_purple', 'color_emerald', 'color_rainbow', 'color_fire',
-      'badge_vip', 'badge_pioneer', 'badge_legend', 'badge_top', 'badge_billionaire', 'badge_god',
-      'theme_tg_dark', 'theme_cyberpunk', 'theme_emerald', 'theme_sunset', 'theme_gold'
+      'badge_vip', 'badge_pioneer', 'badge_legend', 'badge_top', 'badge_billionaire', 'badge_creator',
+      'title_sultan', 'title_oligarch', 'aura_gold', 'aura_cosmic', 'chat_gold'
     ];
     user.inventory = Array.from(new Set([...(user.inventory || []), ...ALL_ITEMS]));
     user.badges = Array.from(new Set([...(user.badges || []), 'Создатель', 'MilkyVIP', 'Меценат', 'Разраб', 'VIP', 'Легенда']));
@@ -146,6 +161,9 @@ const getStoreCatalog = async (req, res) => {
       equippedFrame: user.avatarFrame || 'none',
       equippedColor: user.nameColor || 'default',
       equippedTheme: user.activeTheme || 'default',
+      equippedTitle: user.userTitle || '',
+      equippedAura: user.profileAura || 'none',
+      equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
       giftsReceived: user.giftsReceived || [],
       completedQuests: user.completedQuests || [],
@@ -159,7 +177,7 @@ const getStoreCatalog = async (req, res) => {
   }
 };
 
-// Сбалансированный ежедневный бонус
+// Сложный ежедневный бонус (максимум +15 монет при стрике!)
 const claimDailyBonus = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -179,8 +197,8 @@ const claimDailyBonus = async (req, res) => {
       streak = 1;
     }
 
-    // Реалистичный сбалансированный бонус: 50 * стрик (макс 300 монет)
-    const bonusAmount = Math.min(300, 50 * streak);
+    // Трудный бонус: 5 монет * стрик (максимум 15 монет)
+    const bonusAmount = Math.min(15, 5 * streak);
     user.coins = (user.coins || 0) + bonusAmount;
     user.lastDailyClaim = now;
     user.dailyStreak = streak;
@@ -201,20 +219,18 @@ const claimDailyBonus = async (req, res) => {
   }
 };
 
-// Сбалансированный кликер честного труда (1 тап = +1 + level - 1 монета)
+// Сложный кликер честного труда (10 тапов = 1 монета!)
 const tapCoins = async (req, res) => {
   try {
     const { count = 1 } = req.body;
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
-    const isMilky = user.username.toLowerCase() === 'milkyvip';
     const safeCount = Math.min(20, Math.max(1, Number(count)));
     const level = user.clickerLevel || 1;
     
-    // Сбалансированная доходность: Lv.1 -> +1, Lv.2 -> +2, Lv.3 -> +3
-    const coinsPerTap = isMilky ? 10000000 : (1 + (level - 1));
-    const earned = safeCount * coinsPerTap;
+    // Трудная кликерная прогрессия: 10 тапов = 1 монета на Lv.1
+    const earned = Math.max(1, Math.round(safeCount * 0.1 * level));
 
     user.coins = (user.coins || 0) + earned;
     await user.save();
@@ -241,13 +257,11 @@ const upgradeClicker = async (req, res) => {
     // Стоимость прокачки: Lv.1 -> Lv.2: 500, Lv.2 -> Lv.3: 1500, Lv.3 -> Lv.4: 4500
     const upgradeCost = Math.round(Math.pow(currentLevel, 1.8) * 500);
 
-    if ((user.coins || 0) < upgradeCost && user.username.toLowerCase() !== 'milkyvip') {
+    if ((user.coins || 0) < upgradeCost) {
       return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
     }
 
-    if (user.username.toLowerCase() !== 'milkyvip') {
-      user.coins -= upgradeCost;
-    }
+    user.coins -= upgradeCost;
     user.clickerLevel = currentLevel + 1;
     await user.save();
     await checkMilkyVIP(user);
@@ -356,18 +370,34 @@ const buyItem = async (req, res) => {
       return res.status(400).json({ message: 'Этот предмет уже приобритен!' });
     }
 
-    if ((user.coins || 0) < item.price && user.username.toLowerCase() !== 'milkyvip') {
+    if ((user.coins || 0) < item.price) {
       return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${item.price}` });
     }
 
-    if (user.username.toLowerCase() !== 'milkyvip') {
-      user.coins -= item.price;
-    }
+    user.coins -= item.price;
     user.inventory.push(itemId);
+
+    // 10% комиссия Создателю ("мне") с каждой покупки в магазине
+    const commission = Math.max(1, Math.round(item.price * 0.10));
+    let adminUser = await User.findOne({ username: { $regex: new RegExp('^milkyvip$', 'i') } }) || await User.findOne({ role: 'admin' });
+    if (adminUser && adminUser._id.toString() !== user._id.toString()) {
+      adminUser.coins = (adminUser.coins || 0) + commission;
+      await adminUser.save();
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('coins_updated', { userId: adminUser._id, newCoins: adminUser.coins });
+      }
+    }
 
     if (category === 'frames') user.avatarFrame = itemId;
     if (category === 'nameColors') user.nameColor = itemId;
     if (category === 'themes') user.activeTheme = itemId;
+    if (category === 'titles') {
+      const itemObj = (STORE_ITEMS.titles || []).find(t => t.id === itemId);
+      user.userTitle = itemObj ? itemObj.title : '';
+    }
+    if (category === 'auras') user.profileAura = itemId;
+    if (category === 'chatStyles') user.chatStyle = itemId;
     if (category === 'badges' && item.badge) {
       if (!user.badges.includes(item.badge)) {
         user.badges.push(item.badge);
@@ -403,6 +433,12 @@ const equipItem = async (req, res) => {
     if (category === 'frames') user.avatarFrame = itemId;
     if (category === 'nameColors') user.nameColor = itemId;
     if (category === 'themes') user.activeTheme = itemId;
+    if (category === 'titles') {
+      const itemObj = (STORE_ITEMS.titles || []).find(t => t.id === itemId);
+      user.userTitle = itemId === 'none' || itemId === 'default' ? '' : (itemObj ? itemObj.title : '');
+    }
+    if (category === 'auras') user.profileAura = itemId;
+    if (category === 'chatStyles') user.chatStyle = itemId;
 
     await user.save();
     res.status(200).json({ message: 'Настройки обновлены!', user });
@@ -412,7 +448,7 @@ const equipItem = async (req, res) => {
   }
 };
 
-// Перевод монет и отправка подарков
+// Перевод монет и отправка подарков С КОМИССИЕЙ 10% В ПОЛЬЗУ АДМИНИСТРАТОРА
 const sendGiftOrCoins = async (req, res) => {
   try {
     const { recipientId, giftId, coinsAmount, message, chatId } = req.body;
@@ -436,15 +472,33 @@ const sendGiftOrCoins = async (req, res) => {
       return res.status(400).json({ message: 'Укажите подарок или количество монет' });
     }
 
-    if ((sender.coins || 0) < totalCost && sender.username.toLowerCase() !== 'milkyvip') {
+    if ((sender.coins || 0) < totalCost) {
       return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${totalCost}` });
     }
 
-    if (sender.username.toLowerCase() !== 'milkyvip') {
-      sender.coins -= totalCost;
+    // Расчет комиссии 10%
+    const commissionRate = 0.10;
+    const commission = Math.max(1, Math.round(totalCost * commissionRate));
+
+    // Ищем главного администратора ("мне")
+    let adminUser = await User.findOne({ username: { $regex: new RegExp('^milkyvip$', 'i') } });
+    if (!adminUser) {
+      adminUser = await User.findOne({ role: 'admin' });
     }
-    
-    recipient.coins = (recipient.coins || 0) + totalCost;
+
+    const isSenderAdmin = adminUser && adminUser._id.toString() === sender._id.toString();
+    const actualCommission = isSenderAdmin ? 0 : commission;
+    const netReceived = totalCost - actualCommission;
+
+    // Списания и зачисления
+    sender.coins -= totalCost;
+    recipient.coins = (recipient.coins || 0) + netReceived;
+
+    // Начисление комиссии администратору ("мне")
+    if (adminUser && actualCommission > 0 && adminUser._id.toString() !== recipient._id.toString()) {
+      adminUser.coins = (adminUser.coins || 0) + actualCommission;
+      await adminUser.save();
+    }
 
     if (gift) {
       recipient.giftsReceived.push({
@@ -467,8 +521,8 @@ const sendGiftOrCoins = async (req, res) => {
     await checkMilkyVIP(sender);
 
     let systemMsgContent = gift
-      ? `🎁 ${sender.username} преподнес(ла) подарок ${gift.icon} ${gift.name} пользователю ${recipient.username}! ${message ? `("${message}")` : ''}`
-      : `🪙 ${sender.username} перевёл(а) 🪙 ${totalCost} монет пользователю ${recipient.username}! ${message ? `("${message}")` : ''}`;
+      ? `🎁 ${sender.username} преподнес(ла) подарок ${gift.icon} ${gift.name} пользователю ${recipient.username}! ${actualCommission > 0 ? `(Комиссия 10%: 🪙${actualCommission} отправлена Создателю)` : ''} ${message ? `("${message}")` : ''}`
+      : `🪙 ${sender.username} перевёл(а) 🪙 ${netReceived} монет пользователю ${recipient.username}! ${actualCommission > 0 ? `(Комиссия 10%: 🪙${actualCommission} отправлена Создателю)` : ''} ${message ? `("${message}")` : ''}`;
 
     let createdMessage = null;
     if (chatId) {
@@ -483,15 +537,20 @@ const sendGiftOrCoins = async (req, res) => {
     }
 
     const io = req.app.get('io');
-    if (io && chatId) {
-      const populatedMsg = await Message.findById(createdMessage._id).populate('senderId', 'username avatarUrl avatarFrame nameColor status role');
-      io.to(chatId).emit('message_received', populatedMsg);
+    if (io) {
+      if (chatId && createdMessage) {
+        const populatedMsg = await Message.findById(createdMessage._id).populate('senderId', 'username avatarUrl avatarFrame nameColor status role');
+        io.to(chatId).emit('message_received', populatedMsg);
+      }
       io.emit('coins_updated', { userId: recipient._id, newCoins: recipient.coins });
       io.emit('coins_updated', { userId: sender._id, newCoins: sender.coins });
+      if (adminUser) {
+        io.emit('coins_updated', { userId: adminUser._id, newCoins: adminUser.coins });
+      }
     }
 
-    logger.info(`Gift/Coins sent from ${sender.username} to ${recipient.username}: ${totalCost} coins`);
-    res.status(200).json({ message: 'Подарок успешно отправлен!', senderCoins: sender.coins });
+    logger.info(`Gift/Coins sent from ${sender.username} to ${recipient.username}: ${totalCost} coins (Commission to admin: ${actualCommission})`);
+    res.status(200).json({ message: 'Подарок успешно отправлен!', senderCoins: sender.coins, commission: actualCommission });
   } catch (error) {
     logger.error('Ошибка отправки подарка:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });

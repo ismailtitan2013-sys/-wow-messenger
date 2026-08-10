@@ -17,6 +17,7 @@ import {
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
 import { requestFCMToken, onForegroundMessage } from '../firebase';
+import GiftEffectOverlay from '../components/GiftEffectOverlay';
 
 // Top-level Helper Components to prevent React unmount/remount crashes
 const UserAvatar = ({ usr, size = 'default' }) => {
@@ -56,15 +57,17 @@ const UserAvatar = ({ usr, size = 'default' }) => {
   );
 };
 
-const renderUsernameWithBadge = (usrOrName, isVerified) => {
+const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userTitle) => {
   let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
   let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
+  let title = userTitle || (typeof usrOrName === 'object' ? usrOrName?.userTitle : '');
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
       <span className={username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
         {username || 'Пользователь'}
       </span>
+      {title && <span className="user-title-tag">{title}</span>}
       {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
     </span>
   );
@@ -167,36 +170,58 @@ const Chat = () => {
   // Store & Coins States
   const DEFAULT_CATALOG = {
     frames: [
-      { id: 'frame_gold', name: 'Золотая Аура', price: 150, icon: '✨' },
-      { id: 'frame_neon', name: 'Неоновый Всплеск', price: 200, icon: '⚡' },
-      { id: 'frame_fire', name: 'Пламенный Огонь', price: 250, icon: '🔥' },
-      { id: 'frame_cyber', name: 'Киберпанк', price: 300, icon: '🤖' },
-      { id: 'frame_vip', name: 'Корона Мецената', price: 500, icon: '👑' },
-      { id: 'frame_diamond', name: 'Изумрудный Свет', price: 1000, icon: '💎' },
-      { id: 'frame_galaxy', name: 'Звездный Свет', price: 2500, icon: '🌌' }
+      { id: 'frame_gold', name: 'Золотая Аура', price: 1500, icon: '✨' },
+      { id: 'frame_neon', name: 'Неоновый Всплеск', price: 2500, icon: '⚡' },
+      { id: 'frame_fire', name: 'Пламенный Огонь', price: 4000, icon: '🔥' },
+      { id: 'frame_cyber', name: 'Киберпанк', price: 6000, icon: '🤖' },
+      { id: 'frame_vip', name: 'Корона Мецената', price: 10000, icon: '👑' },
+      { id: 'frame_diamond', name: 'Изумрудный Свет', price: 25000, icon: '💎' },
+      { id: 'frame_galaxy', name: 'Звездный Свет', price: 50000, icon: '🌌' }
     ],
     nameColors: [
-      { id: 'color_gold', name: 'Золотой', price: 100 },
-      { id: 'color_neon_blue', name: 'Неоновый Синий', price: 120 },
-      { id: 'color_purple', name: 'Пурпурный', price: 150 },
-      { id: 'color_emerald', name: 'Изумрудный', price: 200 },
-      { id: 'color_rainbow', name: 'Радужный', price: 300 }
+      { id: 'color_gold', name: 'Золотой', price: 1000 },
+      { id: 'color_neon_blue', name: 'Неоновый Синий', price: 1500 },
+      { id: 'color_purple', name: 'Пурпурный', price: 2000 },
+      { id: 'color_emerald', name: 'Изумрудный', price: 3000 },
+      { id: 'color_rainbow', name: 'Радужный', price: 7500 },
+      { id: 'color_fire', name: 'Огненный', price: 10000 }
     ],
     badges: [
-      { id: 'badge_vip', name: 'VIP Меценат', price: 200, badge: 'VIP' },
-      { id: 'badge_pioneer', name: 'Пионер', price: 150, badge: 'Пионер' },
-      { id: 'badge_legend', name: 'Легенда', price: 400, badge: 'Легенда' },
-      { id: 'badge_billionaire', name: 'Щедрый Меценат', price: 5000, badge: 'Меценат' }
+      { id: 'badge_pioneer', name: 'Пионер', price: 2000, badge: 'Пионер' },
+      { id: 'badge_vip', name: 'VIP Меценат', price: 2500, badge: 'VIP' },
+      { id: 'badge_top', name: 'Почетный Участник', price: 5000, badge: 'Топ' },
+      { id: 'badge_legend', name: 'Легенда', price: 15000, badge: 'Легенда' },
+      { id: 'badge_billionaire', name: 'Щедрый Меценат', price: 50000, badge: 'Меценат' }
     ],
-    themes: [
-      { id: 'theme_tg_dark', name: 'Telegram Dark', price: 100 },
-      { id: 'theme_emerald', name: 'Изумрудный Оазис', price: 150 }
+    titles: [
+      { id: 'title_vladyka', name: '👑 Владыка', price: 50000, title: '👑 Владыка' },
+      { id: 'title_phoenix', name: '💎 Феникс', price: 30000, title: '💎 Феникс' },
+      { id: 'title_cybergod', name: '⚡ Кибер-Бог', price: 25000, title: '⚡ Кибер-Бог' },
+      { id: 'title_cosmos', name: '🌌 Космос', price: 20000, title: '🌌 Космос' },
+      { id: 'title_archon', name: '⚔️ Архонт', price: 15000, title: '⚔️ Архонт' },
+      { id: 'title_sheikh', name: '👑 Шейх', price: 12000, title: '👑 Шейх' },
+      { id: 'title_dragon', name: '🔥 Дракон', price: 10000, title: '🔥 Дракон' },
+      { id: 'title_phantom', name: '☠️ Призрак', price: 7500, title: '☠️ Призрак' },
+      { id: 'title_starlord', name: '🛸 Старлорд', price: 5000, title: '🛸 Старлорд' },
+      { id: 'title_titan', name: '✨ Титан', price: 3000, title: '✨ Титан' }
+    ],
+    auras: [
+      { id: 'aura_gold', name: '✨ Золотая Аура', price: 3000 },
+      { id: 'aura_neon', name: '⚡ Неоновый Пульс', price: 5000 },
+      { id: 'aura_fire', name: '🔥 Огненный Всплеск', price: 10000 },
+      { id: 'aura_cosmic', name: '🌌 Космический Взрыв', price: 30000 }
+    ],
+    chatStyles: [
+      { id: 'chat_gold', name: '👑 Золотые Сообщения', price: 5000 },
+      { id: 'chat_neon', name: '⚡ Неоновый Чат', price: 7500 },
+      { id: 'chat_emerald', name: '🌿 Изумрудные Сообщения', price: 3500 }
     ],
     gifts: []
   };
 
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [activeStoreTab, setActiveStoreTab] = useState('clicker');
+  const [activeGiftEffect, setActiveGiftEffect] = useState(null);
   const [storeData, setStoreData] = useState({
     catalog: DEFAULT_CATALOG,
     quests: [],
@@ -205,6 +230,9 @@ const Chat = () => {
     equippedFrame: user?.avatarFrame || 'none',
     equippedColor: user?.nameColor || 'default',
     equippedTheme: user?.activeTheme || 'default',
+    equippedTitle: user?.userTitle || '',
+    equippedAura: user?.profileAura || 'none',
+    equippedChatStyle: user?.chatStyle || 'default',
     equippedBadges: user?.badges || [],
     giftsReceived: user?.giftsReceived || [],
     completedQuests: user?.completedQuests || [],
@@ -467,6 +495,7 @@ const Chat = () => {
 
     const recipientId = targetUser.id || targetUser._id;
     const chatId = currentChat?._id || currentChat?.id;
+    const selectedGiftObj = storeData.catalog?.gifts?.find(g => g.id === selectedGiftId);
 
     try {
       const res = await axios.post('/api/coins/send-gift', {
@@ -485,6 +514,26 @@ const Chat = () => {
         localStorage.setItem('wow_user', JSON.stringify(u));
         return u;
       });
+
+      // Взрывной халяльный эффект подарка на экране!
+      if (selectedGiftObj) {
+        setActiveGiftEffect({
+          icon: selectedGiftObj.icon,
+          name: selectedGiftObj.name,
+          coins: selectedGiftObj.price,
+          message: giftMsg,
+          senderName: user?.username
+        });
+      } else {
+        setActiveGiftEffect({
+          icon: '🪙',
+          name: `Перевод ${coinsToSend} монет`,
+          coins: coinsToSend,
+          message: giftMsg,
+          senderName: user?.username
+        });
+      }
+
       setShowGiftModal(false);
       setGiftMsg('');
     } catch (err) {
@@ -1522,9 +1571,27 @@ const Chat = () => {
 
                 const sender = currentChat.isGroup && !isOwn ? currentChat.participants.find(p => p && (p.id === actualSenderId || p._id === actualSenderId)) : null;
 
+                const msgChatStyle = (typeof msg.senderId === 'object' && msg.senderId?.chatStyle) ? msg.senderId.chatStyle : (isOwn && user?.chatStyle ? user.chatStyle : '');
+                const isGiftMessage = msg.content && (msg.content.includes('🎁') || msg.content.includes('🪙'));
+
                 return (
                   <div key={msg.id || msg._id || Math.random()} id={`msg-${msg.id || msg._id}`} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
-                    <div className="message-bubble">
+                    <div 
+                      className={`message-bubble ${msgChatStyle ? `chat-style-${msgChatStyle}` : ''} ${isGiftMessage ? 'gift-msg-interactive' : ''}`}
+                      onClick={() => {
+                        if (isGiftMessage) {
+                          setActiveGiftEffect({
+                            icon: msg.content.includes('🎁') ? '🎁' : '🪙',
+                            name: 'Подарок / Перевод',
+                            coins: 100,
+                            message: msg.content,
+                            senderName: (typeof msg.senderId === 'object' && msg.senderId?.username) ? msg.senderId.username : 'Друг'
+                          });
+                        }
+                      }}
+                      style={isGiftMessage ? { cursor: 'pointer' } : {}}
+                      title={isGiftMessage ? 'Нажмите для эффекта подарка!' : ''}
+                    >
                       {sender && <div className="message-sender-name" onClick={() => setShowUserProfile(sender)} style={{cursor: 'pointer'}}>{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
                       {msg.replyTo && (
                         <div
@@ -1878,14 +1945,14 @@ const Chat = () => {
       {/* Telegram-Style User Profile Modal with Gift Showcase */}
       {showUserProfile && (
         <div className="tg-profile-overlay" onClick={() => setShowUserProfile(null)}>
-          <div className="tg-profile-card fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+          <div className={`tg-profile-card fade-in ${showUserProfile.profileAura && showUserProfile.profileAura !== 'none' ? `aura-${showUserProfile.profileAura}` : ''}`} onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="tg-profile-header">
               <button className="tg-profile-close" onClick={() => setShowUserProfile(null)}><X size={18} /></button>
               <div className="tg-profile-avatar-box">
                 <UserAvatar usr={showUserProfile} size="large" />
               </div>
               <div className="tg-profile-name">
-                {renderUsernameWithBadge(showUserProfile.username, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges)}
+                {renderUsernameWithBadge(showUserProfile.username, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges, showUserProfile.userTitle)}
               </div>
               <div className="tg-profile-status">
                 {showUserProfile.status === 'online' ? '🟢 в сети' : '⚪ был(а) недавно'}
@@ -1914,12 +1981,12 @@ const Chat = () => {
                 <div>
                   <div className="tg-info-label">Баланс монет</div>
                   <div className="tg-info-val" style={{ color: '#f59e0b', fontWeight: 800, fontSize: '1.1rem' }}>
-                    🪙 {showUserProfile.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (showUserProfile.coins || 0).toLocaleString()} Coins
+                    🪙 {(showUserProfile.coins || 0).toLocaleString()} Coins
                   </div>
                 </div>
               </div>
 
-              {/* 🎁 Секция полученных подарков с подробным счетчиком */}
+              {/* 🎁 Секция полученных подарков с подробным счетчиком и анимацией */}
               <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '14px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
@@ -1935,7 +2002,18 @@ const Chat = () => {
                 {Array.isArray(showUserProfile.giftsReceived) && showUserProfile.giftsReceived.length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
                     {showUserProfile.giftsReceived.map((g, idx) => (
-                      <div key={idx} style={{ background: 'var(--bg-primary)', padding: '8px', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                      <div 
+                        key={idx} 
+                        onClick={() => setActiveGiftEffect({
+                          icon: g.giftIcon || '🎁',
+                          name: g.giftName,
+                          coins: g.coins,
+                          message: g.message,
+                          senderName: g.fromUsername
+                        })}
+                        style={{ background: 'var(--bg-primary)', padding: '8px', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.15s' }}
+                        title="Нажмите для просмотра эффекта подарка!"
+                      >
                         <div style={{ fontSize: '1.8rem', marginBottom: '2px' }}>{g.giftIcon || '🎁'}</div>
                         <div style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.giftName}</div>
                         <div style={{ fontSize: '0.72rem', color: '#3b82f6', fontWeight: 600 }}>От: @{g.fromUsername}</div>
@@ -1990,14 +2068,14 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Халяльный Магазин и Заработок По Шариату */}
+      {/* Магазин и Заработок Монет */}
       {showStoreModal && (
         <div className="modal-overlay" onClick={() => setShowStoreModal(false)}>
           <div className="modal-content store-modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShoppingBag size={24} color="#f59e0b" />
-                <h2 style={{ margin: 0 }}>🌙 Магазин & Халяльный Заработок</h2>
+                <h2 style={{ margin: 0 }}>🛍️ Магазин & Заработок Монет</h2>
               </div>
               <button className="btn-icon" onClick={() => setShowStoreModal(false)}><X size={20} /></button>
             </div>
@@ -2006,14 +2084,11 @@ const Chat = () => {
               <div>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш баланс: </span>
                 <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
-                  🪙 {user?.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (storeData?.userCoins || 0).toLocaleString()} Coins
+                  🪙 {(storeData?.userCoins || 0).toLocaleString()} Coins
                 </span>
-                {user?.username?.toLowerCase() === 'milkyvip' && (
-                  <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 800 }}>👑 MilkyVIP: Меценат & Разраб</div>
-                )}
               </div>
               <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px', background: 'linear-gradient(135deg, #10b981, #059669)' }} disabled={!storeData?.canClaimDaily} onClick={handleClaimDaily}>
-                {storeData?.canClaimDaily ? '🌙 Ежедневный подарок (+100..1000 🪙)' : '✅ Подарок получен'}
+                {storeData?.canClaimDaily ? '🌙 Ежедневный подарок (+100..300 🪙)' : '✅ Подарок получен'}
               </button>
             </div>
 
@@ -2034,11 +2109,17 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'nameColors' ? 'active' : ''}`} onClick={() => setActiveStoreTab('nameColors')}>
                 🎨 Цвет ника
               </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'titles' ? 'active' : ''}`} onClick={() => setActiveStoreTab('titles')}>
+                👑 Титулы
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'auras' ? 'active' : ''}`} onClick={() => setActiveStoreTab('auras')}>
+                ✨ Ауры профиля
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'chatStyles' ? 'active' : ''}`} onClick={() => setActiveStoreTab('chatStyles')}>
+                💬 Стили сообщений
+              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'badges' ? 'active' : ''}`} onClick={() => setActiveStoreTab('badges')}>
                 🏅 Значки
-              </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'themes' ? 'active' : ''}`} onClick={() => setActiveStoreTab('themes')}>
-                🎨 Темы
               </button>
             </div>
 
@@ -2105,10 +2186,10 @@ const Chat = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
                   {(storeData?.quizQuestions || [
-                    { id: 1, question: 'Что является главным символом гостеприимства на Востоке?', options: ['Арабский кофе и финики', 'Кола', 'Чипсы'], correct: 0, reward: 150 },
-                    { id: 2, question: 'Какое приветствие означает пожелание мира?', options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'], correct: 0, reward: 150 },
-                    { id: 3, question: 'Как называется добровольная искренняя милостыня и подарок ради добра?', options: ['Садака', 'Кредит', 'Процент'], correct: 0, reward: 200 },
-                    { id: 4, question: 'Запрещена ли в Исламе азартная игра (Майсир) и ставка на случайность?', options: ['Да, запрещена (Харам)', 'Нет, разрешена', 'Не знаю'], correct: 0, reward: 250 }
+                    { id: 1, question: 'Что является традиционным символом уюта и гостеприимства?', options: ['Горячий ароматный кофе', 'Кола', 'Чипсы'], correct: 0, reward: 3 },
+                    { id: 2, question: 'Какое приветствие означает дружеское пожелание мира?', options: ['Приветствие мира', 'Привет', 'Хеллоу'], correct: 0, reward: 3 },
+                    { id: 3, question: 'Как называется добровольная поддержка и милостыня ради добра?', options: ['Благотворительность', 'Кредит', 'Процент'], correct: 0, reward: 5 },
+                    { id: 4, question: 'Честны ли азартные игры и быстрые рискованные ставки?', options: ['Нет, это опасный риск и обман', 'Да, вполне', 'Не знаю'], correct: 0, reward: 10 }
                   ]).map(q => (
                     <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
                       <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>
@@ -2137,7 +2218,7 @@ const Chat = () => {
             {activeStoreTab === 'quests' && (
               <div>
                 <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                  <h3 style={{ margin: '0 0 4px' }}>🌿 Благие Дела & Квесты</h3>
+                  <h3 style={{ margin: '0 0 4px' }}>🌿 Добрые Дела & Квесты</h3>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     Совершайте хорошие дела и получайте заслуженную награду коинами!
                   </p>
@@ -2145,11 +2226,11 @@ const Chat = () => {
 
                 <div className="quests-list">
                   {(storeData?.quests || [
-                    { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 100, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-                    { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 250, icon: '🎁', desc: 'Подарите халяльный подарок другу' },
-                    { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 500, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
-                    { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 300, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-                    { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 1000, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
+                    { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 5, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+                    { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 10, icon: '🎁', desc: 'Подарите красивый подарок другу' },
+                    { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 15, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
+                    { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 15, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+                    { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 25, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
                   ]).map(q => {
                     const isDone = storeData?.completedQuests?.includes(q.id);
                     return (
@@ -2178,12 +2259,16 @@ const Chat = () => {
               </div>
             )}
 
-            {/* Карточки предметов Магазина (Рамки, Ник, Значки, Темы) */}
-            {['frames', 'nameColors', 'badges', 'themes'].includes(activeStoreTab) && (
+            {/* Карточки предметов Магазина (Рамки, Ник, Значки, Титулы, Ауры, Стили сообщений) */}
+            {['frames', 'nameColors', 'badges', 'titles', 'auras', 'chatStyles'].includes(activeStoreTab) && (
               <div className="store-items-grid">
                 {(storeData?.catalog?.[activeStoreTab] || []).map(item => {
                   const isOwned = storeData?.userInventory?.includes(item.id);
-                  const isEquipped = storeData?.equippedFrame === item.id || storeData?.equippedColor === item.id || storeData?.equippedTheme === item.id;
+                  const isEquipped = storeData?.equippedFrame === item.id || 
+                    storeData?.equippedColor === item.id || 
+                    storeData?.equippedTitle === item.title || 
+                    storeData?.equippedAura === item.id || 
+                    storeData?.equippedChatStyle === item.id;
 
                   return (
                     <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
@@ -2201,8 +2286,18 @@ const Chat = () => {
                         {activeStoreTab === 'badges' && (
                           <span className="badge-tag" style={{ fontSize: '1rem', padding: '4px 12px' }}>{item.badge}</span>
                         )}
-                        {activeStoreTab === 'themes' && (
-                          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--primary-color)' }}>{item.name}</div>
+                        {activeStoreTab === 'titles' && (
+                          <span className="user-title-tag" style={{ fontSize: '0.9rem', padding: '4px 10px' }}>{item.title}</span>
+                        )}
+                        {activeStoreTab === 'auras' && (
+                          <div className={`avatar-wrapper ${item.id}`} style={{ padding: '6px' }}>
+                            <UserAvatar usr={user} size="default" />
+                          </div>
+                        )}
+                        {activeStoreTab === 'chatStyles' && (
+                          <div className={`message-bubble ${item.id}`} style={{ padding: '8px 14px', borderRadius: '14px', fontSize: '0.85rem' }}>
+                            Сообщение ✨
+                          </div>
                         )}
                       </div>
 
@@ -2227,14 +2322,14 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Модальное окно отправки подарка со ВСЕМИ халяльными подарками */}
+      {/* Модальное окно отправки подарка */}
       {showGiftModal && (
         <div className="modal-overlay" onClick={() => setShowGiftModal(false)}>
           <div className="modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Gift size={22} color="#10b981" />
-                <h2>Преподнести халяльный подарок (Садака)</h2>
+                <h2>Преподнести Подарок Другу</h2>
               </div>
               <button className="btn-icon" onClick={() => setShowGiftModal(false)}><X size={20} /></button>
             </div>
@@ -2244,7 +2339,7 @@ const Chat = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
                 {(storeData.catalog?.gifts || [
                   { id: 'gift_dates', name: 'Пальма', price: 50, icon: '🌴' },
-                  { id: 'gift_coffee', name: 'Кахва Кофе', price: 100, icon: '☕' },
+                  { id: 'gift_coffee', name: 'Премиум Кофе', price: 100, icon: '☕' },
                   { id: 'gift_rose', name: 'Букет Роз', price: 120, icon: '🌺' },
                   { id: 'gift_pizza', name: 'Пицца', price: 150, icon: '🍕' },
                   { id: 'gift_book', name: 'Книга Знаний', price: 200, icon: '📖' },
@@ -2253,7 +2348,7 @@ const Chat = () => {
                   { id: 'gift_crescent', name: 'Полумесяц', price: 500, icon: '🌙' },
                   { id: 'gift_trophy', name: 'Кубок', price: 750, icon: '🏆' },
                   { id: 'gift_rocket', name: 'Ракета', price: 800, icon: '🚀' },
-                  { id: 'gift_mosque', name: 'Мечеть', price: 1000, icon: '🕌' },
+                  { id: 'gift_mosque', name: 'Замок Мира', price: 1000, icon: '🏰' },
                   { id: 'gift_watch', name: 'Часы', price: 1500, icon: '⌚' },
                   { id: 'gift_emerald', name: 'Изумруд', price: 2500, icon: '💎' },
                   { id: 'gift_ring', name: 'Перстень', price: 3000, icon: '💍' },
@@ -2299,6 +2394,14 @@ const Chat = () => {
                   value={giftMsg}
                   onChange={e => setGiftMsg(e.target.value)}
                 />
+              </div>
+
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '10px 14px', borderRadius: '12px', marginTop: '14px', fontSize: '0.82rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Coins size={22} color="#f59e0b" />
+                <div>
+                  <div style={{ fontWeight: 800 }}>Комиссия системы: 10%</div>
+                  <div style={{ fontSize: '0.76rem', opacity: 0.85 }}>10% от суммы подарка или перевода зачисляется Создателю (мне).</div>
+                </div>
               </div>
             </div>
 
@@ -2612,6 +2715,15 @@ const Chat = () => {
             );
           })()}
         </div>
+      )}
+
+      {/* 🎁 Оверлей взрывного визуального эффекта подарков */}
+      {activeGiftEffect && (
+        <GiftEffectOverlay
+          gift={activeGiftEffect}
+          senderName={activeGiftEffect.senderName}
+          onClose={() => setActiveGiftEffect(null)}
+        />
       )}
     </div>
   );

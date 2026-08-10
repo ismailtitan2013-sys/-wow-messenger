@@ -66,6 +66,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'default',
   },
+  userTitle: {
+    type: String,
+    default: '',
+  },
+  profileAura: {
+    type: String,
+    default: 'none',
+  },
+  chatStyle: {
+    type: String,
+    default: 'default',
+  },
   giftsReceived: [{
     fromUserId: String,
     fromUsername: String,
