@@ -353,35 +353,42 @@ const Chat = () => {
   };
 
   const handleUpgradeClicker = async () => {
-    const currentLevel = storeData?.clickerLevel || 1;
-    const upgradeCost = Math.round(Math.pow(currentLevel, 1.8) * 500);
-
-    if ((user?.coins || 0) < upgradeCost) {
-      toast.error(`Недостаточно монет! Требуется 🪙 ${upgradeCost}`);
-      return;
-    }
-
-    const nextLevel = currentLevel + 1;
-    const nextCoins = (user?.coins || 0) - upgradeCost;
-
-    setUser(prev => {
-      if (!prev) return prev;
-      const u = { ...prev, coins: nextCoins, clickerLevel: nextLevel };
-      localStorage.setItem('wow_user', JSON.stringify(u));
-      return u;
-    });
-    setStoreData(prev => ({ ...prev, clickerLevel: nextLevel, userCoins: nextCoins }));
-    toast.success(`⚡ Уровень мастерства повышен до Lv. ${nextLevel}!`);
-
     try {
       const res = await axios.post('/api/coins/upgrade-clicker', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data && typeof res.data === 'object' && res.data.clickerLevel) {
-        setStoreData(prev => ({ ...prev, clickerLevel: res.data.clickerLevel, userCoins: res.data.coins }));
+        setUser(prev => {
+          if (!prev) return prev;
+          const u = { ...prev, coins: res.data.coins, clickerLevel: res.data.clickerLevel };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, clickerLevel: res.data.clickerLevel, nextClickerUpgradeCost: res.data.nextClickerUpgradeCost, userCoins: res.data.coins }));
+        toast.success(res.data.message || `⚡ Уровень прокачан до Lv. ${res.data.clickerLevel}!`);
       }
     } catch (err) {
-      // Handled locally
+      toast.error(err.response?.data?.message || 'Ошибка прокачки кликера');
+    }
+  };
+
+  const handleBuyBusiness = async (businessType) => {
+    try {
+      const res = await axios.post('/api/coins/buy-business', { businessType }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && res.data.businesses) {
+        setUser(prev => {
+          if (!prev) return prev;
+          const u = { ...prev, coins: res.data.coins, businesses: res.data.businesses };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, businesses: res.data.businesses, userCoins: res.data.coins }));
+        toast.success(res.data.message || 'Пассивный доход прокачан!');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка прокачки бизнеса');
     }
   };
 
@@ -2071,6 +2078,9 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
                 ⚡ Кликер
               </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'business' ? 'active' : ''}`} onClick={() => setActiveStoreTab('business')}>
+                📈 Бизнес (ТГ)
+              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveStoreTab('achievements')}>
                 🏆 Достижения
               </button>
@@ -2123,7 +2133,7 @@ const Chat = () => {
                     <Zap size={22} color="#3b82f6" /> Монетный Тапер (Lv. {storeData?.clickerLevel || 1})
                   </h3>
                   <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    Зарабатывайте собственным трудом! Каждая прокачка увеличивает доход на +1 🪙 за нажатие!
+                    Зарабатывайте собственным трудом! Доход: +{storeData?.clickerLevel || 1} 🪙 за нажатие!
                   </p>
 
                   <div className="tap-button-wrapper" style={{ position: 'relative', display: 'inline-block', margin: '15px 0' }}>
@@ -2160,8 +2170,61 @@ const Chat = () => {
                     onClick={handleUpgradeClicker}
                   >
                     <Zap size={18} />
-                    <span>Прокачать мастерство (Стоимость: {Math.round(Math.pow(storeData?.clickerLevel || 1, 1.5) * 100)} 🪙)</span>
+                    <span>Прокачать мастерство (Стоимость: {storeData?.nextClickerUpgradeCost || Math.round(100 * Math.pow(1.6, (storeData?.clickerLevel || 1) - 1))} 🪙)</span>
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Вкладка 2: Пассивный Бизнес и Майнинг в стиле ТГ */}
+            {activeStoreTab === 'business' && (
+              <div style={{ padding: '10px 5px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: '0 0 4px', color: '#ec4899' }}>📈 Майнинг-Бизнесы в стиле ТГ</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Инвестируйте в каналы и бизнесы для получения пассивного дохода!
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ fontSize: '2rem' }}>📢</div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Телеграм Канал (Lv. {storeData?.businesses?.channelLevel || 0})</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Пассивный доход: +{ (storeData?.businesses?.channelLevel || 0) * 15 } 🪙 / мин</div>
+                      </div>
+                    </div>
+                    <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', borderRadius: '12px' }} onClick={() => handleBuyBusiness('channel')}>
+                      Прокачать ({Math.round(250 * Math.pow(1.8, storeData?.businesses?.channelLevel || 0))} 🪙)
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(59, 130, 246, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ fontSize: '2rem' }}>🚀</div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#3b82f6' }}>Рекламная Агентство (Lv. {storeData?.businesses?.agencyLevel || 0})</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Пассивный доход: +{ (storeData?.businesses?.agencyLevel || 0) * 60 } 🪙 / мин</div>
+                      </div>
+                    </div>
+                    <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', borderRadius: '12px' }} onClick={() => handleBuyBusiness('agency')}>
+                      Прокачать ({Math.round(800 * Math.pow(1.8, storeData?.businesses?.agencyLevel || 0))} 🪙)
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.1))', padding: '16px', borderRadius: '16px', border: '1px solid rgba(245, 158, 11, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ fontSize: '2rem' }}>💎</div>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#f59e0b' }}>Клуб Меценатов (Lv. {storeData?.businesses?.fundLevel || 0})</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Пассивный доход: +{ (storeData?.businesses?.fundLevel || 0) * 350 } 🪙 / мин</div>
+                      </div>
+                    </div>
+                    <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px' }} onClick={() => handleBuyBusiness('fund')}>
+                      Прокачать ({Math.round(3000 * Math.pow(1.8, storeData?.businesses?.fundLevel || 0))} 🪙)
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -105,6 +105,12 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 1,
   },
+  businesses: {
+    channelLevel: { type: Number, default: 0 },
+    agencyLevel: { type: Number, default: 0 },
+    fundLevel: { type: Number, default: 0 },
+    lastCollected: { type: Date, default: Date.now }
+  },
   pushSubscriptions: [{
     endpoint: String,
     expirationTime: Date,

@@ -92,6 +92,11 @@ const ACHIEVEMENTS_LIST = [
   { id: 'ach_respect_milky', title: '👑 Уважение Меценату', reward: 100, icon: '👑', desc: 'Приветствие Создателя MilkyVIP' }
 ];
 
+const getClickerUpgradeCost = (level) => {
+  const lvl = Math.max(1, Number(level) || 1);
+  return Math.round(100 * Math.pow(1.6, lvl - 1));
+};
+
 // Получение каталога магазина и данных о балансе
 const getStoreCatalog = async (req, res) => {
   try {
@@ -101,6 +106,7 @@ const getStoreCatalog = async (req, res) => {
     const now = Date.now();
     const lastDaily = user.lastDailyClaim ? new Date(user.lastDailyClaim).getTime() : 0;
     const canClaimDaily = (now - lastDaily) >= 24 * 60 * 60 * 1000;
+    const clickerLevel = user.clickerLevel || 1;
 
     res.status(200).json({
       catalog: STORE_ITEMS,
@@ -116,7 +122,9 @@ const getStoreCatalog = async (req, res) => {
       equippedBadges: user.badges || [],
       giftsReceived: user.giftsReceived || [],
       completedAchievements: user.completedAchievements || [],
-      clickerLevel: user.clickerLevel || 1,
+      clickerLevel,
+      nextClickerUpgradeCost: getClickerUpgradeCost(clickerLevel),
+      businesses: user.businesses || { channelLevel: 0, agencyLevel: 0, fundLevel: 0 },
       canClaimDaily
     });
   } catch (error) {
@@ -215,7 +223,7 @@ const upgradeClicker = async (req, res) => {
     await checkMilkyVIP(user);
 
     const currentLevel = user.clickerLevel || 1;
-    const upgradeCost = Math.round(Math.pow(currentLevel, 1.5) * 100);
+    const upgradeCost = getClickerUpgradeCost(currentLevel);
 
     if ((user.coins || 0) < upgradeCost) {
       return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
@@ -225,13 +233,62 @@ const upgradeClicker = async (req, res) => {
     user.clickerLevel = currentLevel + 1;
     await user.save();
 
+    const nextCost = getClickerUpgradeCost(user.clickerLevel);
     res.status(200).json({
       message: `⚡ Уровень прокачан до Lv. ${user.clickerLevel}!`,
       clickerLevel: user.clickerLevel,
+      nextClickerUpgradeCost: nextCost,
       coins: user.coins
     });
   } catch (error) {
     logger.error('Ошибка прокачки кликера:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Покупка/Прокачка бизнеса (Пассивный майнинг в стиле ТГ)
+const buyBusiness = async (req, res) => {
+  try {
+    const { businessType } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    user.businesses = user.businesses || { channelLevel: 0, agencyLevel: 0, fundLevel: 0, lastCollected: new Date() };
+
+    let currentLvl = 0;
+    let baseCost = 250;
+    let propName = 'channelLevel';
+
+    if (businessType === 'agency') {
+      currentLvl = user.businesses.agencyLevel || 0;
+      baseCost = 800;
+      propName = 'agencyLevel';
+    } else if (businessType === 'fund') {
+      currentLvl = user.businesses.fundLevel || 0;
+      baseCost = 3000;
+      propName = 'fundLevel';
+    } else {
+      currentLvl = user.businesses.channelLevel || 0;
+      baseCost = 250;
+      propName = 'channelLevel';
+    }
+
+    const cost = Math.round(baseCost * Math.pow(1.8, currentLvl));
+    if ((user.coins || 0) < cost) {
+      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${cost}` });
+    }
+
+    user.coins -= cost;
+    user.businesses[propName] = currentLvl + 1;
+    await user.save();
+
+    res.status(200).json({
+      message: `📈 Прокачано до Lv. ${user.businesses[propName]}!`,
+      businesses: user.businesses,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка бизнес-майнинга:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
@@ -509,6 +566,7 @@ module.exports = {
   claimDailyBonus,
   tapCoins,
   upgradeClicker,
+  buyBusiness,
   claimAchievement,
   buyItem,
   equipItem,

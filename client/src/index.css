@@ -1873,19 +1873,35 @@ body {
   box-shadow: 0 0 20px rgba(236, 72, 153, 0.9) !important;
 }
 
-/* USER TITLES */
+/* USER TITLES & BADGES (Clean Telegram Pill Badges) */
 .user-title-tag {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(234, 179, 8, 0.12));
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  color: #f59e0b;
-  padding: 2px 8px;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  vertical-align: middle;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(217, 119, 6, 0.1)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #f59e0b !important;
+  padding: 1px 8px !important;
+  border-radius: 12px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  vertical-align: middle !important;
+  line-height: 1.3 !important;
+}
+
+.badge-tag {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(37, 99, 235, 0.1)) !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+  color: #60a5fa !important;
+  padding: 1px 8px !important;
+  border-radius: 12px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  vertical-align: middle !important;
+  line-height: 1.3 !important;
 }
 
 /* CHAT BUBBLE STYLES FOR COINS */
