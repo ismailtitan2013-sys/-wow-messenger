@@ -271,9 +271,8 @@ const Chat = () => {
   };
 
   const handleClaimDaily = async () => {
-    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
-    const bonusAmount = 100;
-    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + bonusAmount);
+    const bonusAmount = 5;
+    const nextCoins = (user?.coins || 0) + bonusAmount;
 
     setUser(prev => {
       if (!prev) return prev;
@@ -289,6 +288,7 @@ const Chat = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data && typeof res.data === 'object' && typeof res.data.coins === 'number') {
+        setUser(prev => prev ? ({ ...prev, coins: res.data.coins }) : prev);
         setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
       }
     } catch (err) {
@@ -301,10 +301,10 @@ const Chat = () => {
     const x = e.clientX - rect.left - 20;
     const y = e.clientY - rect.top - 20;
 
-    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
     const level = storeData?.clickerLevel || 1;
-    const coinsPerTap = isMilky ? 10000000 : (1 + (level - 1));
-    const tapVal = isMilky ? '+10 000 000' : `+${coinsPerTap}`;
+    // 10 тапов = 1 монета на Lv.1
+    const coinsPerTap = Math.max(1, Math.round(1 * 0.1 * level));
+    const tapVal = `+${coinsPerTap}`;
 
     const newFloat = { id: Date.now() + Math.random(), x, y, text: tapVal };
     setTapFloats(prev => [...prev.slice(-12), newFloat]);
@@ -312,7 +312,7 @@ const Chat = () => {
       setTapFloats(prev => prev.filter(f => f.id !== newFloat.id));
     }, 800);
 
-    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + coinsPerTap);
+    const nextCoins = (user?.coins || 0) + coinsPerTap;
     setUser(prev => {
       if (!prev) return prev;
       const u = { ...prev, coins: nextCoins };
@@ -336,16 +336,15 @@ const Chat = () => {
 
   const handleUpgradeClicker = async () => {
     const currentLevel = storeData?.clickerLevel || 1;
-    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
     const upgradeCost = Math.round(Math.pow(currentLevel, 1.8) * 500);
 
-    if (!isMilky && (user?.coins || 0) < upgradeCost) {
+    if ((user?.coins || 0) < upgradeCost) {
       toast.error(`Недостаточно монет! Требуется 🪙 ${upgradeCost}`);
       return;
     }
 
     const nextLevel = currentLevel + 1;
-    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) - upgradeCost);
+    const nextCoins = (user?.coins || 0) - upgradeCost;
 
     setUser(prev => {
       if (!prev) return prev;
@@ -370,10 +369,10 @@ const Chat = () => {
 
   const handleAnswerQuiz = async (questionId, answerIndex) => {
     const q = (storeData?.quizQuestions || [
-      { id: 1, question: 'Что является главным символом гостеприимства на Востоке?', options: ['Арабский кофе и финики', 'Кола', 'Чипсы'], correct: 0, reward: 50 },
-      { id: 2, question: 'Какое приветствие означает пожелание мира?', options: ['Ассаляму алейкум', 'Привет', 'Хеллоу'], correct: 0, reward: 50 },
-      { id: 3, question: 'Как называется добровольная искренняя милостыня и подарок ради добра?', options: ['Садака', 'Кредит', 'Процент'], correct: 0, reward: 100 },
-      { id: 4, question: 'Запрещена ли в Исламе азартная игра (Майсир) и ставка на случайность?', options: ['Да, запрещена (Харам)', 'Нет, разрешена', 'Не знаю'], correct: 0, reward: 150 }
+      { id: 1, question: 'Что является традиционным символом уюта и гостеприимства?', options: ['Горячий ароматный кофе', 'Кола', 'Чипсы'], correct: 0, reward: 3 },
+      { id: 2, question: 'Какое приветствие означает дружеское пожелание мира?', options: ['Приветствие мира', 'Привет', 'Хеллоу'], correct: 0, reward: 3 },
+      { id: 3, question: 'Как называется добровольная поддержка и милостыня ради добра?', options: ['Благотворительность', 'Кредит', 'Процент'], correct: 0, reward: 5 },
+      { id: 4, question: 'Честны ли азартные игры и быстрые рискованные ставки?', options: ['Нет, это опасный риск и обман', 'Да, вполне', 'Не знаю'], correct: 0, reward: 10 }
     ]).find(item => item.id === questionId);
 
     if (!q) return;
@@ -383,9 +382,8 @@ const Chat = () => {
       return;
     }
 
-    const reward = q.reward || 50;
-    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
-    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + reward);
+    const reward = q.reward || 3;
+    const nextCoins = (user?.coins || 0) + reward;
 
     setUser(prev => {
       if (!prev) return prev;
@@ -407,11 +405,11 @@ const Chat = () => {
 
   const handleClaimQuest = async (questId) => {
     const quest = (storeData?.quests || [
-      { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 50, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-      { id: 'quest_send_gift', title: '🎁 Сделать подарок / Садака', reward: 100, icon: '🎁', desc: 'Подарите подарок другу' },
-      { id: 'quest_click_100', title: '⚡ Заработать 100 монет трудом', reward: 150, icon: '⚡', desc: 'Натапайте 100 монет в кликере' },
-      { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 200, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-      { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 500, icon: '👑', desc: 'Отдайте дань уважения MilkyVIP' },
+      { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 5, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+      { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 10, icon: '🎁', desc: 'Подарите красивый подарок другу' },
+      { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 15, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
+      { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 15, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+      { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 25, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
     ]).find(q => q.id === questId);
 
     if (!quest) return;
@@ -421,8 +419,7 @@ const Chat = () => {
       return;
     }
 
-    const isMilky = user?.username?.toLowerCase() === 'milkyvip';
-    const nextCoins = isMilky ? 999999999 : ((user?.coins || 0) + quest.reward);
+    const nextCoins = (user?.coins || 0) + quest.reward;
     const nextDone = [...(storeData?.completedQuests || []), questId];
 
     setUser(prev => {
@@ -1337,7 +1334,7 @@ const Chat = () => {
                 {renderUsernameWithBadge(user.username, user.isVerified)}
               </span>
               <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800 }}>
-                🪙 {user.username?.toLowerCase() === 'milkyvip' ? '999 999 999 (БЕСКОНЕЧНО)' : (user.coins || 0).toLocaleString()} Coins
+                🪙 {(user?.coins || 0).toLocaleString()} Coins
               </span>
             </div>
           </div>
