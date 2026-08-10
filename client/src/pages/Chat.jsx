@@ -385,76 +385,45 @@ const Chat = () => {
     }
   };
 
-  const handleAnswerQuiz = async (questionId, answerIndex) => {
-    const q = (storeData?.quizQuestions || [
-      { id: 1, question: 'Что является традиционным символом уюта и гостеприимства?', options: ['Горячий ароматный кофе', 'Кола', 'Чипсы'], correct: 0, reward: 3 },
-      { id: 2, question: 'Какое приветствие означает дружеское пожелание мира?', options: ['Приветствие мира', 'Привет', 'Хеллоу'], correct: 0, reward: 3 },
-      { id: 3, question: 'Как называется добровольная поддержка и милостыня ради добра?', options: ['Благотворительность', 'Кредит', 'Процент'], correct: 0, reward: 5 },
-      { id: 4, question: 'Честны ли азартные игры и быстрые рискованные ставки?', options: ['Нет, это опасный риск и обман', 'Да, вполне', 'Не знаю'], correct: 0, reward: 10 }
-    ]).find(item => item.id === questionId);
-
-    if (!q) return;
-
-    if (q.correct !== Number(answerIndex)) {
-      toast.error('Неверный ответ! Попробуйте еще раз.');
-      return;
-    }
-
-    const reward = q.reward || 3;
-    const nextCoins = (user?.coins || 0) + reward;
-
-    setUser(prev => {
-      if (!prev) return prev;
-      const u = { ...prev, coins: nextCoins };
-      localStorage.setItem('wow_user', JSON.stringify(u));
-      return u;
-    });
-    setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
-    toast.success(`📖 Правильно! Вы получили +🪙 ${reward} монет за знания!`);
-
+  const handleSpinWheel = async () => {
     try {
-      await axios.post('/api/coins/quiz', { questionId, answerIndex }, {
+      const res = await axios.post('/api/coins/spin-wheel', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (res.data && res.data.winAmount) {
+        const nextCoins = res.data.coins;
+        setUser(prev => {
+          if (!prev) return prev;
+          const u = { ...prev, coins: nextCoins };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+        toast.success(res.data.message || `🎰 Вы выиграли +🪙 ${res.data.winAmount} монет!`);
+      }
     } catch (err) {
-      // Handled locally
+      toast.error('Ошибка вращения Колеса');
     }
   };
 
-  const handleClaimQuest = async (questId) => {
-    const quest = (storeData?.quests || [
-      { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 5, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-      { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 10, icon: '🎁', desc: 'Подарите красивый подарок другу' },
-      { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 15, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
-      { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 15, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-      { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 25, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
-    ]).find(q => q.id === questId);
-
-    if (!quest) return;
-
-    if (storeData?.completedQuests?.includes(questId)) {
-      toast.error('Награда за это задание уже получена!');
-      return;
-    }
-
-    const nextCoins = (user?.coins || 0) + quest.reward;
-    const nextDone = [...(storeData?.completedQuests || []), questId];
-
-    setUser(prev => {
-      if (!prev) return prev;
-      const u = { ...prev, coins: nextCoins, completedQuests: nextDone };
-      localStorage.setItem('wow_user', JSON.stringify(u));
-      return u;
-    });
-    setStoreData(prev => ({ ...prev, userCoins: nextCoins, completedQuests: nextDone }));
-    toast.success(`🎉 Задание "${quest.title}" выполнено! +🪙 ${quest.reward}`);
-
+  const handleOpenChest = async (chestType) => {
     try {
-      await axios.post('/api/coins/claim-quest', { questId }, {
+      const res = await axios.post('/api/coins/open-chest', { chestType }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (res.data && res.data.winAmount) {
+        const nextCoins = res.data.coins;
+        setUser(prev => {
+          if (!prev) return prev;
+          const u = { ...prev, coins: nextCoins };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+        toast.success(res.data.message || `📦 Вы выиграли +🪙 ${res.data.winAmount} монет!`);
+      }
     } catch (err) {
-      // Handled locally
+      toast.error('Ошибка открытия сундука');
     }
   };
 
@@ -2122,11 +2091,11 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
                 ⚡ Кликер
               </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'quiz' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quiz')}>
-                📖 Викторина
+              <button className={`store-tab-btn ${activeStoreTab === 'wheel' ? 'active' : ''}`} onClick={() => setActiveStoreTab('wheel')}>
+                🎰 Колесо Фортуны
               </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'quests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quests')}>
-                🎯 Квесты
+              <button className={`store-tab-btn ${activeStoreTab === 'chests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('chests')}>
+                📦 Сундуки
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
@@ -2220,88 +2189,69 @@ const Chat = () => {
               </div>
             )}
 
-            {/* Вкладка 2: Викторина Знаний */}
-            {activeStoreTab === 'quiz' && (
-              <div>
-                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#f59e0b' }}>📖 Викторина Знаний</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Отвечайте правильно на вопросы и получайте монеты умом!
+            {/* Вкладка 2: Колесо Фортуны */}
+            {activeStoreTab === 'wheel' && (
+              <div style={{ textAlign: 'center', padding: '10px 5px' }}>
+                <div style={{ background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15))', borderRadius: '18px', padding: '24px', border: '1px solid rgba(236, 72, 153, 0.3)' }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem', color: '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    🎰 Колесо Удачи и Фортуны
+                  </h3>
+                  <p style={{ margin: '0 0 20px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+                    Вращайте колесо и выигрывайте суперпризы от 🪙 25 до 🪙 1000 монет!
                   </p>
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {(storeData?.quizQuestions || [
-                    { id: 1, question: 'Какая планета называется Красной планетой?', options: ['Марс', 'Венера', 'Юпитер'], correct: 0, reward: 15 },
-                    { id: 2, question: 'Что из перечисленного является столицей Франции?', options: ['Париж', 'Берлин', 'Рим'], correct: 0, reward: 15 },
-                    { id: 3, question: 'Сколько секунд в одной минуте?', options: ['60 секунд', '100 секунд', '30 секунд'], correct: 0, reward: 15 },
-                    { id: 4, question: 'Какая химическая формула у чистой воды?', options: ['H2O', 'CO2', 'NaCl'], correct: 0, reward: 20 },
-                    { id: 5, question: 'Какой океан является самым большим на Земле?', options: ['Тихий океан', 'Атлантический', 'Индийский'], correct: 0, reward: 25 }
-                  ]).map(q => (
-                    <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>
-                        📖 {q.question} <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>(+🪙 {q.reward})</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {q.options.map((opt, optIdx) => (
-                          <button
-                            key={optIdx}
-                            className="btn btn-secondary"
-                            style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                            onClick={() => handleAnswerQuiz(q.id, optIdx)}
-                          >
-                            <span>{opt}</span>
-                            <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Ответить →</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  <div style={{ margin: '20px auto', width: '120px', height: '120px', borderRadius: '50%', background: 'radial-gradient(circle, #a855f7 0%, #ec4899 60%, #3b82f6 100%)', boxShadow: '0 0 30px rgba(236, 72, 153, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>
+                    🎰
+                  </div>
+
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: '12px 28px', fontSize: '1rem', fontWeight: 800, background: 'linear-gradient(135deg, #ec4899, #8b5cf6)', borderRadius: '14px', margin: '10px 0' }}
+                    onClick={handleSpinWheel}
+                  >
+                    <Sparkles size={20} /> Вращать Колесо!
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Вкладка 3: Квесты */}
-            {activeStoreTab === 'quests' && (
-              <div>
-                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#10b981' }}>🎯 Ежедневные Задания & Квесты</h3>
+            {/* Вкладка 3: Сундуки Сокровищ */}
+            {activeStoreTab === 'chests' && (
+              <div style={{ padding: '10px 5px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: '0 0 4px', color: '#f59e0b' }}>📦 Сундуки Сокровищ</h3>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Выполняйте простые задания и получайте заслуженную награду коинами!
+                    Открывайте секретные сундуки со случайной наградой!
                   </p>
                 </div>
 
-                <div className="quests-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {(storeData?.quests || [
-                    { id: 'quest_first_msg', title: '💬 Пожелать удачи в чате', reward: 15, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-                    { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 30, icon: '🎁', desc: 'Подарите подарок другу' },
-                    { id: 'quest_click_100', title: '⚡ Натапать 100 кликов в сфере', reward: 25, icon: '⚡', desc: 'Сделайте 100 кликов в кликере' },
-                    { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 20, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-                    { id: 'quest_milky_fan', title: '👑 Поприветствовать MilkyVIP', reward: 50, icon: '👑', desc: 'Отправьте сообщение Меценату MilkyVIP' },
-                  ]).map(q => {
-                    const isDone = storeData?.completedQuests?.includes(q.id);
-                    return (
-                      <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ fontSize: '1.8rem' }}>{q.icon}</div>
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{q.title}</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{q.desc}</div>
-                          </div>
-                        </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                  <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🥉</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Бронзовый</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>+30 ... +100 🪙</div>
+                    <button className="btn btn-secondary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800 }} onClick={() => handleOpenChest('bronze')}>
+                      Открыть 📦
+                    </button>
+                  </div>
 
-                        <div>
-                          {isDone ? (
-                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Выполнено ✅</span>
-                          ) : (
-                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px' }} onClick={() => handleClaimQuest(q.id)}>
-                              +🪙 {q.reward}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(59, 130, 246, 0.4)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🥈</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#3b82f6' }}>Серебряный</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>+80 ... +250 🪙</div>
+                    <button className="btn btn-secondary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800, borderColor: '#3b82f6', color: '#3b82f6' }} onClick={() => handleOpenChest('silver')}>
+                      Открыть 📦
+                    </button>
+                  </div>
+
+                  <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 179, 8, 0.1))', padding: '16px', borderRadius: '16px', border: '1px solid rgba(245, 158, 11, 0.5)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🥇</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#f59e0b' }}>Золотой VIP</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>+200 ... +600 🪙</div>
+                    <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800, background: 'linear-gradient(135deg, #f59e0b, #d97706)' }} onClick={() => handleOpenChest('gold')}>
+                      Открыть 📦
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

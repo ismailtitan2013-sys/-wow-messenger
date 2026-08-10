@@ -84,24 +84,6 @@ const checkMilkyVIP = async (user) => {
   }
 };
 
-// Список заданий
-const QUESTS_LIST = [
-  { id: 'quest_first_msg', title: '💬 Пожелать удачи в чате', reward: 15, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-  { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 30, icon: '🎁', desc: 'Подарите подарок другу' },
-  { id: 'quest_click_100', title: '⚡ Натапать 100 кликов в сфере', reward: 25, icon: '⚡', desc: 'Сделайте 100 кликов в кликере' },
-  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 20, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-  { id: 'quest_milky_fan', title: '👑 Поприветствовать MilkyVIP', reward: 50, icon: '👑', desc: 'Отправьте сообщение Меценату MilkyVIP' },
-];
-
-// Вопросы для Викторины Знаний
-const QUIZ_QUESTIONS = [
-  { id: 1, question: 'Какая планета называется Красной планетой?', options: ['Марс', 'Венера', 'Юпитер'], correct: 0, reward: 15 },
-  { id: 2, question: 'Что из перечисленного является столицей Франции?', options: ['Париж', 'Берлин', 'Рим'], correct: 0, reward: 15 },
-  { id: 3, question: 'Сколько секунд в одной минуте?', options: ['60 секунд', '100 секунд', '30 секунд'], correct: 0, reward: 15 },
-  { id: 4, question: 'Какая химическая формула у чистой воды?', options: ['H2O', 'CO2', 'NaCl'], correct: 0, reward: 20 },
-  { id: 5, question: 'Какой океан является самым большим на Земле?', options: ['Тихий океан', 'Атлантический', 'Индийский'], correct: 0, reward: 25 }
-];
-
 // Получение каталога магазина и данных о балансе
 const getStoreCatalog = async (req, res) => {
   try {
@@ -114,8 +96,6 @@ const getStoreCatalog = async (req, res) => {
 
     res.status(200).json({
       catalog: STORE_ITEMS,
-      quests: QUESTS_LIST,
-      quizQuestions: QUIZ_QUESTIONS,
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -126,7 +106,6 @@ const getStoreCatalog = async (req, res) => {
       equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
       giftsReceived: user.giftsReceived || [],
-      completedQuests: user.completedQuests || [],
       clickerLevel: user.clickerLevel || 1,
       canClaimDaily
     });
@@ -160,6 +139,55 @@ const claimDailyBonus = async (req, res) => {
     });
   } catch (error) {
     logger.error('Ошибка получения бонуса:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Колесо Фортуны (Рулетка Удачи)
+const spinWheel = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const rewards = [25, 50, 75, 100, 150, 250, 500, 1000];
+    const winAmount = rewards[Math.floor(Math.random() * rewards.length)];
+
+    user.coins = (user.coins || 0) + winAmount;
+    await user.save();
+
+    res.status(200).json({
+      message: `🎰 Вы выиграли +${winAmount} монет в Колесе Фортуны!`,
+      winAmount,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка колеса фортуны:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Открытие Сундука Сокровищ
+const openChest = async (req, res) => {
+  try {
+    const { chestType = 'bronze' } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    let minWin = 30, maxWin = 100;
+    if (chestType === 'silver') { minWin = 80; maxWin = 250; }
+    if (chestType === 'gold') { minWin = 200; maxWin = 600; }
+
+    const winAmount = Math.floor(Math.random() * (maxWin - minWin + 1)) + minWin;
+    user.coins = (user.coins || 0) + winAmount;
+    await user.save();
+
+    res.status(200).json({
+      message: `📦 Вы открыли ${chestType === 'gold' ? 'Золотой' : chestType === 'silver' ? 'Серебряный' : 'Бронзовый'} Сундук и получили +${winAmount} монет!`,
+      winAmount,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка открытия сундука:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
@@ -490,12 +518,10 @@ module.exports = {
   claimDailyBonus,
   tapCoins,
   upgradeClicker,
-  answerQuiz,
-  claimQuest,
+  spinWheel,
+  openChest,
   buyItem,
   equipItem,
   sendGiftOrCoins,
-  STORE_ITEMS,
-  QUESTS_LIST,
-  QUIZ_QUESTIONS
+  STORE_ITEMS
 };
