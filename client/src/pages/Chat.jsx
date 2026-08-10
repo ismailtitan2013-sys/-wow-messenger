@@ -212,15 +212,15 @@ const Chat = () => {
       { id: 'badge_billionaire', name: 'Щедрый Меценат', price: 50000, badge: 'Меценат' }
     ],
     titles: [
-      { id: 'title_vladyka', name: '👑 Владыка', price: 50000, title: '👑 Владыка' },
-      { id: 'title_phoenix', name: '💎 Феникс', price: 30000, title: '💎 Феникс' },
-      { id: 'title_cybergod', name: '⚡ Кибер-Бог', price: 25000, title: '⚡ Кибер-Бог' },
+      { id: 'title_vladyka', name: '👑 Правитель', price: 50000, title: '👑 Правитель' },
+      { id: 'title_phoenix', name: '💎 Алмаз', price: 30000, title: '💎 Алмаз' },
+      { id: 'title_cybergod', name: '⚡ Кибер-Мастер', price: 25000, title: '⚡ Кибер-Мастер' },
       { id: 'title_cosmos', name: '🌌 Космос', price: 20000, title: '🌌 Космос' },
-      { id: 'title_archon', name: '⚔️ Архонт', price: 15000, title: '⚔️ Архонт' },
+      { id: 'title_archon', name: '⚔️ Воин Света', price: 15000, title: '⚔️ Воин Света' },
       { id: 'title_sheikh', name: '👑 Шейх', price: 12000, title: '👑 Шейх' },
-      { id: 'title_dragon', name: '🔥 Дракон', price: 10000, title: '🔥 Дракон' },
-      { id: 'title_phantom', name: '☠️ Призрак', price: 7500, title: '☠️ Призрак' },
-      { id: 'title_starlord', name: '🛸 Старлорд', price: 5000, title: '🛸 Старлорд' },
+      { id: 'title_dragon', name: '🔥 Сокол', price: 10000, title: '🔥 Сокол' },
+      { id: 'title_phantom', name: '☠️ Тень', price: 7500, title: '☠️ Тень' },
+      { id: 'title_starlord', name: '🛸 Капитан', price: 5000, title: '🛸 Капитан' },
       { id: 'title_titan', name: '✨ Титан', price: 3000, title: '✨ Титан' }
     ],
     auras: [
@@ -2375,8 +2375,8 @@ const Chat = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                   {(storeData?.nfts || [
-                    { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Amulet', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Эксклюзивный Амулет "Velvet Dusk" с символом Добермана' },
-                    { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Dragon', rarity: 'Rare', price: 1500, icon: '🐲', desc: 'Легендарный дух Космического Дракона' },
+                    { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана' },
+                    { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Falcon', rarity: 'Rare', price: 1500, icon: '🦅', desc: 'Быстрый Космический Сокол' },
                     { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
                     { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
                     { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', price: 10000, icon: '🌀', desc: 'Портал в Галактическую Вселенную' }

@@ -31,16 +31,16 @@ const STORE_ITEMS = {
     { id: 'badge_creator', name: 'Создатель & Хранитель', price: 150000, badge: 'Создатель' },
   ],
   titles: [
-    { id: 'title_vladyka', name: '👑 Владыка', price: 50000, title: '👑 Владыка', description: 'Абсолютный верховный правитель' },
-    { id: 'title_phoenix', name: '💎 Феникс', price: 30000, title: '💎 Феникс', description: 'Бессмертный священный огонь' },
-    { id: 'title_cybergod', name: '⚡ Кибер-Мастер', price: 25000, title: '⚡ Кибер-Мастер', description: 'Повелитель виртуальной реальности' },
-    { id: 'title_cosmos', name: '🌌 Космос', price: 20000, title: '🌌 Космос', description: 'Бесконечная галактическая сила' },
-    { id: 'title_archon', name: '⚔️ Архонт', price: 15000, title: '⚔️ Архонт', description: 'Великий страж и воин света' },
-    { id: 'title_sheikh', name: '👑 Шейх', price: 12000, title: '👑 Шейх', description: 'Почетный мудрый правитель' },
-    { id: 'title_dragon', name: '🔥 Дракон', price: 10000, title: '🔥 Дракон', description: 'Несокрушимое пламя дракона' },
-    { id: 'title_phantom', name: '☠️ Призрак', price: 7500, title: '☠️ Призрак', description: 'Теневой повелитель ночи' },
-    { id: 'title_starlord', name: '🛸 Старлорд', price: 5000, title: '🛸 Старлорд', description: 'Капитан звездного флота' },
-    { id: 'title_titan', name: '✨ Титан', price: 3000, title: '✨ Титан', description: 'Могущественный древний гигант' },
+    { id: 'title_vladyka', name: '👑 Правитель', price: 50000, title: '👑 Правитель', description: 'Почетный правитель и меценат' },
+    { id: 'title_phoenix', name: '💎 Алмаз', price: 30000, title: '💎 Алмаз', description: 'Благородный нерушимый камень' },
+    { id: 'title_cybergod', name: '⚡ Кибер-Мастер', price: 25000, title: '⚡ Кибер-Мастер', description: 'Знаток современных технологий' },
+    { id: 'title_cosmos', name: '🌌 Космос', price: 20000, title: '🌌 Космос', description: 'Красота звездного неба' },
+    { id: 'title_archon', name: '⚔️ Воин Света', price: 15000, title: '⚔️ Воин Света', description: 'Честный защитник добра' },
+    { id: 'title_sheikh', name: '👑 Шейх', price: 12000, title: '👑 Шейх', description: 'Почетный мудрый меценат' },
+    { id: 'title_dragon', name: '🔥 Сокол', price: 10000, title: '🔥 Сокол', description: 'Быстрый и благородный сокол' },
+    { id: 'title_phantom', name: '☠️ Тень', price: 7500, title: '☠️ Тень', description: 'Скромность и бесшумность' },
+    { id: 'title_starlord', name: '🛸 Капитан', price: 5000, title: '🛸 Капитан', description: 'Капитан исследователей' },
+    { id: 'title_titan', name: '✨ Титан', price: 3000, title: '✨ Титан', description: 'Крепкий и сильный духом' },
   ],
   auras: [
     { id: 'aura_gold', name: '✨ Золотая Аура', price: 3000, description: 'Сияющие золотистые частицы вокруг профиля' },
@@ -59,7 +59,7 @@ const STORE_ITEMS = {
     { id: 'gift_heart', name: 'Crystal Heart', price: 2500, icon: '💖', rarity: 'Rare', totalIssued: 1500, description: 'Хрустальное сияющее сердце' },
     { id: 'gift_ring', name: 'Diamond Ring', price: 5000, icon: '💍', rarity: 'Epic', totalIssued: 1000, description: 'Алмазный перстень мецената' },
     { id: 'gift_rocket', name: 'Cosmic Rocket', price: 10000, icon: '🚀', rarity: 'Epic', totalIssued: 500, description: 'Сверхзвуковая ракета' },
-    { id: 'gift_crown', name: 'Imperial Crown', price: 25000, icon: '👑', rarity: 'Legendary', totalIssued: 250, description: 'Императорская корона владыки' },
+    { id: 'gift_crown', name: 'Imperial Crown', price: 25000, icon: '👑', rarity: 'Legendary', totalIssued: 250, description: 'Императорская корона' },
     { id: 'gift_car', name: 'Cyber Roadster', price: 50000, icon: '🏎️', rarity: 'Exclusive', totalIssued: 100, description: 'Эксклюзивный спорткар' },
     { id: 'gift_yacht', name: 'Luxury Yacht', price: 100000, icon: '🛥️', rarity: 'Exclusive', totalIssued: 50, description: 'Морская суперъяхта' },
     { id: 'gift_planet', name: 'Golden Planet', price: 250000, icon: '🪐', rarity: 'Unique', totalIssued: 10, description: 'Уникальная золотая планета' }
@@ -112,8 +112,8 @@ const getClickerUpgradeCost = (level) => {
 };
 
 const NFT_ITEMS = [
-  { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Amulet', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Эксклюзивный Амулет "Velvet Dusk" с символом Добермана' },
-  { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Dragon', rarity: 'Rare', price: 1500, icon: '🐲', desc: 'Легендарный дух Космического Дракона' },
+  { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана' },
+  { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Falcon', rarity: 'Rare', price: 1500, icon: '🦅', desc: 'Быстрый Космический Сокол' },
   { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
   { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
   { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', price: 10000, icon: '🌀', desc: 'Портал в Галактическую Вселенную' }
