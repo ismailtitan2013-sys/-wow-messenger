@@ -23,6 +23,7 @@ import GiftEffectOverlay from '../components/GiftEffectOverlay';
 const UserAvatar = ({ usr, size = 'default' }) => {
   const [imgError, setImgError] = useState(false);
   const avatarUrl = usr?.avatarUrl;
+  const frameClass = usr?.avatarFrame && usr?.avatarFrame !== 'none' ? (usr.avatarFrame.startsWith('frame-') ? usr.avatarFrame : `frame-${usr.avatarFrame}`) : '';
 
   useEffect(() => {
     setImgError(false);
@@ -39,32 +40,42 @@ const UserAvatar = ({ usr, size = 'default' }) => {
 
   const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
 
-  if (avatarUrl && !imgError) {
-    return (
-      <img
-        src={getFullUrl(avatarUrl)}
-        alt=""
-        className={`avatar-img ${size}`}
-        onError={() => setImgError(true)}
-      />
-    );
-  }
-
   return (
-    <div className={`avatar ${size}`}>
-      {initial}
+    <div className={`avatar-wrapper ${size} ${frameClass}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'all 0.3s ease' }}>
+      {avatarUrl && !imgError ? (
+        <img
+          src={getFullUrl(avatarUrl)}
+          alt=""
+          className={`avatar-img ${size}`}
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className={`avatar ${size}`}>
+          {initial}
+        </div>
+      )}
     </div>
   );
 };
 
 const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userTitle) => {
-  let username = typeof usrOrName === 'string' ? usrOrName : usrOrName?.username;
-  let verified = isVerified !== undefined ? isVerified : (typeof usrOrName === 'object' ? usrOrName?.isVerified : false);
-  let title = userTitle || (typeof usrOrName === 'object' ? usrOrName?.userTitle : '');
+  const isObj = typeof usrOrName === 'object' && usrOrName !== null;
+  const username = isObj ? usrOrName.username : usrOrName;
+  const verified = isVerified !== undefined ? isVerified : (isObj ? usrOrName.isVerified : false);
+  const colorClass = nameColor || (isObj ? usrOrName.nameColor : '');
+  const title = userTitle || (isObj ? usrOrName.userTitle : '');
+  const aura = isObj ? usrOrName.profileAura : '';
+
+  let nameStyleClass = '';
+  if (username === 'MilkyVIP') {
+    nameStyleClass = 'milky-vip-name';
+  } else if (colorClass && colorClass !== 'default' && colorClass !== 'none') {
+    nameStyleClass = colorClass.startsWith('name-color-') ? colorClass : `name-color-${colorClass}`;
+  }
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-      <span className={username === 'MilkyVIP' ? 'milky-vip-name' : ''}>
+    <span className={`user-name-wrapper ${aura && aura !== 'none' ? (aura.startsWith('aura-') ? aura : `aura-${aura}`) : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+      <span className={nameStyleClass} style={{ fontWeight: 800 }}>
         {username || 'Пользователь'}
       </span>
       {title && <span className="user-title-tag">{title}</span>}
@@ -445,20 +456,25 @@ const Chat = () => {
       const res = await axios.post('/api/coins/buy', { itemId, category }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(res.data.message);
-      setUser(prev => {
-        const u = { ...prev, ...res.data.user };
-        localStorage.setItem('wow_user', JSON.stringify(u));
-        return u;
-      });
-      setStoreData(prev => ({
-        ...prev,
-        userCoins: res.data.coins,
-        userInventory: res.data.inventory,
-        equippedFrame: res.data.user.avatarFrame,
-        equippedColor: res.data.user.nameColor,
-        equippedTheme: res.data.user.activeTheme
-      }));
+      toast.success(res.data.message || 'Покупка совершена!');
+      if (res.data.user) {
+        setUser(prev => {
+          const u = { ...prev, ...res.data.user };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({
+          ...prev,
+          userCoins: res.data.coins,
+          userInventory: res.data.inventory,
+          equippedFrame: res.data.user.avatarFrame,
+          equippedColor: res.data.user.nameColor,
+          equippedTheme: res.data.user.activeTheme,
+          equippedTitle: res.data.user.userTitle,
+          equippedAura: res.data.user.profileAura,
+          equippedChatStyle: res.data.user.chatStyle
+        }));
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Ошибка покупки');
     }
@@ -469,20 +485,25 @@ const Chat = () => {
       const res = await axios.post('/api/coins/equip', { itemId, category }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(res.data.message);
-      setUser(prev => {
-        const u = { ...prev, ...res.data.user };
-        localStorage.setItem('wow_user', JSON.stringify(u));
-        return u;
-      });
-      setStoreData(prev => ({
-        ...prev,
-        equippedFrame: res.data.user.avatarFrame,
-        equippedColor: res.data.user.nameColor,
-        equippedTheme: res.data.user.activeTheme
-      }));
+      toast.success(res.data.message || 'Предмет надет!');
+      if (res.data.user) {
+        setUser(prev => {
+          const u = { ...prev, ...res.data.user };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({
+          ...prev,
+          equippedFrame: res.data.user.avatarFrame,
+          equippedColor: res.data.user.nameColor,
+          equippedTheme: res.data.user.activeTheme,
+          equippedTitle: res.data.user.userTitle,
+          equippedAura: res.data.user.profileAura,
+          equippedChatStyle: res.data.user.chatStyle
+        }));
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка обновления');
+      toast.error(err.response?.data?.message || 'Ошибка экипировки');
     }
   };
 
@@ -1331,7 +1352,7 @@ const Chat = () => {
             <UserAvatar usr={user} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{fontWeight: 600}}>
-                {renderUsernameWithBadge(user.username, user.isVerified)}
+                {renderUsernameWithBadge(user)}
               </span>
               <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800 }}>
                 🪙 {(user?.coins || 0).toLocaleString()} Coins

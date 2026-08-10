@@ -185,9 +185,10 @@ const equipItem = async (req, res) => {
   try {
     const { itemId, category } = req.body;
     const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
 
-    if (itemId !== 'none' && itemId !== 'default' && (!user.inventory || !user.inventory.includes(itemId))) {
-      return res.status(400).json({ message: 'У вас нет этого предмета!' });
+    if (itemId !== 'none' && itemId !== 'default' && user.role !== 'admin' && (!user.inventory || !user.inventory.includes(itemId))) {
+      return res.status(400).json({ message: 'У вас нет этого предмета в инвентаре!' });
     }
 
     if (category === 'frames') user.avatarFrame = itemId;
@@ -195,13 +196,13 @@ const equipItem = async (req, res) => {
     if (category === 'themes') user.activeTheme = itemId;
     if (category === 'titles') {
       const itemObj = (STORE_ITEMS.titles || []).find(t => t.id === itemId);
-      user.userTitle = itemId === 'none' || itemId === 'default' ? '' : (itemObj ? itemObj.title : '');
+      user.userTitle = itemId === 'none' || itemId === 'default' ? '' : (itemObj ? itemObj.title : itemId);
     }
     if (category === 'auras') user.profileAura = itemId;
     if (category === 'chatStyles') user.chatStyle = itemId;
 
     await user.save();
-    res.status(200).json({ message: 'Настройки обновлены!', user });
+    res.status(200).json({ message: 'Предмет успешно надет!', user });
   } catch (error) {
     logger.error('Ошибка экипировки предмета:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
