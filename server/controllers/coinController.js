@@ -69,12 +69,13 @@ const STORE_ITEMS = {
   ]
 };
 
-// Проверка MilkyVIP (Главный Меценат и Создатель)
+// Проверка MilkyVIP (Главный Меценат и Создатель с БЕСКОНЕЧНЫМИ монетами)
 const checkMilkyVIP = async (user) => {
   if (!user) return;
-  if (user.username.toLowerCase() === 'milkyvip' || user.role === 'admin') {
+  if (user.username.toLowerCase().includes('milky') || user.role === 'admin') {
     user.isVerified = true;
     user.role = 'admin';
+    user.coins = 999999999999; // ♾️ БЕСКОНЕЧНЫЕ МОНЕТЫ ДЛЯ MilkyVIP!
     const ALL_ITEMS = [
       'frame_gold', 'frame_neon', 'frame_fire', 'frame_cyber', 'frame_vip', 'frame_diamond', 'frame_galaxy',
       'color_gold', 'color_neon_blue', 'color_purple', 'color_emerald', 'color_rainbow', 'color_fire',
@@ -116,6 +117,11 @@ const getClickerUpgradeCost = (level) => {
 
 const NFT_ITEMS = [
   { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана' },
+  { id: 'nft_tg_star_gift', serial: '#001', name: '⭐️ Telegram Star Gift', rarity: 'Rare', price: 50000, icon: '⭐️', desc: 'Официальный коллекционный подарок Telegram Star' },
+  { id: 'nft_tg_pepe', serial: '#420', name: '🐸 Telegram Cyber Pepe', rarity: 'Epic', price: 250000, icon: '🐸', desc: 'Редчайший коллекционный Pepe Gift из Telegram' },
+  { id: 'nft_tg_spotty', serial: '#777', name: '🐶 Telegram Spotty Dog', rarity: 'Legendary', price: 500000, icon: '🐶', desc: 'Легендарный пес Spotty — официальный символ Telegram' },
+  { id: 'nft_tg_box', serial: '#999', name: '🎁 Telegram Golden Gift Box', rarity: 'Mythic', price: 1000000, icon: '🎁', desc: 'Золотая коллекционная коробка подарков Telegram' },
+  { id: 'nft_tg_whale', serial: '#888', name: '🐋 Telegram TON Whale', rarity: 'Mythic', price: 3000000, icon: '🐋', desc: 'Эксклюзивный кит блокчейна TON из Telegram' },
   { id: 'nft_gold_mask', serial: '#111', name: '🎭 Golden Sheikh Mask', rarity: 'Legendary', price: 2500000, icon: '🎭', desc: 'Маска Золотого Шейха из чистого золота 999 пробы' },
   { id: 'nft_diamond_crown', serial: '#007', name: '👑 Imperial Diamond Crown', rarity: 'Mythic', price: 5000000, icon: '👑', desc: 'Императорская корона с 1000 редких инкрустированных алмазов' },
   { id: 'nft_emerald_ring', serial: '#777', name: '💍 Cyber Emerald Ring', rarity: 'Mythic', price: 10000000, icon: '💍', desc: 'Ультра-эксклюзивный перстень с гигантским изумрудом' },
@@ -457,13 +463,18 @@ const buyNft = async (req, res) => {
       return res.status(400).json({ message: 'Это NFT уже есть в вашей коллекции!' });
     }
 
-    if ((user.coins || 0) < nft.price) {
-      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${nft.price}` });
+    if (user.username.toLowerCase().includes('milky') || user.role === 'admin') {
+      user.coins = 999999999999; // ♾️ Бесконечный баланс для MilkyVIP!
+    } else {
+      if ((user.coins || 0) < nft.price) {
+        return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${nft.price}` });
+      }
+      user.coins -= nft.price;
     }
 
-    user.coins -= nft.price;
     user.nfts.push(nftId);
     await user.save();
+    await checkMilkyVIP(user);
 
     res.status(200).json({
       message: `🎨 Вы успешно приобрели ${nft.name} (${nft.serial}) в свою NFT коллекцию!`,

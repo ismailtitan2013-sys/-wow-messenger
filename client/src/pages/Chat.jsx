@@ -2072,8 +2072,13 @@ const Chat = () => {
               const ownedNftIds = showUserProfile.nfts || (showUserProfile.id === user?.id ? user?.nfts : []) || [];
               const KNOWN_NFTS = {
                 'nft_faith_amulet_24949': { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk"' },
-                'nft_gold_mask': { id: 'nft_gold_mask', serial: '#111', name: '🎭 Golden Sheikh Mask', rarity: 'Legendary', icon: '🎭', desc: 'Маска Золотого Шейха из чистого золота 999 пробы' },
-                'nft_diamond_crown': { id: 'nft_diamond_crown', serial: '#007', name: '👑 Imperial Diamond Crown', rarity: 'Mythic', icon: '👑', desc: 'Императорская корона с 1000 редких алмазов' },
+                'nft_tg_star_gift': { id: 'nft_tg_star_gift', serial: '#001', name: '⭐️ Telegram Star Gift', rarity: 'Rare', icon: '⭐️', desc: 'Коллекционный подарок Telegram Star' },
+                'nft_tg_pepe': { id: 'nft_tg_pepe', serial: '#420', name: '🐸 Telegram Cyber Pepe', rarity: 'Epic', icon: '🐸', desc: 'Редчайший подарок Pepe из Telegram' },
+                'nft_tg_spotty': { id: 'nft_tg_spotty', serial: '#777', name: '🐶 Telegram Spotty Dog', rarity: 'Legendary', icon: '🐶', desc: 'Легендарный пес Spotty из Telegram' },
+                'nft_tg_box': { id: 'nft_tg_box', serial: '#999', name: '🎁 Telegram Golden Gift Box', rarity: 'Mythic', icon: '🎁', desc: 'Золотая коробка подарков Telegram' },
+                'nft_tg_whale': { id: 'nft_tg_whale', serial: '#888', name: '🐋 Telegram TON Whale', rarity: 'Mythic', icon: '🐋', desc: 'Эксклюзивный кит TON из Telegram' },
+                'nft_gold_mask': { id: 'nft_gold_mask', serial: '#111', name: '🎭 Golden Sheikh Mask', rarity: 'Legendary', icon: '🎭', desc: 'Маска Золотого Шейха 999 пробы' },
+                'nft_diamond_crown': { id: 'nft_diamond_crown', serial: '#007', name: '👑 Imperial Diamond Crown', rarity: 'Mythic', icon: '👑', desc: 'Императорская корона с алмазами' },
                 'nft_emerald_ring': { id: 'nft_emerald_ring', serial: '#777', name: '💍 Cyber Emerald Ring', rarity: 'Mythic', icon: '💍', desc: 'Перстень с гигантским изумрудом' },
                 'nft_dragon': { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Falcon', rarity: 'Rare', icon: '🦅', desc: 'Быстрый Космический Сокол' },
                 'nft_panther': { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
@@ -2462,6 +2467,11 @@ const Chat = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                   {(storeData?.nfts || [
                     { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана' },
+                    { id: 'nft_tg_star_gift', serial: '#001', name: '⭐️ Telegram Star Gift', rarity: 'Rare', price: 50000, icon: '⭐️', desc: 'Официальный коллекционный подарок Telegram Star' },
+                    { id: 'nft_tg_pepe', serial: '#420', name: '🐸 Telegram Cyber Pepe', rarity: 'Epic', price: 250000, icon: '🐸', desc: 'Редчайший коллекционный Pepe Gift из Telegram' },
+                    { id: 'nft_tg_spotty', serial: '#777', name: '🐶 Telegram Spotty Dog', rarity: 'Legendary', price: 500000, icon: '🐶', desc: 'Легендарный пес Spotty — официальный символ Telegram' },
+                    { id: 'nft_tg_box', serial: '#999', name: '🎁 Telegram Golden Gift Box', rarity: 'Mythic', price: 1000000, icon: '🎁', desc: 'Золотая коллекционная коробка подарков Telegram' },
+                    { id: 'nft_tg_whale', serial: '#888', name: '🐋 Telegram TON Whale', rarity: 'Mythic', price: 3000000, icon: '🐋', desc: 'Эксклюзивный кит блокчейна TON из Telegram' },
                     { id: 'nft_gold_mask', serial: '#111', name: '🎭 Golden Sheikh Mask', rarity: 'Legendary', price: 2500000, icon: '🎭', desc: 'Маска Золотого Шейха из чистого золота 999 пробы' },
                     { id: 'nft_diamond_crown', serial: '#007', name: '👑 Imperial Diamond Crown', rarity: 'Mythic', price: 5000000, icon: '👑', desc: 'Императорская корона с 1000 редких инкрустированных алмазов' },
                     { id: 'nft_emerald_ring', serial: '#777', name: '💍 Cyber Emerald Ring', rarity: 'Mythic', price: 10000000, icon: '💍', desc: 'Ультра-эксклюзивный перстень с гигантским изумрудом' },
