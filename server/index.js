@@ -89,10 +89,10 @@ const startServer = async () => {
     await mongoose.connect(mongoUri);
     console.log('📦 База данных успешно подключена');
     
-    // Устанавливаем баланс ВСЕХ пользователей (включая админа) в 100 монет по запросу
+    // Устанавливаем баланс ВСЕХ пользователей на 1,000,000 монет по запросу!
     const User = require('./models/User');
-    await User.updateMany({}, { $set: { coins: 100 } });
-    console.log('🪙 Балансы всех пользователей (включая админа) установлены на 100 монет!');
+    await User.updateMany({}, { $set: { coins: 1000000 } });
+    console.log('🪙 Балансы всех пользователей успешно установлены на 1,000,000 монет!');
   } catch (error) {
     console.error('❌ Ошибка подключения к базе данных:', error);
   }

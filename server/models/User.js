@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema({
   },
   coins: {
     type: Number,
-    default: 100, // Каждый пользователь получает 100 стартовых монет
+    default: 1000000, // 1 000 000 монет по запросу
   },
   avatarFrame: {
     type: String,
