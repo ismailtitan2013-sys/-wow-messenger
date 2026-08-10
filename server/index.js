@@ -89,10 +89,20 @@ const startServer = async () => {
     await mongoose.connect(mongoUri);
     console.log('📦 База данных успешно подключена');
     
-    // Устанавливаем баланс ВСЕХ пользователей на 1,000,000 монет по запросу!
+    // Балансы пользователей: VIP Создатель получат 1,000,000, а обычные демо-аккаунты — реалистичные индивидуальные балансы
     const User = require('./models/User');
-    await User.updateMany({}, { $set: { coins: 1000000 } });
-    console.log('🪙 Балансы всех пользователей успешно установлены на 1,000,000 монет!');
+    const users = await User.find({});
+    for (const u of users) {
+      if (u.username.toLowerCase().includes('milky') || u.role === 'admin') {
+        u.coins = 1000000;
+      } else if (u.coins >= 1000000) {
+        // Устанавливаем интересные реалистичные балансы для демо-ботов
+        const demoBalances = [2500, 1850, 920, 450, 310, 150, 80];
+        u.coins = demoBalances[Math.floor(Math.random() * demoBalances.length)];
+      }
+      await u.save();
+    }
+    console.log('🪙 Индивидуальные балансы пользователей успешно обновлены!');
   } catch (error) {
     console.error('❌ Ошибка подключения к базе данных:', error);
   }
