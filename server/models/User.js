@@ -120,6 +120,7 @@ const userSchema = new mongoose.Schema({
     botLevel: { type: Number, default: 0 },
     lastCollected: { type: Date, default: Date.now }
   },
+  nfts: [{ type: String }],
   pushSubscriptions: [{
     endpoint: String,
     expirationTime: Date,

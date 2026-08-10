@@ -111,6 +111,13 @@ const getClickerUpgradeCost = (level) => {
   return Math.round(100 * Math.pow(1.6, lvl - 1));
 };
 
+const NFT_ITEMS = [
+  { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Dragon', rarity: 'Rare', price: 1500, icon: '🐲', desc: 'Легендарный дух Космического Дракона' },
+  { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
+  { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
+  { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', price: 10000, icon: '🌀', desc: 'Портал в Галактическую Вселенную' }
+];
+
 // Получение каталога магазина и данных о балансе
 const getStoreCatalog = async (req, res) => {
   try {
@@ -120,10 +127,13 @@ const getStoreCatalog = async (req, res) => {
     const now = Date.now();
     const lastDaily = user.lastDailyClaim ? new Date(user.lastDailyClaim).getTime() : 0;
     const canClaimDaily = (now - lastDaily) >= 24 * 60 * 60 * 1000;
+    const clickerLevel = user.clickerLevel || 1;
     const clickerStats = updateAndGetEnergy(user);
 
     res.status(200).json({
       catalog: STORE_ITEMS,
+      nfts: NFT_ITEMS,
+      userNfts: user.nfts || [],
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -370,6 +380,40 @@ const buyBusiness = async (req, res) => {
     });
   } catch (error) {
     logger.error('Ошибка бизнес-майнинга:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Покупка NFT
+const buyNft = async (req, res) => {
+  try {
+    const { nftId } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const nft = NFT_ITEMS.find(n => n.id === nftId);
+    if (!nft) return res.status(404).json({ message: 'NFT не найдено' });
+
+    user.nfts = user.nfts || [];
+    if (user.nfts.includes(nftId)) {
+      return res.status(400).json({ message: 'Это NFT уже есть в вашей коллекции!' });
+    }
+
+    if ((user.coins || 0) < nft.price) {
+      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${nft.price}` });
+    }
+
+    user.coins -= nft.price;
+    user.nfts.push(nftId);
+    await user.save();
+
+    res.status(200).json({
+      message: `🎨 Вы успешно приобрели ${nft.name} (${nft.serial}) в свою NFT коллекцию!`,
+      nfts: user.nfts,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка покупки NFT:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
@@ -672,8 +716,10 @@ module.exports = {
   upgradeClicker,
   buyBusiness,
   buyBoost,
+  buyNft,
   buyItem,
   equipItem,
   sendGiftOrCoins,
-  STORE_ITEMS
+  STORE_ITEMS,
+  NFT_ITEMS
 };

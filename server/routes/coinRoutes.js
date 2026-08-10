@@ -8,6 +8,7 @@ const {
   upgradeClicker,
   buyBusiness,
   buyBoost,
+  buyNft,
   buyItem,
   equipItem,
   sendGiftOrCoins
@@ -19,6 +20,7 @@ router.post('/tap', authMiddleware, tapCoins);
 router.post('/upgrade-clicker', authMiddleware, upgradeClicker);
 router.post('/buy-business', authMiddleware, buyBusiness);
 router.post('/buy-boost', authMiddleware, buyBoost);
+router.post('/buy-nft', authMiddleware, buyNft);
 router.post('/buy', authMiddleware, buyItem);
 router.post('/equip', authMiddleware, equipItem);
 router.post('/send-gift', authMiddleware, sendGiftOrCoins);

@@ -314,7 +314,29 @@ const Chat = () => {
     }
   };
 
-  const handleTapCoin = async () => {
+  const tapBatchCountRef = useRef(0);
+  const tapBatchTimerRef = useRef(null);
+
+  const flushTapBatch = async () => {
+    const batchCount = tapBatchCountRef.current;
+    if (batchCount <= 0) return;
+    tapBatchCountRef.current = 0;
+    tapBatchTimerRef.current = null;
+
+    try {
+      const res = await axios.post('/api/coins/tap', { count: batchCount }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && typeof res.data === 'object' && res.data.clickerStats) {
+        setUser(prev => prev ? ({ ...prev, coins: res.data.coins }) : prev);
+        setStoreData(prev => ({ ...prev, userCoins: res.data.coins, clickerStats: res.data.clickerStats }));
+      }
+    } catch (err) {
+      // Synced locally
+    }
+  };
+
+  const handleTapCoin = () => {
     const currentEnergy = storeData?.clickerStats?.energy ?? 1000;
     const multitapPower = storeData?.clickerStats?.multitapLevel || 1;
 
@@ -327,10 +349,10 @@ const Chat = () => {
     const nextEnergy = Math.max(0, currentEnergy - multitapPower);
 
     const id = Date.now() + Math.random();
-    setTapFloats(prev => [...prev, { id, x: Math.random() * 40 - 20, y: Math.random() * -20 - 10, text: `+${multitapPower}` }]);
+    setTapFloats(prev => [...prev.slice(-15), { id, x: Math.random() * 50 - 25, y: Math.random() * -30 - 10, text: `+${multitapPower}` }]);
     setTimeout(() => {
       setTapFloats(prev => prev.filter(item => item.id !== id));
-    }, 800);
+    }, 700);
 
     setUser(prev => prev ? ({ ...prev, coins: nextCoins }) : prev);
     setStoreData(prev => ({
@@ -339,16 +361,9 @@ const Chat = () => {
       clickerStats: { ...(prev.clickerStats || {}), energy: nextEnergy }
     }));
 
-    try {
-      const res = await axios.post('/api/coins/tap', { count: 1 }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data && typeof res.data === 'object' && typeof res.data.coins === 'number') {
-        setUser(prev => prev ? ({ ...prev, coins: res.data.coins }) : prev);
-        setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
-      }
-    } catch (err) {
-      // Handled locally
+    tapBatchCountRef.current += 1;
+    if (!tapBatchTimerRef.current) {
+      tapBatchTimerRef.current = setTimeout(flushTapBatch, 400);
     }
   };
 
@@ -409,6 +424,26 @@ const Chat = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Ошибка покупки буста');
+    }
+  };
+
+  const handleBuyNft = async (nftId) => {
+    try {
+      const res = await axios.post('/api/coins/buy-nft', { nftId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && res.data.nfts) {
+        setUser(prev => {
+          if (!prev) return prev;
+          const u = { ...prev, coins: res.data.coins, nfts: res.data.nfts };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, userNfts: res.data.nfts, userCoins: res.data.coins }));
+        toast.success(res.data.message || 'NFT приобретено!');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка покупки NFT');
     }
   };
 
@@ -2079,6 +2114,9 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'business' ? 'active' : ''}`} onClick={() => setActiveStoreTab('business')}>
                 📈 Бизнес (ТГ)
               </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'nfts' ? 'active' : ''}`} onClick={() => setActiveStoreTab('nfts')}>
+                🎨 NFT Маркет
+              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
@@ -2266,81 +2304,51 @@ const Chat = () => {
               </div>
             )}
 
-            {/* Вкладка 3: Награды и Достижения (Халяль) */}
-            {activeStoreTab === 'achievements' && (
+            {/* Вкладка 3: Цифровые NFT Коллекции */}
+            {activeStoreTab === 'nfts' && (
               <div style={{ padding: '10px 5px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#10b981' }}>🏆 Почётные Достижения за Активность</h3>
+                  <h3 style={{ margin: '0 0 4px', color: '#a855f7' }}>🎨 Цифровые NFT Коллекции</h3>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Получайте награды за полезную активность и проявление уважения!
+                    Собирайте уникальные коллекционные NFT с уникальным порядковым номером и редким оформлением!
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {(storeData?.achievements || [
-                    { id: 'ach_welcome', title: '🌟 Первые шаги', reward: 50, icon: '🌟', desc: 'Успешный вход в мессенджер' },
-                    { id: 'ach_chat_active', title: '💬 Дружеское общение', reward: 25, icon: '💬', desc: 'Активное общение в диалогах' },
-                    { id: 'ach_gift_giver', title: '🎁 Щедрый подарок', reward: 50, icon: '🎁', desc: 'Подарок другу или участнику' },
-                    { id: 'ach_respect_milky', title: '👑 Уважение Меценату', reward: 100, icon: '👑', desc: 'Приветствие Создателя MilkyVIP' }
-                  ]).map(ach => {
-                    const isClaimed = storeData?.completedAchievements?.includes(ach.id);
-                    return (
-                      <div key={ach.id} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ fontSize: '1.8rem' }}>{ach.icon}</div>
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{ach.title}</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{ach.desc}</div>
-                          </div>
-                        </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+                  {(storeData?.nfts || [
+                    { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Dragon', rarity: 'Rare', price: 1500, icon: '🐲', desc: 'Легендарный дух Космического Дракона' },
+                    { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
+                    { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
+                    { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', price: 10000, icon: '🌀', desc: 'Портал в Галактическую Вселенную' }
+                  ]).map(nft => {
+                    const isOwned = storeData?.userNfts?.includes(nft.id) || user?.nfts?.includes(nft.id);
+                    const rarityColors = {
+                      Rare: '#3b82f6',
+                      Epic: '#a855f7',
+                      Legendary: '#f59e0b',
+                      Mythic: '#ec4899'
+                    };
+                    const color = rarityColors[nft.rarity] || '#f59e0b';
 
-                        <div>
-                          {isClaimed ? (
-                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Получено ✅</span>
-                          ) : (
-                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => handleClaimAchievement(ach.id)}>
-                              <Coins size={14} color="#ffffff" /> +{ach.reward}
-                            </button>
-                          )}
+                    return (
+                      <div key={nft.id} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: `1px solid ${color}`, textAlign: 'center', boxShadow: `0 0 15px ${color}33`, position: 'relative' }}>
+                        <div style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.72rem', fontWeight: 800, color, background: `${color}22`, padding: '2px 8px', borderRadius: '8px' }}>
+                          {nft.serial}
                         </div>
+                        <div style={{ fontSize: '2.8rem', margin: '12px 0 8px', filter: `drop-shadow(0 0 10px ${color})` }}>{nft.icon}</div>
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color }}>{nft.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '4px 0 12px' }}>{nft.desc}</div>
+
+                        {isOwned ? (
+                          <span style={{ color: '#10b981', fontWeight: 800, fontSize: '0.85rem' }}>В коллекции 💎</span>
+                        ) : (
+                          <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800, background: `linear-gradient(135deg, ${color}, #1e293b)`, borderRadius: '10px' }} onClick={() => handleBuyNft(nft.id)}>
+                            Купить 🪙 {nft.price}
+                          </button>
+                        )}
                       </div>
                     );
                   })}
-                </div>
-              </div>
-            )}
-
-            {/* Вкладка 4: Трудовые Контракты и Профессии */}
-            {activeStoreTab === 'jobs' && (
-              <div style={{ padding: '10px 5px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#3b82f6' }}>🛠️ Трудовые Контракты (Честный Заработок)</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Выполняйте реальную полезную работу и получайте заслуженное вознаграждение!
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {(storeData?.jobs || [
-                    { id: 'job_courier', title: '🚚 Доставка сообщений', reward: 40, durationMin: 1, icon: '🚚', desc: 'Выполнить быстрый контракт курьера' },
-                    { id: 'job_developer', title: '💻 Программирование модуля', reward: 120, durationMin: 5, icon: '💻', desc: 'Написать код нового функционала' },
-                    { id: 'job_designer', title: '🎨 Дизайн тем и оформления', reward: 250, durationMin: 15, icon: '🎨', desc: 'Создать уникальное оформление' },
-                    { id: 'job_architect', title: '🏛️ Архитектура системы', reward: 600, durationMin: 30, icon: '🏛️', desc: 'Разработать масштабную архитектуру' }
-                  ]).map(job => (
-                    <div key={job.id} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ fontSize: '1.8rem' }}>{job.icon}</div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{job.title}</div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{job.desc}</div>
-                        </div>
-                      </div>
-
-                      <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => handleClaimJob(job.id)}>
-                        <Coins size={14} color="#ffffff" /> +{job.reward}
-                      </button>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
