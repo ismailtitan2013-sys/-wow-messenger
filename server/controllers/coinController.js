@@ -62,7 +62,10 @@ const STORE_ITEMS = {
     { id: 'gift_crown', name: 'Imperial Crown', price: 25000, icon: '👑', rarity: 'Legendary', totalIssued: 250, description: 'Императорская корона' },
     { id: 'gift_car', name: 'Cyber Roadster', price: 50000, icon: '🏎️', rarity: 'Exclusive', totalIssued: 100, description: 'Эксклюзивный спорткар' },
     { id: 'gift_yacht', name: 'Luxury Yacht', price: 100000, icon: '🛥️', rarity: 'Exclusive', totalIssued: 50, description: 'Морская суперъяхта' },
-    { id: 'gift_planet', name: 'Golden Planet', price: 250000, icon: '🪐', rarity: 'Unique', totalIssued: 10, description: 'Уникальная золотая планета' }
+    { id: 'gift_planet', name: 'Golden Planet', price: 250000, icon: '🪐', rarity: 'Unique', totalIssued: 10, description: 'Уникальная золотая планета' },
+    { id: 'gift_jet', name: 'Luxury Private Jet', price: 500000, icon: '✈️', rarity: 'Exclusive', totalIssued: 5, description: 'Роскошный частный бизнес-джет' },
+    { id: 'gift_skyscraper', name: 'Golden Skyscraper', price: 1000000, icon: '🏙️', rarity: 'Unique', totalIssued: 3, description: 'Золотой небоскреб правителя' },
+    { id: 'gift_palace', name: 'Diamond Palace', price: 5000000, icon: '🏰', rarity: 'Mythic', totalIssued: 1, description: 'Алмазный дворец мецената' }
   ]
 };
 
@@ -113,6 +116,9 @@ const getClickerUpgradeCost = (level) => {
 
 const NFT_ITEMS = [
   { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана' },
+  { id: 'nft_gold_mask', serial: '#111', name: '🎭 Golden Sheikh Mask', rarity: 'Legendary', price: 2500000, icon: '🎭', desc: 'Маска Золотого Шейха из чистого золота 999 пробы' },
+  { id: 'nft_diamond_crown', serial: '#007', name: '👑 Imperial Diamond Crown', rarity: 'Mythic', price: 5000000, icon: '👑', desc: 'Императорская корона с 1000 редких инкрустированных алмазов' },
+  { id: 'nft_emerald_ring', serial: '#777', name: '💍 Cyber Emerald Ring', rarity: 'Mythic', price: 10000000, icon: '💍', desc: 'Ультра-эксклюзивный перстень с гигантским изумрудом' },
   { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Falcon', rarity: 'Rare', price: 1500, icon: '🦅', desc: 'Быстрый Космический Сокол' },
   { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
   { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
