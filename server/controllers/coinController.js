@@ -84,6 +84,24 @@ const checkMilkyVIP = async (user) => {
   }
 };
 
+// Список заданий
+const QUESTS_LIST = [
+  { id: 'quest_first_msg', title: '💬 Пожелать удачи в чате', reward: 15, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+  { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 30, icon: '🎁', desc: 'Подарите подарок другу' },
+  { id: 'quest_click_100', title: '⚡ Натапать 100 кликов в сфере', reward: 25, icon: '⚡', desc: 'Сделайте 100 кликов в кликере' },
+  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 20, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+  { id: 'quest_milky_fan', title: '👑 Поприветствовать MilkyVIP', reward: 50, icon: '👑', desc: 'Отправьте сообщение Меценату MilkyVIP' },
+];
+
+// Вопросы для Викторины Знаний
+const QUIZ_QUESTIONS = [
+  { id: 1, question: 'Какая планета называется Красной планетой?', options: ['Марс', 'Венера', 'Юпитер'], correct: 0, reward: 15 },
+  { id: 2, question: 'Что из перечисленного является столицей Франции?', options: ['Париж', 'Берлин', 'Рим'], correct: 0, reward: 15 },
+  { id: 3, question: 'Сколько секунд в одной минуте?', options: ['60 секунд', '100 секунд', '30 секунд'], correct: 0, reward: 15 },
+  { id: 4, question: 'Какая химическая формула у чистой воды?', options: ['H2O', 'CO2', 'NaCl'], correct: 0, reward: 20 },
+  { id: 5, question: 'Какой океан является самым большим на Земле?', options: ['Тихий океан', 'Атлантический', 'Индийский'], correct: 0, reward: 25 }
+];
+
 // Получение каталога магазина и данных о балансе
 const getStoreCatalog = async (req, res) => {
   try {
@@ -96,6 +114,8 @@ const getStoreCatalog = async (req, res) => {
 
     res.status(200).json({
       catalog: STORE_ITEMS,
+      quests: QUESTS_LIST,
+      quizQuestions: QUIZ_QUESTIONS,
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -106,6 +126,8 @@ const getStoreCatalog = async (req, res) => {
       equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
       giftsReceived: user.giftsReceived || [],
+      completedQuests: user.completedQuests || [],
+      clickerLevel: user.clickerLevel || 1,
       canClaimDaily
     });
   } catch (error) {
@@ -150,17 +172,106 @@ const tapCoins = async (req, res) => {
     await checkMilkyVIP(user);
 
     const safeCount = Math.min(20, Math.max(1, Number(count)));
-    const earned = safeCount;
+    const level = user.clickerLevel || 1;
+    const earned = safeCount * level;
 
     user.coins = (user.coins || 0) + earned;
     await user.save();
 
     res.status(200).json({
       earned,
-      coins: user.coins
+      coins: user.coins,
+      clickerLevel: level
     });
   } catch (error) {
     logger.error('Ошибка кликера:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Улучшение кликера
+const upgradeClicker = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const currentLevel = user.clickerLevel || 1;
+    const upgradeCost = Math.round(Math.pow(currentLevel, 1.5) * 100);
+
+    if ((user.coins || 0) < upgradeCost) {
+      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
+    }
+
+    user.coins -= upgradeCost;
+    user.clickerLevel = currentLevel + 1;
+    await user.save();
+
+    res.status(200).json({
+      message: `⚡ Уровень прокачан до Lv. ${user.clickerLevel}!`,
+      clickerLevel: user.clickerLevel,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка прокачки кликера:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Викторина
+const answerQuiz = async (req, res) => {
+  try {
+    const { questionId, answerIndex } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const q = QUIZ_QUESTIONS.find(item => item.id === questionId);
+    if (!q) return res.status(404).json({ message: 'Вопрос не найден' });
+
+    if (q.correct !== Number(answerIndex)) {
+      return res.status(400).json({ message: 'Неверный ответ! Попробуйте еще раз.' });
+    }
+
+    const reward = q.reward || 15;
+    user.coins = (user.coins || 0) + reward;
+    await user.save();
+
+    res.status(200).json({
+      message: `📖 Правильно! Вы получили +${reward} монет!`,
+      coins: user.coins,
+      reward
+    });
+  } catch (error) {
+    logger.error('Ошибка викторины:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Квесты
+const claimQuest = async (req, res) => {
+  try {
+    const { questId } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const quest = QUESTS_LIST.find(q => q.id === questId);
+    if (!quest) return res.status(404).json({ message: 'Задание не найдено' });
+
+    if (user.completedQuests && user.completedQuests.includes(questId)) {
+      return res.status(400).json({ message: 'Награда за это задание уже получена!' });
+    }
+
+    user.completedQuests = user.completedQuests || [];
+    user.completedQuests.push(questId);
+    user.coins = (user.coins || 0) + quest.reward;
+    await user.save();
+
+    res.status(200).json({
+      message: `🎉 Задание "${quest.title}" выполнено! Получено +${quest.reward} монет`,
+      coins: user.coins,
+      completedQuests: user.completedQuests
+    });
+  } catch (error) {
+    logger.error('Ошибка забора задания:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };

@@ -2113,7 +2113,13 @@ const Chat = () => {
             {/* Вкладки Магазина Предметов & Заработка */}
             <div className="store-tabs">
               <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
-                ⚡ Заработок Монет
+                ⚡ Кликер
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'quiz' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quiz')}>
+                📖 Викторина
+              </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'quests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quests')}>
+                🎯 Квесты
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
@@ -2125,10 +2131,10 @@ const Chat = () => {
                 👑 Титулы
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'auras' ? 'active' : ''}`} onClick={() => setActiveStoreTab('auras')}>
-                ✨ Ауры профиля
+                ✨ Ауры
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'chatStyles' ? 'active' : ''}`} onClick={() => setActiveStoreTab('chatStyles')}>
-                💬 Стили сообщений
+                💬 Стили
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'badges' ? 'active' : ''}`} onClick={() => setActiveStoreTab('badges')}>
                 🏅 Значки
@@ -2138,7 +2144,7 @@ const Chat = () => {
               </button>
             </div>
 
-            {/* Вкладка Заработок Монет */}
+            {/* Вкладка 1: Заработок Монет (Кликер) */}
             {activeStoreTab === 'clicker' && (
               <div style={{ textAlign: 'center', padding: '10px 5px' }}>
                 <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.15))', borderRadius: '18px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '16px' }}>
@@ -2161,10 +2167,10 @@ const Chat = () => {
 
                 <div style={{ background: 'var(--bg-secondary)', borderRadius: '18px', padding: '20px', border: '1px solid var(--border-color)' }}>
                   <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <Zap size={22} color="#3b82f6" /> Монетный Тапер
+                    <Zap size={22} color="#3b82f6" /> Монетный Тапер (Lv. {storeData?.clickerLevel || 1})
                   </h3>
                   <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    Нажимайте на золотую монету для заработка коинов!
+                    Нажимайте на монету! Каждая прокачка увеличивает доход на +1 🪙 за клик!
                   </p>
 
                   <div className="tap-button-wrapper" style={{ position: 'relative', display: 'inline-block', margin: '15px 0' }}>
@@ -2194,6 +2200,101 @@ const Chat = () => {
                       </div>
                     ))}
                   </div>
+
+                  <button
+                    className="btn btn-primary"
+                    style={{ width: '100%', marginTop: '10px', padding: '10px', background: 'linear-gradient(135deg, #10b981, #059669)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '12px' }}
+                    onClick={handleUpgradeClicker}
+                  >
+                    <Zap size={18} />
+                    <span>Прокачать доход за клик (Стоимость: {Math.round(Math.pow(storeData?.clickerLevel || 1, 1.5) * 100)} 🪙)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Вкладка 2: Викторина Знаний */}
+            {activeStoreTab === 'quiz' && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                  <h3 style={{ margin: '0 0 4px', color: '#f59e0b' }}>📖 Викторина Знаний</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Отвечайте правильно на вопросы и получайте монеты умом!
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {(storeData?.quizQuestions || [
+                    { id: 1, question: 'Какая планета называется Красной планетой?', options: ['Марс', 'Венера', 'Юпитер'], correct: 0, reward: 15 },
+                    { id: 2, question: 'Что из перечисленного является столицей Франции?', options: ['Париж', 'Берлин', 'Рим'], correct: 0, reward: 15 },
+                    { id: 3, question: 'Сколько секунд в одной минуте?', options: ['60 секунд', '100 секунд', '30 секунд'], correct: 0, reward: 15 },
+                    { id: 4, question: 'Какая химическая формула у чистой воды?', options: ['H2O', 'CO2', 'NaCl'], correct: 0, reward: 20 },
+                    { id: 5, question: 'Какой океан является самым большим на Земле?', options: ['Тихий океан', 'Атлантический', 'Индийский'], correct: 0, reward: 25 }
+                  ]).map(q => (
+                    <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>
+                        📖 {q.question} <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>(+🪙 {q.reward})</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {q.options.map((opt, optIdx) => (
+                          <button
+                            key={optIdx}
+                            className="btn btn-secondary"
+                            style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                            onClick={() => handleAnswerQuiz(q.id, optIdx)}
+                          >
+                            <span>{opt}</span>
+                            <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Ответить →</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Вкладка 3: Квесты */}
+            {activeStoreTab === 'quests' && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+                  <h3 style={{ margin: '0 0 4px', color: '#10b981' }}>🎯 Ежедневные Задания & Квесты</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Выполняйте простые задания и получайте заслуженную награду коинами!
+                  </p>
+                </div>
+
+                <div className="quests-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {(storeData?.quests || [
+                    { id: 'quest_first_msg', title: '💬 Пожелать удачи в чате', reward: 15, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
+                    { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 30, icon: '🎁', desc: 'Подарите подарок другу' },
+                    { id: 'quest_click_100', title: '⚡ Натапать 100 кликов в сфере', reward: 25, icon: '⚡', desc: 'Сделайте 100 кликов в кликере' },
+                    { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 20, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
+                    { id: 'quest_milky_fan', title: '👑 Поприветствовать MilkyVIP', reward: 50, icon: '👑', desc: 'Отправьте сообщение Меценату MilkyVIP' },
+                  ]).map(q => {
+                    const isDone = storeData?.completedQuests?.includes(q.id);
+                    return (
+                      <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ fontSize: '1.8rem' }}>{q.icon}</div>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{q.title}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{q.desc}</div>
+                          </div>
+                        </div>
+
+                        <div>
+                          {isDone ? (
+                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Выполнено ✅</span>
+                          ) : (
+                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px' }} onClick={() => handleClaimQuest(q.id)}>
+                              +🪙 {q.reward}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

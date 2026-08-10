@@ -5,6 +5,9 @@ const {
   getStoreCatalog,
   claimDailyBonus,
   tapCoins,
+  upgradeClicker,
+  answerQuiz,
+  claimQuest,
   buyItem,
   equipItem,
   sendGiftOrCoins
@@ -13,6 +16,9 @@ const {
 router.get('/store', authMiddleware, getStoreCatalog);
 router.post('/claim-daily', authMiddleware, claimDailyBonus);
 router.post('/tap', authMiddleware, tapCoins);
+router.post('/upgrade-clicker', authMiddleware, upgradeClicker);
+router.post('/quiz', authMiddleware, answerQuiz);
+router.post('/claim-quest', authMiddleware, claimQuest);
 router.post('/buy', authMiddleware, buyItem);
 router.post('/equip', authMiddleware, equipItem);
 router.post('/send-gift', authMiddleware, sendGiftOrCoins);
