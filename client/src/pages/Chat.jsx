@@ -65,6 +65,7 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
   const verified = isVerified !== undefined ? isVerified : (isObj ? usrOrName.isVerified : false);
   const colorClass = nameColor || (isObj ? usrOrName.nameColor : '');
   const title = userTitle || (isObj ? usrOrName.userTitle : '');
+  const userBadges = badges || (isObj ? usrOrName.badges : []);
 
   let nameStyleClass = '';
   if (colorClass && colorClass !== 'default' && colorClass !== 'none') {
@@ -79,6 +80,11 @@ const renderUsernameWithBadge = (usrOrName, isVerified, nameColor, badges, userT
         {username || 'Пользователь'}
       </span>
       {title && <span className="user-title-tag">{title}</span>}
+      {userBadges && Array.isArray(userBadges) && userBadges.map((b, idx) => (
+        <span key={idx} className="badge-tag" style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', fontWeight: 800 }}>
+          {b}
+        </span>
+      ))}
       {(verified || username === 'MilkyVIP') && <BadgeCheck size={16} color="#3b82f6" title="Оригинал" />}
     </span>
   );
@@ -2303,12 +2309,14 @@ const Chat = () => {
             {['frames', 'nameColors', 'badges', 'titles', 'auras', 'chatStyles'].includes(activeStoreTab) && (
               <div className="store-items-grid">
                 {(storeData?.catalog?.[activeStoreTab] || []).map(item => {
-                  const isOwned = storeData?.userInventory?.includes(item.id);
-                  const isEquipped = storeData?.equippedFrame === item.id || 
-                    storeData?.equippedColor === item.id || 
-                    storeData?.equippedTitle === item.title || 
-                    storeData?.equippedAura === item.id || 
-                    storeData?.equippedChatStyle === item.id;
+                  const isOwned = (user?.role === 'admin' || user?.username === 'MilkyVIP') || (storeData?.userInventory?.includes(item.id)) || (user?.inventory?.includes(item.id));
+                  const isEquipped = 
+                    (activeStoreTab === 'frames' && (user?.avatarFrame === item.id || storeData?.equippedFrame === item.id)) ||
+                    (activeStoreTab === 'nameColors' && (user?.nameColor === item.id || storeData?.equippedColor === item.id)) ||
+                    (activeStoreTab === 'titles' && (user?.userTitle === item.title || storeData?.equippedTitle === item.title)) ||
+                    (activeStoreTab === 'auras' && (user?.profileAura === item.id || storeData?.equippedAura === item.id)) ||
+                    (activeStoreTab === 'chatStyles' && (user?.chatStyle === item.id || storeData?.equippedChatStyle === item.id)) ||
+                    (activeStoreTab === 'badges' && (user?.badges?.includes(item.badge)));
 
                   return (
                     <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
