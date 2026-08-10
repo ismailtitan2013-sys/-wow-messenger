@@ -2335,49 +2335,55 @@ const Chat = () => {
               <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>Выберите подарок из каталога:</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
                 {(storeData.catalog?.gifts || [
-                  { id: 'gift_dates', name: 'Пальма', price: 50, icon: '🌴' },
-                  { id: 'gift_coffee', name: 'Премиум Кофе', price: 100, icon: '☕' },
-                  { id: 'gift_rose', name: 'Букет Роз', price: 120, icon: '🌺' },
-                  { id: 'gift_pizza', name: 'Пицца', price: 150, icon: '🍕' },
-                  { id: 'gift_book', name: 'Книга Знаний', price: 200, icon: '📖' },
-                  { id: 'gift_cake', name: 'Торт', price: 250, icon: '🎂' },
-                  { id: 'gift_magic_box', name: 'Шкатулка', price: 300, icon: '🎁' },
-                  { id: 'gift_crescent', name: 'Полумесяц', price: 500, icon: '🌙' },
-                  { id: 'gift_trophy', name: 'Кубок', price: 750, icon: '🏆' },
-                  { id: 'gift_rocket', name: 'Ракета', price: 800, icon: '🚀' },
-                  { id: 'gift_mosque', name: 'Замок Мира', price: 1000, icon: '🏰' },
-                  { id: 'gift_watch', name: 'Часы', price: 1500, icon: '⌚' },
-                  { id: 'gift_emerald', name: 'Изумруд', price: 2500, icon: '💎' },
-                  { id: 'gift_ring', name: 'Перстень', price: 3000, icon: '💍' },
-                  { id: 'gift_car', name: 'Автомобиль', price: 5000, icon: '🏎️' },
-                  { id: 'gift_tiger', name: 'Тигр', price: 7000, icon: '🐅' },
-                  { id: 'gift_horse', name: 'Скакун', price: 8500, icon: '🏇' },
-                  { id: 'gift_yacht', name: 'Яхта', price: 10000, icon: '🛥️' },
-                  { id: 'gift_sword', name: 'Меч Почета', price: 12000, icon: '🗡️' },
-                  { id: 'gift_palace', name: 'Дом', price: 15000, icon: '🏰' },
-                  { id: 'gift_airplane', name: 'Самолет', price: 25000, icon: '🛩️' },
-                  { id: 'gift_crown', name: 'Корона', price: 50000, icon: '👑' },
-                  { id: 'gift_planet', name: 'Планета', price: 100000, icon: '🪐' },
-                  { id: 'gift_supernova', name: 'Супернова', price: 200000, icon: '💫' },
-                  { id: 'gift_charity_box', name: 'Сокровищница', price: 250000, icon: '📦' },
-                  { id: 'gift_universe', name: 'Вселенная', price: 500000, icon: '🌌' }
+                  { id: 'gift_star', name: 'Telegram Star', price: 500, icon: '⭐️', rarity: 'Limited', totalIssued: 5000 },
+                  { id: 'gift_bear', name: 'Plush Bear', price: 1500, icon: '🧸', rarity: 'Rare', totalIssued: 2500 },
+                  { id: 'gift_heart', name: 'Crystal Heart', price: 2500, icon: '💖', rarity: 'Rare', totalIssued: 1500 },
+                  { id: 'gift_ring', name: 'Diamond Ring', price: 5000, icon: '💍', rarity: 'Epic', totalIssued: 1000 },
+                  { id: 'gift_rocket', name: 'Cosmic Rocket', price: 10000, icon: '🚀', rarity: 'Epic', totalIssued: 500 },
+                  { id: 'gift_crown', name: 'Imperial Crown', price: 25000, icon: '👑', rarity: 'Legendary', totalIssued: 250 },
+                  { id: 'gift_car', name: 'Cyber Roadster', price: 50000, icon: '🏎️', rarity: 'Exclusive', totalIssued: 100 },
+                  { id: 'gift_yacht', name: 'Luxury Yacht', price: 100000, icon: '🛥️', rarity: 'Exclusive', totalIssued: 50 },
+                  { id: 'gift_planet', name: 'Golden Planet', price: 250000, icon: '🪐', rarity: 'Unique', totalIssued: 10 }
                 ]).map(g => (
                   <div
                     key={g.id}
                     onClick={() => setSelectedGiftId(g.id)}
                     style={{
-                      padding: '10px 6px',
-                      borderRadius: '12px',
-                      border: selectedGiftId === g.id ? '2px solid #10b981' : '1px solid var(--border-color)',
-                      background: selectedGiftId === g.id ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary)',
+                      position: 'relative',
+                      padding: '12px 8px',
+                      borderRadius: '14px',
+                      border: selectedGiftId === g.id ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: selectedGiftId === g.id ? 'rgba(59, 130, 246, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: selectedGiftId === g.id ? '0 0 15px rgba(59, 130, 246, 0.4)' : 'none',
                       cursor: 'pointer',
                       textAlign: 'center',
-                      transition: 'transform 0.15s'
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    <div style={{ fontSize: '2rem' }}>{g.icon}</div>
-                    <div style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 800 }}>🪙 {g.price}</div>
+                    {/* TG Rarity Badge */}
+                    <span style={{
+                      position: 'absolute',
+                      top: '6px',
+                      right: '6px',
+                      fontSize: '0.62rem',
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: '6px',
+                      background: g.rarity === 'Unique' ? 'linear-gradient(135deg, #ec4899, #8b5cf6)' : 
+                                  g.rarity === 'Exclusive' ? 'linear-gradient(135deg, #ef4444, #f59e0b)' :
+                                  g.rarity === 'Legendary' ? 'linear-gradient(135deg, #f59e0b, #eab308)' :
+                                  g.rarity === 'Epic' ? 'linear-gradient(135deg, #a855f7, #6366f1)' : '#3b82f6',
+                      color: '#fff',
+                      textTransform: 'uppercase'
+                    }}>
+                      {g.rarity || 'Limited'}
+                    </span>
+
+                    <div style={{ fontSize: '2.4rem', filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.5))', margin: '4px 0 2px' }}>{g.icon}</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.name}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 900, marginTop: '2px' }}>🪙 {g.price.toLocaleString()}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '2px' }}>1 of {g.totalIssued || 1000}</div>
                   </div>
                 ))}
               </div>
