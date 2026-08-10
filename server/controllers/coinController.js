@@ -89,7 +89,21 @@ const ACHIEVEMENTS_LIST = [
   { id: 'ach_welcome', title: '🌟 Первые шаги', reward: 50, icon: '🌟', desc: 'Успешный вход в мессенджер' },
   { id: 'ach_chat_active', title: '💬 Дружеское общение', reward: 25, icon: '💬', desc: 'Активное общение в диалогах' },
   { id: 'ach_gift_giver', title: '🎁 Щедрый подарок', reward: 50, icon: '🎁', desc: 'Подарок другу или участнику' },
-  { id: 'ach_respect_milky', title: '👑 Уважение Меценату', reward: 100, icon: '👑', desc: 'Приветствие Создателя MilkyVIP' }
+  { id: 'ach_respect_milky', title: '👑 Уважение Меценату', reward: 100, icon: '👑', desc: 'Приветствие Создателя MilkyVIP' },
+  { id: 'ach_profile_avatar', title: '📸 Своя аватарка', reward: 40, icon: '📸', desc: 'Установите свой уникальный аватар' },
+  { id: 'ach_bio_set', title: '📝 Заполнить био', reward: 30, icon: '📝', desc: 'Напишите несколько слов о себе в профиле' },
+  { id: 'ach_clicker_100', title: '⚡ 100 кликов труда', reward: 50, icon: '⚡', desc: 'Сделайте 100 кликов собственным трудом' },
+  { id: 'ach_rich_saver', title: '💰 Капитал 1 000 монет', reward: 150, icon: '💰', desc: 'Накопите 1 000 монет на счете' },
+  { id: 'ach_channel_post', title: '📢 Читатель канала', reward: 75, icon: '📢', desc: 'Ознакомьтесь с новостями в канале' },
+  { id: 'ach_vip_fan', title: '👑 Почетный участник', reward: 200, icon: '👑', desc: 'Приобретите или надетьте любой предмет в магазине' }
+];
+
+// Профессии и Трудовые Контракты (Честный заработок труда)
+const JOBS_LIST = [
+  { id: 'job_courier', title: '🚚 Доставка сообщений', reward: 40, durationMin: 1, icon: '🚚', desc: 'Выполнить быстрый контракт курьера' },
+  { id: 'job_developer', title: '💻 Программирование модуля', reward: 120, durationMin: 5, icon: '💻', desc: 'Написать код нового функционала' },
+  { id: 'job_designer', title: '🎨 Дизайн тем и оформления', reward: 250, durationMin: 15, icon: '🎨', desc: 'Создать уникальное оформление' },
+  { id: 'job_architect', title: '🏛️ Архитектура системы', reward: 600, durationMin: 30, icon: '🏛️', desc: 'Разработать масштабную архитектуру' }
 ];
 
 const getClickerUpgradeCost = (level) => {
@@ -111,6 +125,7 @@ const getStoreCatalog = async (req, res) => {
     res.status(200).json({
       catalog: STORE_ITEMS,
       achievements: ACHIEVEMENTS_LIST,
+      jobs: JOBS_LIST,
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -289,6 +304,29 @@ const buyBusiness = async (req, res) => {
     });
   } catch (error) {
     logger.error('Ошибка бизнес-майнинга:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
+// Выполнение трудового контракта (Профессии)
+const claimJob = async (req, res) => {
+  try {
+    const { jobId } = req.body;
+    const user = await User.findById(req.user.id);
+    await checkMilkyVIP(user);
+
+    const job = JOBS_LIST.find(j => j.id === jobId);
+    if (!job) return res.status(404).json({ message: 'Контракт не найден' });
+
+    user.coins = (user.coins || 0) + job.reward;
+    await user.save();
+
+    res.status(200).json({
+      message: `🛠️ Контракт "${job.title}" выполнен! +${job.reward} монет`,
+      coins: user.coins
+    });
+  } catch (error) {
+    logger.error('Ошибка работы:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
@@ -568,9 +606,11 @@ module.exports = {
   upgradeClicker,
   buyBusiness,
   claimAchievement,
+  claimJob,
   buyItem,
   equipItem,
   sendGiftOrCoins,
   STORE_ITEMS,
-  ACHIEVEMENTS_LIST
+  ACHIEVEMENTS_LIST,
+  JOBS_LIST
 };

@@ -414,6 +414,26 @@ const Chat = () => {
     }
   };
 
+  const handleClaimJob = async (jobId) => {
+    try {
+      const res = await axios.post('/api/coins/claim-job', { jobId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data && res.data.coins) {
+        setUser(prev => {
+          if (!prev) return prev;
+          const u = { ...prev, coins: res.data.coins };
+          localStorage.setItem('wow_user', JSON.stringify(u));
+          return u;
+        });
+        setStoreData(prev => ({ ...prev, userCoins: res.data.coins }));
+        toast.success(res.data.message || 'Контракт выполнен!');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Ошибка выполнения контракта');
+    }
+  };
+
   const handleBuyItem = async (itemId, category) => {
     try {
       const res = await axios.post('/api/coins/buy', { itemId, category }, {
@@ -2084,6 +2104,9 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'achievements' ? 'active' : ''}`} onClick={() => setActiveStoreTab('achievements')}>
                 🏆 Достижения
               </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'jobs' ? 'active' : ''}`} onClick={() => setActiveStoreTab('jobs')}>
+                🛠️ Работа
+              </button>
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
@@ -2229,7 +2252,7 @@ const Chat = () => {
               </div>
             )}
 
-            {/* Вкладка 2: Награды и Достижения (Халяль) */}
+            {/* Вкладка 3: Награды и Достижения (Халяль) */}
             {activeStoreTab === 'achievements' && (
               <div style={{ padding: '10px 5px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -2261,14 +2284,49 @@ const Chat = () => {
                           {isClaimed ? (
                             <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Получено ✅</span>
                           ) : (
-                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px' }} onClick={() => handleClaimAchievement(ach.id)}>
-                              +🪙 {ach.reward}
+                            <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => handleClaimAchievement(ach.id)}>
+                              <Coins size={14} color="#ffffff" /> +{ach.reward}
                             </button>
                           )}
                         </div>
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Вкладка 4: Трудовые Контракты и Профессии */}
+            {activeStoreTab === 'jobs' && (
+              <div style={{ padding: '10px 5px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: '0 0 4px', color: '#3b82f6' }}>🛠️ Трудовые Контракты (Честный Заработок)</h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    Выполняйте реальную полезную работу и получайте заслуженное вознаграждение!
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {(storeData?.jobs || [
+                    { id: 'job_courier', title: '🚚 Доставка сообщений', reward: 40, durationMin: 1, icon: '🚚', desc: 'Выполнить быстрый контракт курьера' },
+                    { id: 'job_developer', title: '💻 Программирование модуля', reward: 120, durationMin: 5, icon: '💻', desc: 'Написать код нового функционала' },
+                    { id: 'job_designer', title: '🎨 Дизайн тем и оформления', reward: 250, durationMin: 15, icon: '🎨', desc: 'Создать уникальное оформление' },
+                    { id: 'job_architect', title: '🏛️ Архитектура системы', reward: 600, durationMin: 30, icon: '🏛️', desc: 'Разработать масштабную архитектуру' }
+                  ]).map(job => (
+                    <div key={job.id} style={{ background: 'var(--bg-secondary)', padding: '12px 16px', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ fontSize: '1.8rem' }}>{job.icon}</div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{job.title}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{job.desc}</div>
+                        </div>
+                      </div>
+
+                      <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.82rem', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} onClick={() => handleClaimJob(job.id)}>
+                        <Coins size={14} color="#ffffff" /> +{job.reward}
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
