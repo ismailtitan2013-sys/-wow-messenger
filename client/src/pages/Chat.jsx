@@ -2065,42 +2065,33 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Магазин и Заработок Монет */}
+      {/* Официальный Магазин WoW */}
       {showStoreModal && (
         <div className="modal-overlay" onClick={() => setShowStoreModal(false)}>
           <div className="modal-content store-modal-content fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShoppingBag size={24} color="#f59e0b" />
-                <h2 style={{ margin: 0 }}>🛍️ Магазин & Заработок Монет</h2>
+                <h2 style={{ margin: 0 }}>🛍️ Официальный Магазин WoW</h2>
               </div>
               <button className="btn-icon" onClick={() => setShowStoreModal(false)}><X size={20} /></button>
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(245, 158, 11, 0.15))', padding: '14px 18px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 15px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               <div>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш баланс: </span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш текущий баланс: </span>
                 <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
                   🪙 {(storeData?.userCoins || 0).toLocaleString()} Coins
                 </span>
               </div>
-              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px', background: 'linear-gradient(135deg, #10b981, #059669)' }} disabled={!storeData?.canClaimDaily} onClick={handleClaimDaily}>
-                {storeData?.canClaimDaily ? '🌙 Ежедневный подарок (+100..300 🪙)' : '✅ Подарок получен'}
-              </button>
+              <div style={{ fontSize: '0.78rem', opacity: 0.8, color: 'var(--text-primary)' }}>
+                Пополнение через переводы & комиссии
+              </div>
             </div>
 
-            {/* Вкладки Магазина и Заработка */}
+            {/* Вкладки Магазина Предметов */}
             <div className="store-tabs">
-              <button className={`store-tab-btn ${activeStoreTab === 'clicker' ? 'active' : ''}`} onClick={() => setActiveStoreTab('clicker')}>
-                ⚡ Честный Труд (Кликер)
-              </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'quiz' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quiz')}>
-                📖 Викторина Знаний
-              </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'quests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('quests')}>
-                🌿 Благие Дела & Квесты
-              </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
+              <button className={`store-tab-btn ${activeStoreTab === 'frames' || activeStoreTab === 'clicker' || activeStoreTab === 'quiz' || activeStoreTab === 'quests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
               <button className={`store-tab-btn ${activeStoreTab === 'nameColors' ? 'active' : ''}`} onClick={() => setActiveStoreTab('nameColors')}>
@@ -2118,143 +2109,10 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'badges' ? 'active' : ''}`} onClick={() => setActiveStoreTab('badges')}>
                 🏅 Значки
               </button>
+              <button className={`store-tab-btn ${activeStoreTab === 'gifts' ? 'active' : ''}`} onClick={() => { setShowStoreModal(false); setShowGiftModal(true); }}>
+                🎁 Подарки
+              </button>
             </div>
-
-            {/* Вкладка 1: Честный Труд (Кликер) */}
-            {activeStoreTab === 'clicker' && (
-              <div className="clicker-container">
-                <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-                  <h3 style={{ margin: '0 0 4px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                    <Zap size={22} color="#f59e0b" /> Заработок Честным Трудом
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Нажимая на монету, вы зарабатываете коины собственным честным трудом без обмана!
-                  </p>
-                </div>
-
-                <div className="tap-button-wrapper">
-                  <div className="tap-button" onClick={handleTapCoin} title="Нажмите для работы!">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.2)', width: '88px', height: '88px', borderRadius: '50%', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-                      <Coins size={54} color="#ffffff" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }} />
-                    </div>
-                  </div>
-                  {tapFloats.map(f => (
-                    <div key={f.id} className="tap-float-number" style={{ left: f.x, top: f.y }}>
-                      {f.text}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="miner-stats-bar">
-                  <div className="miner-stat-card">
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Уровень мастерства</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#3b82f6' }}>Lv. {storeData?.clickerLevel || 1}</div>
-                  </div>
-                  <div className="miner-stat-card">
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Доход за труд</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                      <span>+{user?.username?.toLowerCase() === 'milkyvip' ? '10 000 000' : 1 + ((storeData?.clickerLevel || 1) - 1)}</span>
-                      <Coins size={18} color="#10b981" />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  className="btn btn-primary"
-                  style={{ width: '100%', marginTop: '15px', padding: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  onClick={handleUpgradeClicker}
-                >
-                  <Zap size={18} />
-                  <span>Прокачать мастерство (Стоимость: {Math.round(Math.pow(storeData?.clickerLevel || 1, 1.8) * 500)})</span>
-                  <Coins size={18} color="#fbbf24" />
-                </button>
-              </div>
-            )}
-
-            {/* Вкладка 2: Викторина Полезных Знаний */}
-            {activeStoreTab === 'quiz' && (
-              <div>
-                <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                  <h3 style={{ margin: '0 0 4px' }}>📖 Викторина Полезных Знаний</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Зарабатывайте коины умом! Отвечайте правильно на полезные вопросы.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {(storeData?.quizQuestions || [
-                    { id: 1, question: 'Что является традиционным символом уюта и гостеприимства?', options: ['Горячий ароматный кофе', 'Кола', 'Чипсы'], correct: 0, reward: 3 },
-                    { id: 2, question: 'Какое приветствие означает дружеское пожелание мира?', options: ['Приветствие мира', 'Привет', 'Хеллоу'], correct: 0, reward: 3 },
-                    { id: 3, question: 'Как называется добровольная поддержка и милостыня ради добра?', options: ['Благотворительность', 'Кредит', 'Процент'], correct: 0, reward: 5 },
-                    { id: 4, question: 'Честны ли азартные игры и быстрые рискованные ставки?', options: ['Нет, это опасный риск и обман', 'Да, вполне', 'Не знаю'], correct: 0, reward: 10 }
-                  ]).map(q => (
-                    <div key={q.id} style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>
-                        📖 {q.question} <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>(+🪙 {q.reward})</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {q.options.map((opt, optIdx) => (
-                          <button
-                            key={optIdx}
-                            className="btn btn-secondary"
-                            style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                            onClick={() => handleAnswerQuiz(q.id, optIdx)}
-                          >
-                            <span>{opt}</span>
-                            <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Ответить →</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Вкладка 3: Благие Дела */}
-            {activeStoreTab === 'quests' && (
-              <div>
-                <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-                  <h3 style={{ margin: '0 0 4px' }}>🌿 Добрые Дела & Квесты</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Совершайте хорошие дела и получайте заслуженную награду коинами!
-                  </p>
-                </div>
-
-                <div className="quests-list">
-                  {(storeData?.quests || [
-                    { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 5, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-                    { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 10, icon: '🎁', desc: 'Подарите красивый подарок другу' },
-                    { id: 'quest_click_100', title: '⚡ Натапать 100 монет честным трудом', reward: 15, icon: '⚡', desc: 'Заработайте 100 монет в кликере труда' },
-                    { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 15, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-                    { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 25, icon: '👑', desc: 'Отдайте дань уважения создателю MilkyVIP' },
-                  ]).map(q => {
-                    const isDone = storeData?.completedQuests?.includes(q.id);
-                    return (
-                      <div key={q.id} className="quest-card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ fontSize: '1.8rem' }}>{q.icon}</div>
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{q.title}</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{q.desc}</div>
-                          </div>
-                        </div>
-
-                        <div>
-                          {isDone ? (
-                            <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem' }}>Выполнено ✅</span>
-                          ) : (
-                            <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleClaimQuest(q.id)}>
-                              +🪙 {q.reward}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Карточки предметов Магазина (Рамки, Ник, Значки, Титулы, Ауры, Стили сообщений) */}
             {['frames', 'nameColors', 'badges', 'titles', 'auras', 'chatStyles'].includes(activeStoreTab) && (

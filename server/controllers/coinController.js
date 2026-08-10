@@ -66,47 +66,6 @@ const STORE_ITEMS = {
   ]
 };
 
-// Сбалансированный список заданий с реалистичными сложными наградами
-const QUESTS_LIST = [
-  { id: 'quest_first_msg', title: '💬 Пожелать мира в чате', reward: 5, icon: '💬', desc: 'Отправьте приветствие в любой чат' },
-  { id: 'quest_send_gift', title: '🎁 Сделать подарок другу', reward: 10, icon: '🎁', desc: 'Подарите подарок другу' },
-  { id: 'quest_click_100', title: '⚡ Заработать 100 монет трудом', reward: 15, icon: '⚡', desc: 'Натапайте 100 монет в кликере' },
-  { id: 'quest_quiz', title: '📖 Пройти Викторину Знаний', reward: 15, icon: '📖', desc: 'Ответьте правильно на вопросы викторины' },
-  { id: 'quest_milky_fan', title: '👑 Поприветствовать Мецената MilkyVIP', reward: 25, icon: '👑', desc: 'Отдайте дань уважения MilkyVIP' },
-];
-
-// Вопросы для Викторины Полезных Знаний
-const QUIZ_QUESTIONS = [
-  {
-    id: 1,
-    question: 'Что является традиционным символом уюта и гостеприимства?',
-    options: ['Горячий ароматный кофе', 'Кола', 'Чипсы'],
-    correct: 0,
-    reward: 3
-  },
-  {
-    id: 2,
-    question: 'Какое приветствие означает дружеское пожелание мира?',
-    options: ['Приветствие мира', 'Привет', 'Хеллоу'],
-    correct: 0,
-    reward: 3
-  },
-  {
-    id: 3,
-    question: 'Как называется добровольная поддержка и милостыня ради добра?',
-    options: ['Благотворительность', 'Кредит', 'Процент'],
-    correct: 0,
-    reward: 5
-  },
-  {
-    id: 4,
-    question: 'Честны ли азартные игры и быстрые рискованные ставки?',
-    options: ['Нет, это опасный риск и обман', 'Да, вполне', 'Не знаю'],
-    correct: 0,
-    reward: 10
-  }
-];
-
 // Проверка MilkyVIP (Главный Меценат и Создатель)
 const checkMilkyVIP = async (user) => {
   if (!user) return;
@@ -131,14 +90,8 @@ const getStoreCatalog = async (req, res) => {
     const user = await User.findById(req.user.id);
     await checkMilkyVIP(user);
 
-    const now = Date.now();
-    const lastDaily = user.lastDailyClaim ? new Date(user.lastDailyClaim).getTime() : 0;
-    const canClaimDaily = (now - lastDaily) >= 24 * 60 * 60 * 1000;
-
     res.status(200).json({
       catalog: STORE_ITEMS,
-      quests: QUESTS_LIST,
-      quizQuestions: QUIZ_QUESTIONS,
       userCoins: user.coins || 0,
       userInventory: user.inventory || [],
       equippedFrame: user.avatarFrame || 'none',
@@ -148,186 +101,10 @@ const getStoreCatalog = async (req, res) => {
       equippedAura: user.profileAura || 'none',
       equippedChatStyle: user.chatStyle || 'default',
       equippedBadges: user.badges || [],
-      giftsReceived: user.giftsReceived || [],
-      completedQuests: user.completedQuests || [],
-      clickerLevel: user.clickerLevel || 1,
-      canClaimDaily,
-      dailyStreak: user.dailyStreak || 0
+      giftsReceived: user.giftsReceived || []
     });
   } catch (error) {
     logger.error('Ошибка получения магазина:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-  }
-};
-
-// Сложный ежедневный бонус (максимум +15 монет при стрике!)
-const claimDailyBonus = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
-
-    const now = new Date();
-    const lastClaim = user.lastDailyClaim ? new Date(user.lastDailyClaim) : null;
-
-    if (lastClaim && (now.getTime() - lastClaim.getTime() < 24 * 60 * 60 * 1000)) {
-      return res.status(400).json({ message: 'Ежедневный подарок уже получен! Приходите завтра.' });
-    }
-
-    let streak = user.dailyStreak || 0;
-    if (lastClaim && (now.getTime() - lastClaim.getTime() < 48 * 60 * 60 * 1000)) {
-      streak += 1;
-    } else {
-      streak = 1;
-    }
-
-    // Трудный бонус: 5 монет * стрик (максимум 15 монет)
-    const bonusAmount = Math.min(15, 5 * streak);
-    user.coins = (user.coins || 0) + bonusAmount;
-    user.lastDailyClaim = now;
-    user.dailyStreak = streak;
-
-    await user.save();
-    await checkMilkyVIP(user);
-
-    logger.info(`User ${user.username} claimed daily bonus of ${bonusAmount} coins (Streak: ${streak})`);
-    res.status(200).json({ 
-      message: `🌙 Вы получили подарок +${bonusAmount} монет! (Дней подряд: ${streak})`, 
-      coins: user.coins, 
-      lastDailyClaim: user.lastDailyClaim,
-      dailyStreak: streak 
-    });
-  } catch (error) {
-    logger.error('Ошибка получения бонуса:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-  }
-};
-
-// Сложный кликер честного труда (10 тапов = 1 монета!)
-const tapCoins = async (req, res) => {
-  try {
-    const { count = 1 } = req.body;
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
-
-    const safeCount = Math.min(20, Math.max(1, Number(count)));
-    const level = user.clickerLevel || 1;
-    
-    // Трудная кликерная прогрессия: 10 тапов = 1 монета на Lv.1
-    const earned = Math.max(1, Math.round(safeCount * 0.1 * level));
-
-    user.coins = (user.coins || 0) + earned;
-    await user.save();
-    await checkMilkyVIP(user);
-
-    res.status(200).json({
-      earned,
-      coins: user.coins,
-      clickerLevel: user.clickerLevel || 1
-    });
-  } catch (error) {
-    logger.error('Ошибка кликера труда:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-  }
-};
-
-// Прокачка уровня кликера (Реалистичная экономическая прогрессия)
-const upgradeClicker = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
-
-    const currentLevel = user.clickerLevel || 1;
-    // Стоимость прокачки: Lv.1 -> Lv.2: 500, Lv.2 -> Lv.3: 1500, Lv.3 -> Lv.4: 4500
-    const upgradeCost = Math.round(Math.pow(currentLevel, 1.8) * 500);
-
-    if ((user.coins || 0) < upgradeCost) {
-      return res.status(400).json({ message: `Недостаточно монет! Требуется 🪙 ${upgradeCost}` });
-    }
-
-    user.coins -= upgradeCost;
-    user.clickerLevel = currentLevel + 1;
-    await user.save();
-    await checkMilkyVIP(user);
-
-    res.status(200).json({
-      message: `⚡ Уровень мастерства повышен до Lv. ${user.clickerLevel}!`,
-      clickerLevel: user.clickerLevel,
-      coins: user.coins
-    });
-  } catch (error) {
-    logger.error('Ошибка улучшения умения:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-  }
-};
-
-// Викторина Знаний
-const answerQuiz = async (req, res) => {
-  try {
-    const { questionId, answerIndex } = req.body;
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
-
-    const q = QUIZ_QUESTIONS.find(item => item.id === questionId);
-    if (!q) {
-      return res.status(404).json({ message: 'Вопрос не найден' });
-    }
-
-    if (q.correct !== Number(answerIndex)) {
-      return res.status(400).json({ message: 'Неверный ответ! Попробуйте еще раз.' });
-    }
-
-    const reward = q.reward || 50;
-    user.coins = (user.coins || 0) + reward;
-
-    if (user.completedQuests && !user.completedQuests.includes('quest_quiz')) {
-      user.completedQuests.push('quest_quiz');
-    }
-
-    await user.save();
-    await checkMilkyVIP(user);
-
-    logger.info(`User ${user.username} answered quiz correctly and earned ${reward} coins`);
-    res.status(200).json({
-      message: `📖 Правильно! Вы получили +🪙 ${reward} монет за знания!`,
-      coins: user.coins,
-      reward
-    });
-  } catch (error) {
-    logger.error('Ошибка в викторине:', { error });
-    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
-  }
-};
-
-// Забор задания
-const claimQuest = async (req, res) => {
-  try {
-    const { questId } = req.body;
-    const user = await User.findById(req.user.id);
-    await checkMilkyVIP(user);
-
-    const quest = QUESTS_LIST.find(q => q.id === questId);
-    if (!quest) {
-      return res.status(404).json({ message: 'Задание не найдено' });
-    }
-
-    if (user.completedQuests && user.completedQuests.includes(questId)) {
-      return res.status(400).json({ message: 'Награда за это благое дело уже получена!' });
-    }
-
-    user.completedQuests = user.completedQuests || [];
-    user.completedQuests.push(questId);
-    user.coins = (user.coins || 0) + quest.reward;
-
-    await user.save();
-    await checkMilkyVIP(user);
-
-    res.status(200).json({
-      message: `🎉 Задание "${quest.title}" выполнено! Получено +🪙 ${quest.reward}`,
-      coins: user.coins,
-      completedQuests: user.completedQuests
-    });
-  } catch (error) {
-    logger.error('Ошибка забора задания:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
   }
 };
