@@ -1989,128 +1989,211 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Telegram-Style User Profile Modal with Gift Showcase */}
+      {/* Ultra-Modern Telegram Premium & Discord Hybrid User Profile Modal */}
       {showUserProfile && (
-        <div className="tg-profile-overlay" onClick={() => setShowUserProfile(null)}>
-          <div className={`tg-profile-card fade-in ${showUserProfile.profileAura && showUserProfile.profileAura !== 'none' ? `aura-${showUserProfile.profileAura}` : ''}`} onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div className="tg-profile-header">
-              <button className="tg-profile-close" onClick={() => setShowUserProfile(null)}><X size={18} /></button>
-              <div className="tg-profile-avatar-box">
+        <div className="hybrid-profile-overlay" onClick={() => setShowUserProfile(null)}>
+          <div className="hybrid-profile-card" onClick={e => e.stopPropagation()}>
+            
+            {/* 1. Cover Banner */}
+            <div className="hybrid-cover-banner">
+              <button className="hybrid-cover-close" onClick={() => setShowUserProfile(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 2. Overlapping Avatar & Status */}
+            <div className="hybrid-avatar-header">
+              <div className="hybrid-avatar-wrapper">
                 <UserAvatar usr={showUserProfile} size="large" />
+                <div className={`hybrid-status-dot ${showUserProfile.status === 'online' ? '' : 'offline'}`} />
               </div>
-              <div className="tg-profile-name">
-                {renderUsernameWithBadge(showUserProfile.username, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges, showUserProfile.userTitle)}
+
+              {showUserProfile.userTitle && (
+                <div className="user-title-tag">
+                  {showUserProfile.userTitle}
+                </div>
+              )}
+            </div>
+
+            {/* 3. User Info Header */}
+            <div className="hybrid-user-info">
+              <div className="hybrid-display-name">
+                {renderUsernameWithBadge(showUserProfile.username, showUserProfile.isVerified, showUserProfile.nameColor, showUserProfile.badges, null)}
               </div>
-              <div className="tg-profile-status">
-                {showUserProfile.status === 'online' ? '🟢 в сети' : '⚪ был(а) недавно'}
+              <div 
+                className="hybrid-username-badge"
+                onClick={() => {
+                  navigator.clipboard.writeText(`@${showUserProfile.username}`);
+                  toast.success(`Скопировано: @${showUserProfile.username}`);
+                }}
+                title="Нажмите, чтобы скопировать @username"
+              >
+                <AtSign size={14} /> @{showUserProfile.username}
               </div>
             </div>
 
-            <div className="tg-profile-body">
-              <div className="tg-info-row">
-                <div className="tg-info-icon"><AtSign size={18} /></div>
-                <div>
-                  <div className="tg-info-label">Имя пользователя (Username)</div>
-                  <div className="tg-info-val" style={{ color: '#3b82f6', fontWeight: 700 }}>@{showUserProfile.username}</div>
+            {/* 4. Glassmorphism Stat Cards (3 Columns) */}
+            <div className="hybrid-stats-grid">
+              <div className="hybrid-stat-card">
+                <div style={{ fontSize: '1.4rem' }}>🪙</div>
+                <div className="hybrid-stat-value" style={{ color: '#f59e0b' }}>
+                  {(showUserProfile.coins || 0).toLocaleString()}
                 </div>
+                <div className="hybrid-stat-label">Монеты</div>
               </div>
 
-              <div className="tg-info-row">
-                <div className="tg-info-icon"><MessageSquare size={18} /></div>
-                <div>
-                  <div className="tg-info-label">О себе (Bio)</div>
-                  <div className="tg-info-val">{showUserProfile.bio || 'Информация не указана'}</div>
+              <div className="hybrid-stat-card">
+                <div style={{ fontSize: '1.4rem' }}>🎁</div>
+                <div className="hybrid-stat-value" style={{ color: '#ec4899' }}>
+                  {showUserProfile.giftsReceived?.length || 0}
                 </div>
+                <div className="hybrid-stat-label">Подарки</div>
               </div>
 
-              <div className="tg-info-row">
-                <div className="tg-info-icon"><Coins size={18} /></div>
-                <div>
-                  <div className="tg-info-label">Баланс монет</div>
-                  <div className="tg-info-val" style={{ color: '#f59e0b', fontWeight: 800, fontSize: '1.1rem' }}>
-                    🪙 {(showUserProfile.coins || 0).toLocaleString()} Coins
+              <div className="hybrid-stat-card">
+                <div style={{ fontSize: '1.4rem' }}>💎</div>
+                <div className="hybrid-stat-value" style={{ color: '#8b5cf6' }}>
+                  {(showUserProfile.nfts || (showUserProfile.id === user?.id ? user?.nfts : []) || []).length}
+                </div>
+                <div className="hybrid-stat-label">NFT Коллекции</div>
+              </div>
+            </div>
+
+            {/* 5. Bio Card */}
+            <div className="hybrid-bio-card">
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'normal', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', fontWeight: 800 }}>
+                💬 О себе (Bio)
+              </div>
+              "{showUserProfile.bio || 'Пользователь еще не указал информацию о себе.'}"
+            </div>
+
+            {/* 6. NFT Showcase Grid */}
+            {(() => {
+              const ownedNftIds = showUserProfile.nfts || (showUserProfile.id === user?.id ? user?.nfts : []) || [];
+              const KNOWN_NFTS = {
+                'nft_faith_amulet_24949': { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk"' },
+                'nft_dragon': { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Falcon', rarity: 'Rare', icon: '🦅', desc: 'Быстрый Космический Сокол' },
+                'nft_panther': { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
+                'nft_crown': { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', icon: '👑', desc: 'Императорская Корона Мецената' },
+                'nft_portal': { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', icon: '🌀', desc: 'Портал в Галактическую Вселенную' }
+              };
+
+              const userNftItems = ownedNftIds.map(id => KNOWN_NFTS[id]).filter(Boolean);
+
+              return (
+                <div className="hybrid-showcase-section">
+                  <div className="hybrid-section-title">
+                    <span>💎 Коллекционные NFT ({userNftItems.length})</span>
+                    <span style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>Уникальные артефакты</span>
                   </div>
-                </div>
-              </div>
 
-              {/* 🎁 Секция полученных подарков с подробным счетчиком и анимацией */}
-              <div style={{ marginTop: '16px', background: 'var(--bg-secondary)', padding: '14px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                    🎁 Коллекция подарков ({showUserProfile.giftsReceived?.length || 0})
-                  </span>
-                  {showUserProfile.giftsReceived?.length > 0 && (
-                    <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>
-                      🪙 {showUserProfile.giftsReceived.reduce((sum, g) => sum + (g.coins || 0), 0).toLocaleString()} coins
-                    </span>
+                  {userNftItems.length > 0 ? (
+                    <div className="hybrid-showcase-grid">
+                      {userNftItems.map(nft => {
+                        const rarityColors = { Mythic: '#ec4899', Legendary: '#f59e0b', Epic: '#a855f7', Rare: '#3b82f6' };
+                        const rColor = rarityColors[nft.rarity] || '#8b5cf6';
+
+                        return (
+                          <div key={nft.id} className="hybrid-showcase-item" style={{ borderColor: `${rColor}66` }}>
+                            <div className="hybrid-rarity-tag" style={{ background: `${rColor}33`, color: rColor }}>
+                              {nft.rarity}
+                            </div>
+                            {nft.imageUrl ? (
+                              <img src={nft.imageUrl} alt={nft.name} style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', margin: '8px auto 4px', border: `1px solid ${rColor}` }} />
+                            ) : (
+                              <div style={{ fontSize: '2rem', margin: '8px 0 4px' }}>{nft.icon}</div>
+                            )}
+                            <div style={{ fontWeight: 800, fontSize: '0.78rem', color: rColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nft.name}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>{nft.serial}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', color: '#64748b', fontSize: '0.82rem' }}>
+                      💎 В коллекции пока нет эксклюзивных NFT.
+                    </div>
                   )}
                 </div>
+              );
+            })()}
 
-                {Array.isArray(showUserProfile.giftsReceived) && showUserProfile.giftsReceived.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
-                    {showUserProfile.giftsReceived.map((g, idx) => (
-                      <div 
-                        key={idx} 
-                        onClick={() => setActiveGiftEffect({
-                          icon: g.giftIcon || '🎁',
-                          name: g.giftName,
-                          coins: g.coins,
-                          message: g.message,
-                          senderName: g.fromUsername
-                        })}
-                        style={{ background: 'var(--bg-primary)', padding: '8px', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border-color)', cursor: 'pointer', transition: 'transform 0.15s' }}
-                        title="Нажмите для просмотра эффекта подарка!"
-                      >
-                        <div style={{ fontSize: '1.8rem', marginBottom: '2px' }}>{g.giftIcon || '🎁'}</div>
-                        <div style={{ fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.giftName}</div>
-                        <div style={{ fontSize: '0.72rem', color: '#3b82f6', fontWeight: 600 }}>От: @{g.fromUsername}</div>
-                        {g.message && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '2px' }}>"{g.message}"</div>}
+            {/* 6. Gift Showcase Grid */}
+            <div className="hybrid-showcase-section">
+              <div className="hybrid-section-title">
+                <span>🎁 Коллекция Подарков ({showUserProfile.giftsReceived?.length || 0})</span>
+                {showUserProfile.giftsReceived?.length > 0 && (
+                  <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 800 }}>
+                    🪙 {showUserProfile.giftsReceived.reduce((sum, g) => sum + (g.coins || 0), 0).toLocaleString()} coins
+                  </span>
+                )}
+              </div>
+
+              {Array.isArray(showUserProfile.giftsReceived) && showUserProfile.giftsReceived.length > 0 ? (
+                <div className="hybrid-showcase-grid">
+                  {showUserProfile.giftsReceived.map((g, idx) => (
+                    <div 
+                      key={idx} 
+                      className="hybrid-showcase-item"
+                      onClick={() => setActiveGiftEffect({
+                        icon: g.giftIcon || '🎁',
+                        name: g.giftName,
+                        coins: g.coins,
+                        message: g.message,
+                        senderName: g.fromUsername
+                      })}
+                    >
+                      <div className="hybrid-rarity-tag" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' }}>
+                        TG Gift
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '15px 10px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    🎁 У этого пользователя пока нет подарков.<br />
-                    {showUserProfile?.username !== user?.username && 'Будьте первым, кто подарит подарок!'}
-                  </div>
-                )}
-              </div>
-
-              {/* Кнопки действий */}
-              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                {showUserProfile?.username === user?.username ? (
-                  <>
-                    <button className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #f59e0b, #d97706)', fontWeight: 700 }} onClick={() => {
-                      setShowUserProfile(null);
-                      fetchStoreAndOpen();
-                    }}>
-                      🛍️ Открыть Магазин & Заработок
-                    </button>
-                    <button className="btn btn-secondary" onClick={() => {
-                      setShowUserProfile(null);
-                      setShowSettingsModal(true);
-                    }}>
-                      ⚙️ Профиль
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => {
-                      handleStartChat(showUserProfile.id || showUserProfile._id);
-                      setShowUserProfile(null);
-                    }}>
-                      💬 Написать сообщение
-                    </button>
-                    <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none' }} onClick={() => {
-                      setGiftRecipient(showUserProfile);
-                      setShowGiftModal(true);
-                    }}>
-                      🎁 Подарить
-                    </button>
-                  </>
-                )}
-              </div>
+                      <div style={{ fontSize: '2rem', margin: '4px 0' }}>{g.giftIcon || '🎁'}</div>
+                      <div style={{ fontWeight: 800, fontSize: '0.78rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.giftName}</div>
+                      <div style={{ fontSize: '0.68rem', color: '#3b82f6' }}>От @{g.fromUsername}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', color: '#64748b', fontSize: '0.82rem' }}>
+                  🎁 Подарков пока нет.
+                </div>
+              )}
             </div>
+
+            {/* 7. Action Buttons & Spring Physics */}
+            <div className="hybrid-actions">
+              {showUserProfile?.username === user?.username ? (
+                <>
+                  <button className="hybrid-btn hybrid-btn-gold" onClick={() => {
+                    setShowUserProfile(null);
+                    fetchStoreAndOpen();
+                  }}>
+                    🛍️ Магазин & NFT Маркет
+                  </button>
+                  <button className="hybrid-btn hybrid-btn-primary" onClick={() => {
+                    setShowUserProfile(null);
+                    setShowSettingsModal(true);
+                  }}>
+                    ⚙️ Настройки
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="hybrid-btn hybrid-btn-primary" onClick={() => {
+                    handleStartChat(showUserProfile.id || showUserProfile._id);
+                    setShowUserProfile(null);
+                  }}>
+                    💬 Написать сообщение
+                  </button>
+                  <button className="hybrid-btn hybrid-btn-gold" onClick={() => {
+                    setGiftRecipient(showUserProfile);
+                    setShowGiftModal(true);
+                  }}>
+                    🎁 Подарить
+                  </button>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
       )}

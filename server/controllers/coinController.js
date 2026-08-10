@@ -157,15 +157,20 @@ const getStoreCatalog = async (req, res) => {
   }
 };
 
-// Топ игроков (Лидерборд)
+// Топ игроков (Лидерборд - сортировка по NFT и Монетам)
 const getLeaderboard = async (req, res) => {
   try {
-    const topUsers = await User.find({})
-      .select('username avatarUrl avatarFrame nameColor coins nfts clickerStats')
-      .sort({ coins: -1 })
-      .limit(10);
+    const allUsers = await User.find({})
+      .select('username avatarUrl avatarFrame nameColor userTitle profileAura coins nfts clickerStats');
 
-    res.status(200).json({ leaderboard: topUsers });
+    allUsers.sort((a, b) => {
+      const nftsA = (a.nfts || []).length;
+      const nftsB = (b.nfts || []).length;
+      if (nftsB !== nftsA) return nftsB - nftsA;
+      return (b.coins || 0) - (a.coins || 0);
+    });
+
+    res.status(200).json({ leaderboard: allUsers.slice(0, 10) });
   } catch (error) {
     logger.error('Ошибка получения лидерборда:', { error });
     res.status(500).json({ message: 'Внутренняя ошибка сервера' });
