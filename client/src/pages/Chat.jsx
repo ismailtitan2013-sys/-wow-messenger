@@ -2213,9 +2213,7 @@ const Chat = () => {
                     <div key={item.id} className={`store-item-card ${isEquipped ? 'equipped' : ''}`}>
                       <div style={{ margin: '10px 0', minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {activeStoreTab === 'frames' && (
-                          <div className={`avatar-wrapper frame-${item.id}`}>
-                            <UserAvatar usr={user} size="default" />
-                          </div>
+                          <UserAvatar usr={{ username: user?.username, avatarUrl: user?.avatarUrl, avatarFrame: item.id, profileAura: 'none' }} size="default" />
                         )}
                         {activeStoreTab === 'nameColors' && (
                           <span className={`name-color-${item.id}`} style={{ fontSize: '1.1rem', fontWeight: 700 }}>
@@ -2229,12 +2227,10 @@ const Chat = () => {
                           <span className="user-title-tag" style={{ fontSize: '0.9rem', padding: '4px 10px' }}>{item.title}</span>
                         )}
                         {activeStoreTab === 'auras' && (
-                          <div className={`avatar-wrapper ${item.id}`} style={{ padding: '6px' }}>
-                            <UserAvatar usr={user} size="default" />
-                          </div>
+                          <UserAvatar usr={{ username: user?.username, avatarUrl: user?.avatarUrl, avatarFrame: 'none', profileAura: item.id }} size="default" />
                         )}
                         {activeStoreTab === 'chatStyles' && (
-                          <div className={`message-bubble ${item.id}`} style={{ padding: '8px 14px', borderRadius: '14px', fontSize: '0.85rem' }}>
+                          <div className={`message-bubble chat-style-${item.id}`} style={{ padding: '8px 14px', borderRadius: '14px', fontSize: '0.85rem' }}>
                             Сообщение ✨
                           </div>
                         )}

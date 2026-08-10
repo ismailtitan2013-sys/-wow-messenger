@@ -1782,44 +1782,40 @@ body {
   border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
-/* PROFILE AURAS */
+/* PROFILE AURAS (Soft Smooth Glow around Avatar) */
 .aura-aura_gold, .aura-gold {
-  box-shadow: 0 0 35px rgba(245, 158, 11, 0.6), inset 0 0 20px rgba(245, 158, 11, 0.3) !important;
-  border: 2px solid #f59e0b !important;
+  box-shadow: 0 0 22px 6px rgba(245, 158, 11, 0.5) !important;
 }
 .aura-aura_neon, .aura-neon {
-  box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), inset 0 0 20px rgba(59, 130, 246, 0.4) !important;
-  border: 2px solid #3b82f6 !important;
+  box-shadow: 0 0 22px 6px rgba(59, 130, 246, 0.55) !important;
 }
 .aura-aura_fire, .aura-fire {
-  box-shadow: 0 0 45px rgba(239, 68, 68, 0.8), inset 0 0 25px rgba(239, 68, 68, 0.4) !important;
-  border: 2px solid #ef4444 !important;
+  box-shadow: 0 0 24px 6px rgba(239, 68, 68, 0.6) !important;
 }
 .aura-aura_cosmic, .aura-cosmic {
-  box-shadow: 0 0 50px rgba(168, 85, 247, 0.9), inset 0 0 25px rgba(168, 85, 247, 0.5) !important;
-  border: 2px solid #a855f7 !important;
+  box-shadow: 0 0 26px 7px rgba(168, 85, 247, 0.65) !important;
 }
 
 /* NAME COLORS */
 .name-color-color_gold, .name-color-gold {
   color: #f59e0b !important;
   font-weight: 800 !important;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
 }
 .name-color-color_neon_blue, .name-color-neon_blue, .name-color-neon-blue {
   color: #3b82f6 !important;
   font-weight: 800 !important;
-  text-shadow: 0 0 12px rgba(59, 130, 246, 0.7) !important;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5) !important;
 }
 .name-color-color_purple, .name-color-purple {
   color: #a855f7 !important;
   font-weight: 800 !important;
-  text-shadow: 0 0 12px rgba(168, 85, 247, 0.7) !important;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5) !important;
 }
 .name-color-color_emerald, .name-color-emerald {
   color: #10b981 !important;
   font-weight: 800 !important;
-  text-shadow: 0 0 12px rgba(16, 185, 129, 0.7) !important;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5) !important;
 }
 .name-color-color_rainbow, .name-color-rainbow {
   background: linear-gradient(135deg, #ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6) !important;
@@ -1836,42 +1832,50 @@ body {
   display: inline-block !important;
 }
 
-/* AVATAR FRAMES */
+/* AVATAR FRAMES (Single Crisp Ring) */
 .avatar-wrapper {
   position: relative;
+  border-radius: 50% !important;
 }
 .frame-frame_gold, .frame-gold {
-  box-shadow: 0 0 0 3px #f59e0b, 0 0 18px rgba(245, 158, 11, 0.8) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
 }
 .frame-frame_neon, .frame-neon {
-  box-shadow: 0 0 0 3px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.9) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.7) !important;
 }
 .frame-frame_fire, .frame-fire {
-  box-shadow: 0 0 0 3px #ef4444, 0 0 22px rgba(249, 115, 22, 0.9) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #ef4444 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.7) !important;
 }
 .frame-frame_cyber, .frame-cyber {
-  box-shadow: 0 0 0 3px #8b5cf6, 0 0 22px rgba(139, 92, 246, 0.9) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #8b5cf6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.7) !important;
 }
 .frame-frame_vip, .frame-vip {
-  box-shadow: 0 0 0 3px #eab308, 0 0 28px rgba(234, 179, 8, 0.9) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #eab308 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 18px rgba(234, 179, 8, 0.8) !important;
 }
 .frame-frame_diamond, .frame-diamond {
-  box-shadow: 0 0 0 3px #06b6d4, 0 0 28px rgba(6, 182, 212, 0.9) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #06b6d4 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.8) !important;
 }
 .frame-frame_galaxy, .frame-galaxy {
-  box-shadow: 0 0 0 3px #ec4899, 0 0 32px rgba(236, 72, 153, 1) !important;
-  border-radius: 50% !important;
+  outline: 3px solid #ec4899 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.9) !important;
 }
 
 /* USER TITLES */
 .user-title-tag {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(234, 179, 8, 0.15));
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(234, 179, 8, 0.12));
   border: 1px solid rgba(245, 158, 11, 0.5);
   color: #f59e0b;
   padding: 2px 8px;
@@ -1882,7 +1886,6 @@ body {
   align-items: center;
   gap: 4px;
   vertical-align: middle;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
 }
 
 /* CHAT BUBBLE STYLES FOR COINS */
