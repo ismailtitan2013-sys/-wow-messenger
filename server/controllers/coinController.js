@@ -116,19 +116,18 @@ const getClickerUpgradeCost = (level) => {
 };
 
 const NFT_ITEMS = [
-  { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана' },
+  { id: 'nft_faith_amulet_24949', serial: '#24949', name: '📿 Faith Symbol', rarity: 'Mythic', price: 1000000, icon: '🐕', imageUrl: 'https://i.getgems.io/zWo6B6TzrbCt3LQgWYLF0An1wB_RWxN_TOj5V-5MgkE/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQ5ejg3aFJaQVY3QzJNVjFnazM5LWJTZzVZZnMyRWRNcjlIZks4MUl1QjJSbGMvMDY5MzhjMWJjMjYxZjAyMg.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с символом Добермана (Getgems Top #1)' },
+  { id: 'nft_tg_numbers', serial: '+888 0707', name: '📱 Anonymous TG Number', rarity: 'Mythic', price: 2500000, icon: '📱', imageUrl: 'https://i.getgems.io/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUNBMTRvMS1WcHQwQW5nakdiTFFLMmRRZTB3alVuVnFtTS1xWC1hLXlHX0hfZUkvMDAx.jpg', desc: 'Анонимный номер Telegram (+888 0707) с Getgems Top Collections' },
+  { id: 'nft_tg_usernames', serial: '@durov', name: '💎 Telegram Username NFT', rarity: 'Mythic', price: 5000000, icon: '💎', imageUrl: 'https://i.getgems.io/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUIzbk5xNWdHMzc3V3BQM1Q5VDR5V2JLNWZMOFYyWWY3UXo0SjZrN2I5SjVyX1kvMDAx.jpg', desc: 'Официальный коллекционный юзернейм Telegram NFT (@durov) с Getgems' },
+  { id: 'nft_ton_whales', serial: '#1234', name: '🐋 TON Whales Club', rarity: 'Legendary', price: 1500000, icon: '🐋', imageUrl: 'https://i.getgems.io/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUFPUXdkd3c4akdmdEpDU0ZnT1FzVmRZNHo3YlZfMU0wSnQ0RzJxNFEtYV8yYTYvMDAx.jpg', desc: 'Элитный клуб TON Whales с рынка Getgems Top Collections' },
+  { id: 'nft_ton_punks', serial: '#777', name: '⚡ TON Punks Cyber', rarity: 'Epic', price: 800000, icon: '⚡', imageUrl: 'https://i.getgems.io/rs:fill:300:300:1/g:ce/czM6Ly9nZXRnZW1zLXMzL25mdC1jb250ZW50LWNhY2hlL2ltYWdlcy9FUUQxNTlfZjZzOTQzODlzOGY3NXM5NDM4OXM4Zjc1czk0Mzg5czhmNzVzOTQzODkvMDAx.jpg', desc: 'Кибер-панк коллекция TON Punks с Getgems NFT Market' },
   { id: 'nft_tg_star_gift', serial: '#001', name: '⭐️ Telegram Star Gift', rarity: 'Rare', price: 50000, icon: '⭐️', desc: 'Официальный коллекционный подарок Telegram Star' },
   { id: 'nft_tg_pepe', serial: '#420', name: '🐸 Telegram Cyber Pepe', rarity: 'Epic', price: 250000, icon: '🐸', desc: 'Редчайший коллекционный Pepe Gift из Telegram' },
   { id: 'nft_tg_spotty', serial: '#777', name: '🐶 Telegram Spotty Dog', rarity: 'Legendary', price: 500000, icon: '🐶', desc: 'Легендарный пес Spotty — официальный символ Telegram' },
   { id: 'nft_tg_box', serial: '#999', name: '🎁 Telegram Golden Gift Box', rarity: 'Mythic', price: 1000000, icon: '🎁', desc: 'Золотая коллекционная коробка подарков Telegram' },
-  { id: 'nft_tg_whale', serial: '#888', name: '🐋 Telegram TON Whale', rarity: 'Mythic', price: 3000000, icon: '🐋', desc: 'Эксклюзивный кит блокчейна TON из Telegram' },
   { id: 'nft_gold_mask', serial: '#111', name: '🎭 Golden Sheikh Mask', rarity: 'Legendary', price: 2500000, icon: '🎭', desc: 'Маска Золотого Шейха из чистого золота 999 пробы' },
   { id: 'nft_diamond_crown', serial: '#007', name: '👑 Imperial Diamond Crown', rarity: 'Mythic', price: 5000000, icon: '👑', desc: 'Императорская корона с 1000 редких инкрустированных алмазов' },
-  { id: 'nft_emerald_ring', serial: '#777', name: '💍 Cyber Emerald Ring', rarity: 'Mythic', price: 10000000, icon: '💍', desc: 'Ультра-эксклюзивный перстень с гигантским изумрудом' },
-  { id: 'nft_dragon', serial: '#001', name: '🌌 Cosmic Falcon', rarity: 'Rare', price: 1500, icon: '🦅', desc: 'Быстрый Космический Сокол' },
-  { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
-  { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
-  { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', price: 10000, icon: '🌀', desc: 'Портал в Галактическую Вселенную' }
+  { id: 'nft_emerald_ring', serial: '#777', name: '💍 Cyber Emerald Ring', rarity: 'Mythic', price: 10000000, icon: '💍', desc: 'Ультра-эксклюзивный перстень с гигантским изумрудом' }
 ];
 
 // Получение каталога магазина и данных о балансе
