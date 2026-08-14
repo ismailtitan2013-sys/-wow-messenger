@@ -591,9 +591,10 @@ const Chat = () => {
   };
 
   const renderNftVisual = (nft, color) => {
+    // If real image URL exists and hasn't errored
     if (nft.imageUrl && !nftImageErrors[nft.id]) {
       return (
-        <div style={{ width: '100%', height: '130px', borderRadius: '14px', overflow: 'hidden', margin: '28px 0 12px', border: `1px solid ${color}66`, boxShadow: `0 0 20px ${color}40`, position: 'relative' }}>
+        <div style={{ width: '100%', height: '140px', borderRadius: '14px', overflow: 'hidden', margin: '24px 0 12px', border: `1px solid ${color}66`, boxShadow: `0 0 24px ${color}40`, position: 'relative' }}>
           <img
             src={nft.imageUrl}
             alt={nft.name}
@@ -605,54 +606,111 @@ const Chat = () => {
       );
     }
 
+    // 📱 Anonymous Telegram SIM Card 3D Art
     if (nft.id?.includes('anon') || nft.name?.includes('Anonymous') || nft.serial?.startsWith('+888')) {
       return (
-        <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311b92 100%)', border: '1px solid rgba(168, 85, 247, 0.5)', boxShadow: '0 0 25px rgba(168, 85, 247, 0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%)' }} />
-          <div style={{ fontSize: '1.8rem', marginBottom: '4px', filter: 'drop-shadow(0 0 12px #c084fc)' }}>📱</div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#e879f9', letterSpacing: '1px', textShadow: '0 0 15px rgba(232, 121, 249, 0.8)' }}>
-            {nft.serial || '+888 0707'}
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#a855f7', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-            Fragment SIM Card
-          </div>
+        <div style={{ width: '100%', height: '140px', borderRadius: '14px', margin: '24px 0 12px', background: 'radial-gradient(circle at 30% 30%, #3b0764 0%, #0f172a 70%, #020617 100%)', border: '1px solid rgba(168, 85, 247, 0.6)', boxShadow: '0 0 30px rgba(168, 85, 247, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <svg width="100%" height="100%" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="simGrad" x1="0" y1="0" x2="240" y2="140" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#a855f7" stopOpacity="0.8"/>
+                <stop offset="0.5" stopColor="#6366f1" stopOpacity="0.9"/>
+                <stop offset="1" stopColor="#0f172a"/>
+              </linearGradient>
+              <linearGradient id="goldChip" x1="0" y1="0" x2="40" y2="30" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#fbbf24"/>
+                <stop offset="1" stopColor="#d97706"/>
+              </linearGradient>
+            </defs>
+            <rect x="25" y="15" width="190" height="110" rx="12" fill="url(#simGrad)" stroke="#c084fc" strokeWidth="1.5"/>
+            <rect x="45" y="35" width="38" height="28" rx="4" fill="url(#goldChip)" stroke="#fef08a"/>
+            <path d="M45 49H83 M64 35V63" stroke="#92400e" strokeWidth="1.2"/>
+            <path d="M195 15L215 35V113C215 119.627 209.627 125 203 125H37C30.3726 125 25 119.627 25 113V27C25 20.3726 30.3726 15 37 15H195Z" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+            <text x="45" y="92" fill="#ffffff" fontSize="18" fontWeight="900" fontFamily="monospace" letterSpacing="1.5" filter="drop-shadow(0 2px 8px rgba(0,0,0,0.8))">
+              {nft.serial || '+888 0707'}
+            </text>
+            <text x="45" y="108" fill="#e879f9" fontSize="9" fontWeight="800" letterSpacing="2">
+              FRAGMENT OFFICIAL SIM
+            </text>
+          </svg>
         </div>
       );
     }
 
+    // 💎 Telegram Username @durov 3D Trophy Art
     if (nft.id?.includes('username') || nft.name?.includes('Username') || nft.desc?.includes('durov')) {
       return (
-        <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)', border: '1px solid rgba(56, 189, 248, 0.5)', boxShadow: '0 0 25px rgba(56, 189, 248, 0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: '1.8rem', marginBottom: '4px', filter: 'drop-shadow(0 0 12px #38bdf8)' }}>💎</div>
-          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#7dd3fc', textShadow: '0 0 15px rgba(125, 211, 252, 0.8)' }}>
-            @durov
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#38bdf8', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-            Fragment Collectible
-          </div>
+        <div style={{ width: '100%', height: '140px', borderRadius: '14px', margin: '24px 0 12px', background: 'radial-gradient(circle at 50% 30%, #0369a1 0%, #0f172a 75%, #020617 100%)', border: '1px solid rgba(56, 189, 248, 0.6)', boxShadow: '0 0 30px rgba(56, 189, 248, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <svg width="100%" height="100%" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="diamondGrad" x1="120" y1="15" x2="120" y2="75" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#38bdf8"/>
+                <stop offset="1" stopColor="#0284c7"/>
+              </linearGradient>
+            </defs>
+            <polygon points="120,15 150,40 120,80 90,40" fill="url(#diamondGrad)" stroke="#7dd3fc" strokeWidth="2"/>
+            <polygon points="120,15 150,40 120,45 90,40" fill="rgba(255,255,255,0.4)"/>
+            <line x1="120" y1="45" x2="120" y2="80" stroke="#bae6fd" strokeWidth="1.5"/>
+            <ellipse cx="120" cy="80" rx="45" ry="8" fill="none" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4 2"/>
+            <text x="120" y="106" textAnchor="middle" fill="#38bdf8" fontSize="16" fontWeight="900" letterSpacing="1" filter="drop-shadow(0 0 10px #0284c7)">
+              @durov
+            </text>
+            <text x="120" y="122" textAnchor="middle" fill="#93c5fd" fontSize="9" fontWeight="800" letterSpacing="2">
+              FRAGMENT USERNAME NFT
+            </text>
+          </svg>
         </div>
       );
     }
 
+    // 🐳 TON Whales Club 3D Art
     if (nft.id?.includes('whale') || nft.name?.includes('Whale') || nft.name?.includes('TON')) {
       return (
-        <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0f172a 100%)', border: '1px solid rgba(34, 211, 238, 0.5)', boxShadow: '0 0 25px rgba(34, 211, 238, 0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '4px', filter: 'drop-shadow(0 0 12px #22d3ee)' }}>🐳</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#67e8f9', textShadow: '0 0 15px rgba(103, 232, 249, 0.8)' }}>
-            TON Whales Club
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#22d3ee', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-            GetGems Verified
-          </div>
+        <div style={{ width: '100%', height: '140px', borderRadius: '14px', margin: '24px 0 12px', background: 'radial-gradient(circle at 50% 40%, #0891b2 0%, #0f172a 75%, #020617 100%)', border: '1px solid rgba(34, 211, 238, 0.6)', boxShadow: '0 0 30px rgba(34, 211, 238, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <svg width="100%" height="100%" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="120" cy="50" r="32" fill="rgba(6,182,212,0.25)" stroke="#22d3ee" strokeWidth="2"/>
+            <path d="M100 52C100 42 110 38 122 38C136 38 142 46 142 54C142 62 130 64 120 64C112 64 100 60 100 52Z" fill="#22d3ee"/>
+            <path d="M142 52L150 46V58L142 52Z" fill="#06b6d4"/>
+            <circle cx="112" cy="48" r="2.5" fill="#ffffff"/>
+            <text x="120" y="104" textAnchor="middle" fill="#67e8f9" fontSize="15" fontWeight="900" letterSpacing="1">
+              TON WHALES CLUB
+            </text>
+            <text x="120" y="120" textAnchor="middle" fill="#22d3ee" fontSize="9" fontWeight="800" letterSpacing="2">
+              GETGEMS VERIFIED #1234
+            </text>
+          </svg>
         </div>
       );
     }
 
+    // 📿 Faith Symbol / Golden Crescent Velvet Dusk
+    if (nft.id?.includes('faith') || nft.name?.includes('Faith') || nft.serial?.includes('24949')) {
+      return (
+        <div style={{ width: '100%', height: '140px', borderRadius: '14px', margin: '24px 0 12px', background: 'radial-gradient(circle at 50% 40%, #7e22ce 0%, #1e1b4b 70%, #020617 100%)', border: '1px solid rgba(192, 132, 252, 0.6)', boxShadow: '0 0 30px rgba(192, 132, 252, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <svg width="100%" height="100%" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="120" cy="50" r="35" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="2"/>
+            <path d="M130 25C113 25 100 38 100 55C100 72 113 85 130 85C122 78 117 67 117 55C117 43 122 32 130 25Z" fill="#fbbf24" filter="drop-shadow(0 0 8px #f59e0b)"/>
+            <path d="M125 45C125 40 128 38 130 35C132 38 135 40 135 45V60H125V45Z" fill="#fef08a"/>
+            <text x="120" y="104" textAnchor="middle" fill="#e9d5ff" fontSize="15" fontWeight="900" letterSpacing="1">
+              FAITH SYMBOL #24949
+            </text>
+            <text x="120" y="120" textAnchor="middle" fill="#c084fc" fontSize="9" fontWeight="800" letterSpacing="2">
+              VELVET DUSK GETGEMS TOP #1
+            </text>
+          </svg>
+        </div>
+      );
+    }
+
+    // Generic 3D Fragment / GetGems Art Banner
     return (
-      <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: `linear-gradient(135deg, ${color}25 0%, rgba(15,23,42,0.9) 100%)`, border: `1px solid ${color}55`, boxShadow: `0 0 20px ${color}30`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: '2.4rem', filter: `drop-shadow(0 0 14px ${color})` }}>{nft.icon || '💎'}</div>
-        <div style={{ fontSize: '0.75rem', fontWeight: 900, color, marginTop: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+      <div style={{ width: '100%', height: '140px', borderRadius: '14px', margin: '24px 0 12px', background: `radial-gradient(circle at 50% 40%, ${color}40 0%, rgba(15,23,42,0.9) 75%, #020617 100%)`, border: `1px solid ${color}66`, boxShadow: `0 0 25px ${color}35`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: '2.5rem', filter: `drop-shadow(0 0 16px ${color})`, marginBottom: '6px' }}>{nft.icon || '💎'}</div>
+        <div style={{ fontSize: '0.95rem', fontWeight: 900, color, textTransform: 'uppercase', letterSpacing: '1px' }}>
           {nft.name || 'GetGems NFT'}
+        </div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+          {nft.serial || '#001'} • GetGems Official
         </div>
       </div>
     );
