@@ -314,7 +314,9 @@ const Chat = () => {
       { id: 'frame_cyber', name: 'Киберпанк', price: 6000, icon: '🤖' },
       { id: 'frame_vip', name: 'Корона Мецената', price: 10000, icon: '👑' },
       { id: 'frame_diamond', name: 'Изумрудный Свет', price: 25000, icon: '💎' },
-      { id: 'frame_galaxy', name: 'Звездный Свет', price: 50000, icon: '🌌' }
+      { id: 'frame_galaxy', name: 'Звездный Свет', price: 50000, icon: '🌌' },
+      { id: 'frame_dragon', name: 'Огненный Дракон', price: 75000, icon: '🐉' },
+      { id: 'frame_cosmos', name: 'Космический Ореол', price: 100000, icon: '🪐' }
     ],
     nameColors: [
       { id: 'color_gold', name: 'Золотой', price: 1000 },

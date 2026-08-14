@@ -1849,40 +1849,73 @@ body {
   position: relative;
   border-radius: 50% !important;
 }
+@keyframes framePulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 10px currentColor) brightness(1.1); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 20px currentColor) brightness(1.4); transform: scale(1.02); }
+}
+
 .frame-frame_gold, .frame-gold {
   outline: 3px solid #f59e0b !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.85), inset 0 0 10px rgba(251, 191, 36, 0.6) !important;
+  animation: framePulseGlow 2.4s infinite ease-in-out;
+  color: #f59e0b;
 }
 .frame-frame_neon, .frame-neon {
   outline: 3px solid #3b82f6 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 14px rgba(59, 130, 246, 0.7) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.9), inset 0 0 12px rgba(96, 165, 250, 0.7) !important;
+  animation: framePulseGlow 2s infinite ease-in-out;
+  color: #3b82f6;
 }
 .frame-frame_fire, .frame-fire {
   outline: 3px solid #ef4444 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.7) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.95), inset 0 0 12px rgba(249, 115, 22, 0.8) !important;
+  animation: framePulseGlow 1.8s infinite ease-in-out;
+  color: #ef4444;
 }
 .frame-frame_cyber, .frame-cyber {
-  outline: 3px solid #8b5cf6 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.7) !important;
+  outline: 3px solid #a855f7 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.95), inset 0 0 12px rgba(192, 132, 252, 0.8) !important;
+  animation: framePulseGlow 2.2s infinite ease-in-out;
+  color: #a855f7;
 }
 .frame-frame_vip, .frame-vip {
   outline: 3px solid #eab308 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 18px rgba(234, 179, 8, 0.8) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 28px rgba(234, 179, 8, 1), inset 0 0 14px rgba(253, 224, 71, 0.85) !important;
+  animation: framePulseGlow 2s infinite ease-in-out;
+  color: #eab308;
 }
 .frame-frame_diamond, .frame-diamond {
   outline: 3px solid #06b6d4 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 18px rgba(6, 182, 212, 0.8) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 28px rgba(6, 182, 212, 1), inset 0 0 14px rgba(103, 232, 249, 0.85) !important;
+  animation: framePulseGlow 2s infinite ease-in-out;
+  color: #06b6d4;
 }
 .frame-frame_galaxy, .frame-galaxy {
   outline: 3px solid #ec4899 !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 20px rgba(236, 72, 153, 0.9) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 30px rgba(236, 72, 153, 1), 0 0 18px rgba(168, 85, 247, 0.9) !important;
+  animation: framePulseGlow 1.8s infinite ease-in-out;
+  color: #ec4899;
+}
+.frame-frame_dragon, .frame-dragon {
+  outline: 3px solid #f97316 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 32px rgba(249, 115, 22, 1), 0 0 20px rgba(239, 68, 68, 0.95) !important;
+  animation: framePulseGlow 1.5s infinite ease-in-out;
+  color: #f97316;
+}
+.frame-frame_cosmos, .frame-cosmos {
+  outline: 3px solid #818cf8 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 32px rgba(129, 140, 248, 1), 0 0 20px rgba(192, 132, 252, 0.95) !important;
+  animation: framePulseGlow 2s infinite ease-in-out;
+  color: #818cf8;
 }
 
 /* USER TITLES & BADGES (Clean Telegram Pill Badges) */
