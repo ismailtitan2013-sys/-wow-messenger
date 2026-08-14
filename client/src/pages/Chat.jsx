@@ -212,6 +212,8 @@ const Chat = () => {
   const [inChatSearchQuery, setInChatSearchQuery] = useState('');
   const [pinnedMessage, setPinnedMessage] = useState(null);
   const [completedQuests, setCompletedQuests] = useState([]);
+  const [nftImageErrors, setNftImageErrors] = useState({});
+  const [nftRarityFilter, setNftRarityFilter] = useState('ALL');
   
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
@@ -2741,9 +2743,22 @@ const Chat = () => {
               <div style={{ padding: '10px 5px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                   <h3 style={{ margin: '0 0 4px', color: '#a855f7' }}>🎨 Цифровые NFT Коллекции</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  <p style={{ margin: '0 0 12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     Собирайте уникальные коллекционные NFT с уникальным порядковым номером и редким оформлением!
                   </p>
+
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {['ALL', 'Rare', 'Epic', 'Legendary', 'Mythic'].map(rarity => (
+                      <button
+                        key={rarity}
+                        className={`store-tab-btn ${nftRarityFilter === rarity ? 'active' : ''}`}
+                        onClick={() => setNftRarityFilter(rarity)}
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', borderRadius: '10px' }}
+                      >
+                        {rarity === 'ALL' ? 'Все NFT' : rarity}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
@@ -2761,7 +2776,7 @@ const Chat = () => {
                     { id: 'nft_panther', serial: '#002', name: '⚡ Cyber Panther', rarity: 'Epic', price: 2500, icon: '🐆', desc: 'Кибернетическая Пантера будущего' },
                     { id: 'nft_crown', serial: '#003', name: '👑 Empire Crown', rarity: 'Legendary', price: 5000, icon: '👑', desc: 'Императорская Корона Мецената' },
                     { id: 'nft_portal', serial: '#004', name: '🌌 Galactic Portal', rarity: 'Mythic', price: 10000, icon: '🌀', desc: 'Портал в Галактическую Вселенную' }
-                  ]).map(nft => {
+                  ]).filter(nft => nftRarityFilter === 'ALL' || nft.rarity === nftRarityFilter).map(nft => {
                     const isOwned = storeData?.userNfts?.includes(nft.id) || user?.nfts?.includes(nft.id);
                     const rarityColors = {
                       Rare: '#3b82f6',
@@ -2779,9 +2794,14 @@ const Chat = () => {
                         <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc', background: 'rgba(15,23,42,0.8)', padding: '2px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {nft.serial}
                         </div>
-                        {nft.imageUrl ? (
+                        {nft.imageUrl && !nftImageErrors[nft.id] ? (
                           <div style={{ margin: '32px auto 10px', width: '90px', height: '90px', borderRadius: '18px', overflow: 'hidden', border: `2px solid ${color}`, boxShadow: `0 0 16px ${color}88` }}>
-                            <img src={nft.imageUrl} alt={nft.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img
+                              src={nft.imageUrl}
+                              alt={nft.name}
+                              onError={() => setNftImageErrors(prev => ({ ...prev, [nft.id]: true }))}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
                           </div>
                         ) : (
                           <div style={{ fontSize: '3.2rem', margin: '30px 0 10px', filter: `drop-shadow(0 0 14px ${color})` }}>{nft.icon}</div>
