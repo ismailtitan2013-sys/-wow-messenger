@@ -14,7 +14,11 @@ const initSocket = (io) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret_default_key');
+      const jwtSecret = process.env.JWT_SECRET || 'supersecret_default_key';
+      if (jwtSecret === 'supersecret_default_key') {
+         console.warn('⚠️ WARNING: Using default JWT_SECRET! This is highly insecure in production.');
+      }
+      const decoded = jwt.verify(token, jwtSecret);
       socket.user = decoded; // Сохраняем данные юзера в объекте сокета
       connectedUsers.set(decoded.id, socket.id);
       next();
@@ -142,6 +146,9 @@ const initSocket = (io) => {
         // Удалять может автор или администратор
         const isMilkyOrAdmin = socket.user.role === 'admin' || socket.user.username === 'MilkyVIP';
         if (message.senderId.toString() !== socket.user.id && !isMilkyOrAdmin) return;
+        
+        // Проверка: относится ли сообщение к этому чату
+        if (message.chatId.toString() !== chatId) return;
 
         message.deletedForEveryone = true;
         // Текст сообщения сохраняется для истории админов/MilkyVIP
@@ -156,6 +163,12 @@ const initSocket = (io) => {
     // Отметка о прочтении
     socket.on('mark_as_read', async (chatId) => {
       try {
+        // Проверяем, состоит ли пользователь в чате
+        const chatObj = await Chat.findById(chatId);
+        if (!chatObj || !chatObj.participants.map(p => p.toString()).includes(socket.user.id.toString())) {
+            return;
+        }
+
         const currentUser = await require('./models/User').findById(socket.user.id);
         if (currentUser && currentUser.settings && currentUser.settings.readReceipts === false) {
           // Читаем без уведомления отправителя
@@ -176,10 +189,18 @@ const initSocket = (io) => {
     });
 
     // Индикация набора текста
-    socket.on('typing', (data) => {
+    socket.on('typing', async (data) => {
       const { chatId, isTyping } = data;
-      // Отправляем событие всем в комнате, КРОМЕ самого отправителя
-      socket.to(chatId).emit('typing', { chatId, senderId: socket.user.id, isTyping });
+      try {
+          const chatObj = await Chat.findById(chatId);
+          if (!chatObj || !chatObj.participants.map(p => p.toString()).includes(socket.user.id.toString())) {
+              return;
+          }
+          // Отправляем событие всем в комнате, КРОМЕ самого отправителя
+          socket.to(chatId).emit('typing', { chatId, senderId: socket.user.id, isTyping });
+      } catch(e) {
+          console.error(e);
+      }
     });
 
     // Реакции на сообщения

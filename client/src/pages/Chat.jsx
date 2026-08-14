@@ -894,6 +894,23 @@ const Chat = () => {
     }
   };
 
+  useEffect(() => {
+    if (!activeStoryViewer) return;
+    
+    const currentStory = activeStoryViewer.stories[activeStoryIndex];
+    if (!currentStory) return;
+
+    // Проверяем, видео ли это. Видео использует onEnded, а не таймер
+    const isVideo = currentStory.mediaType === 'video' || (currentStory.mediaUrl && currentStory.mediaUrl.match(/\.(mp4|webm|mov|avi)$/i));
+    
+    if (!isVideo) {
+      const timer = setTimeout(() => {
+        handleNextStory();
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeStoryViewer, activeStoryIndex]);
+
   const handlePrevStory = () => {
     if (!activeStoryViewer) return;
     if (activeStoryIndex > 0) {
@@ -2971,7 +2988,7 @@ const Chat = () => {
                           src={currentStory.mediaUrl.startsWith('http') ? currentStory.mediaUrl : `${import.meta.env.VITE_API_URL || ''}${currentStory.mediaUrl}`}
                           autoPlay
                           playsInline
-                          loop
+                          onEnded={handleNextStory}
                           className="story-media-video"
                         />
                       ) : (

@@ -24,10 +24,15 @@ const MONGO_URI = process.env.MONGO_URI || '';
 const CLIENT_URL = process.env.CLIENT_URL || '*';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// CORS — принимает любой домен (нужно для GitHub Pages)
+// CORS — ограничение на разрешенные домены в продакшене
+const allowedOrigins = [CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000', 'https://ismailtitan2013-sys.github.io'];
 const corsOptions = {
   origin: function (origin, callback) {
-    callback(null, true);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
@@ -43,8 +48,8 @@ app.set('io', io);
 
 // Middleware
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API роуты

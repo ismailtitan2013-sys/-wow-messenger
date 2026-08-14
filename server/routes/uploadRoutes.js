@@ -25,12 +25,20 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
   fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const dangerousExts = ['.svg', '.html', '.htm', '.xhtml', '.xml', '.php', '.exe', '.sh', '.js'];
+    
+    if (dangerousExts.includes(ext) || file.mimetype.includes('svg') || file.mimetype.includes('html') || file.mimetype.includes('xml')) {
+      return cb(new Error('Недопустимый формат файла (потенциально опасный)'));
+    }
+
     const allowedMimes = [
       'image/jpeg', 'image/png', 'image/gif', 'image/webp',
       'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska', 'video/mov', 'video/avi',
       'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/plain', 'audio/webm', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4'
     ];
+    
     if (allowedMimes.includes(file.mimetype) || file.mimetype.startsWith('video/') || file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {

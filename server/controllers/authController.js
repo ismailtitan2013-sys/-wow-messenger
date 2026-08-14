@@ -7,8 +7,8 @@ const register = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Проверяем, существует ли пользователь
-    const existingUser = await User.findOne({ username });
+    // Проверяем, существует ли пользователь (независимо от регистра)
+    const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
     if (existingUser) {
       return res.status(400).json({ message: 'Пользователь с таким именем уже существует' });
     }
