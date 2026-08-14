@@ -2346,6 +2346,39 @@ body {
   transform: scale(1.35) rotate(6deg);
 }
 
+/* Scroll-to-bottom Floating Action Button */
+.scroll-to-bottom-btn {
+  position: absolute;
+  bottom: 84px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.45);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 20;
+}
+.scroll-to-bottom-btn:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.65);
+}
+.scroll-to-bottom-btn:active {
+  transform: scale(0.92);
+}
+
+/* Online Pulse Ring around User Avatar */
+.online-pulse-avatar {
+  box-shadow: 0 0 0 2.5px #34d399, 0 0 12px rgba(52, 211, 153, 0.7) !important;
+}
+
+
 
 
 

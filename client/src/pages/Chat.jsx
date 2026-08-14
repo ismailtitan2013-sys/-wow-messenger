@@ -11,7 +11,7 @@ import {
   Search, Phone, Video, Paperclip, Smile, 
   Send, Edit2, Trash2, ArrowLeft, Check, CheckCheck, BadgeCheck,
   FileText, Download, MessageSquare, X, Mic, Trash, PhoneOff,
-  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, Upload,
+  Plus, Sparkles, Eye, Image, Palette, ChevronLeft, ChevronRight, ChevronDown, Upload,
   ShoppingBag, Gift, Coins, Award, Crown, User, AtSign, Reply, CornerUpLeft, Zap
 } from 'lucide-react';
 import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
@@ -140,8 +140,9 @@ const UserAvatar = ({ usr, size = 'default' }) => {
 
   const initial = usr?.username ? usr.username.charAt(0).toUpperCase() : '?';
 
+  const onlinePulse = usr?.status === 'online' ? 'online-pulse-avatar' : '';
   return (
-    <div className={`avatar-wrapper ${size} ${frameClass} ${auraClass}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'all 0.3s ease' }}>
+    <div className={`avatar-wrapper ${size} ${frameClass} ${auraClass} ${onlinePulse}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'all 0.3s ease' }}>
       {avatarUrl && !imgError ? (
         <img
           src={getFullUrl(avatarUrl)}
@@ -1825,6 +1826,13 @@ const Chat = () => {
                 );
               })}
               {partnerTyping && <div className="message-wrapper other"><div className="typing-indicator"><span></span><span></span><span></span></div></div>}
+              <button 
+                className="scroll-to-bottom-btn" 
+                onClick={() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                title="Прокрутить вниз"
+              >
+                <ChevronDown size={22} color="#ffffff" />
+              </button>
               <div ref={scrollRef}></div>
             </div>
 
