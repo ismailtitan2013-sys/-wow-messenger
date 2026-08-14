@@ -1751,8 +1751,29 @@ const Chat = () => {
 
                 return (
                   <div key={msg.id || msg._id || Math.random()} id={`msg-${msg.id || msg._id}`} className={`message-wrapper ${isOwn ? 'own' : 'other'} slide-up`} onContextMenu={(e) => handleContextMenu(e, msg)}>
+                    <div className="hover-quick-reactions">
+                      {['❤️', '🔥', '👍', '😂', '🎉', '👑'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          className="quick-react-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            socketRef.current?.emit('add_reaction', { messageId: msg.id || msg._id, chatId: currentChat.id, emoji });
+                            playWebAudioEffect('coin');
+                          }}
+                          title={`Отправить реакцию ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
                     <div 
                       className={`message-bubble ${msgChatStyle ? `chat-style-${msgChatStyle}` : ''} ${isGiftMessage ? 'gift-msg-interactive' : ''}`}
+                      onDoubleClick={() => {
+                        socketRef.current?.emit('add_reaction', { messageId: msg.id || msg._id, chatId: currentChat.id, emoji: '❤️' });
+                        playWebAudioEffect('coin');
+                        toast('❤️ Реакция отправлена!', { icon: '❤️' });
+                      }}
                       onClick={() => {
                         if (isGiftMessage) {
                           setActiveGiftEffect({
@@ -1765,7 +1786,7 @@ const Chat = () => {
                         }
                       }}
                       style={isGiftMessage ? { cursor: 'pointer' } : {}}
-                      title={isGiftMessage ? 'Нажмите для эффекта подарка!' : ''}
+                      title={isGiftMessage ? 'Нажмите для эффекта подарка!' : 'Двойной клик — поставь ❤️'}
                     >
                       {sender && <div className="message-sender-name" onClick={() => setShowUserProfile(sender)} style={{cursor: 'pointer'}}>{renderUsernameWithBadge(sender.username, sender.isVerified)}</div>}
                       {msg.replyTo && (
