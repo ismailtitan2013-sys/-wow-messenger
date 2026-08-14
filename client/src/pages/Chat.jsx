@@ -211,6 +211,7 @@ const Chat = () => {
   const [showInChatSearch, setShowInChatSearch] = useState(false);
   const [inChatSearchQuery, setInChatSearchQuery] = useState('');
   const [pinnedMessage, setPinnedMessage] = useState(null);
+  const [completedQuests, setCompletedQuests] = useState([]);
   
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
@@ -543,6 +544,19 @@ const Chat = () => {
       playWebAudioEffect('gift');
       toast.success(`🎉 ДЖЕКПОТ! Вы выиграли +${prizeCoins.toLocaleString()} 🪙!`, { icon: '🎰' });
     }, 4000);
+  };
+
+  const handleClaimQuest = (questId, rewardAmount, title) => {
+    if (completedQuests.includes(questId)) {
+      toast.error('Задание уже выполнено сегодня!');
+      return;
+    }
+    const nextCoins = (user?.coins || 0) + rewardAmount;
+    setUser(prev => prev ? { ...prev, coins: nextCoins } : prev);
+    setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+    setCompletedQuests(prev => [...prev, questId]);
+    playWebAudioEffect('gift');
+    toast.success(`🎯 Выполнено: "${title}"! Получено +${rewardAmount.toLocaleString()} 🪙!`, { icon: '✨' });
   };
 
   const handleUpgradeClicker = async () => {
@@ -2574,51 +2588,48 @@ const Chat = () => {
                   </div>
                 </div>
 
-                {/* 🎰 Wheel of Fortune / Колесо Удачи */}
-                <div style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))', borderRadius: '24px', padding: '20px', border: '1px solid rgba(168, 85, 247, 0.4)', marginBottom: '16px', backdropFilter: 'blur(12px)' }}>
-                  <div style={{ fontWeight: 900, fontSize: '1rem', color: '#c084fc', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <Sparkles size={20} color="#c084fc" /> 🎰 Колесо Удачи & Рулетка Призов 🎁
+                {/* 🎯 Halal Daily Quests & Activity Rewards */}
+                <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(99, 102, 241, 0.15))', borderRadius: '24px', padding: '20px', border: '1px solid rgba(16, 185, 129, 0.4)', marginBottom: '16px', backdropFilter: 'blur(12px)', textAlign: 'left' }}>
+                  <div style={{ fontWeight: 900, fontSize: '1rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                    <Sparkles size={20} color="#34d399" /> 🎯 Дневные Задания & Полезная Активность
                   </div>
                   
-                  <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 16px' }}>
-                    <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, fontSize: '1.8rem', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }}>
-                      👇
-                    </div>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: '50%',
-                        border: '5px solid #eab308',
-                        boxShadow: '0 0 25px rgba(234, 179, 8, 0.5), inset 0 0 15px rgba(0,0,0,0.5)',
-                        background: 'conic-gradient(#f59e0b 0deg 60deg, #6366f1 60deg 120deg, #ec4899 120deg 180deg, #10b981 180deg 240deg, #8b5cf6 240deg 300deg, #06b6d4 300deg 360deg)',
-                        transform: `rotate(${wheelRotation}deg)`,
-                        transition: 'transform 4s cubic-bezier(0.15, 0.9, 0.2, 1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '2.5rem'
-                      }}
-                    >
-                      🎰
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {[
+                      { id: 'quest_checkin', icon: '🌟', title: 'Ежедневный вход в сеть', desc: 'Зайдите в WOW Messenger сегодня', reward: 1000 },
+                      { id: 'quest_messages', icon: '💬', title: 'Общение с друзьями', desc: 'Отправьте 5 сообщений в любые чаты', reward: 2500 },
+                      { id: 'quest_story', icon: '🎬', title: 'Творчество & Истории', desc: 'Опубликуйте 1 историю или создайте канал', reward: 5000 },
+                      { id: 'quest_gift', icon: '🎁', title: 'Щедрость & Доброта', desc: 'Подарите 1 виртуальный подарок другу', reward: 10000 }
+                    ].map(q => {
+                      const isClaimed = completedQuests.includes(q.id);
+                      return (
+                        <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '16px', padding: '12px 16px', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ fontSize: '1.6rem' }}>{q.icon}</div>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{q.title}</div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{q.desc}</div>
+                            </div>
+                          </div>
+                          <button
+                            className="btn btn-primary"
+                            disabled={isClaimed}
+                            onClick={() => handleClaimQuest(q.id, q.reward, q.title)}
+                            style={{
+                              padding: '6px 14px',
+                              fontSize: '0.82rem',
+                              fontWeight: 800,
+                              background: isClaimed ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #10b981, #059669)',
+                              borderRadius: '12px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {isClaimed ? 'Выполнено ✅' : `Забрать +${q.reward.toLocaleString()} 🪙`}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  <button
-                    className="btn btn-primary"
-                    disabled={isSpinning}
-                    onClick={handleSpinWheel}
-                    style={{
-                      padding: '10px 24px',
-                      fontSize: '0.92rem',
-                      fontWeight: 900,
-                      background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
-                      borderRadius: '14px',
-                      boxShadow: '0 6px 20px rgba(234, 179, 8, 0.4)'
-                    }}
-                  >
-                    {isSpinning ? '🌀 Вращаем рулетку...' : '🎰 Вращать Колесо Удачи 🪙'}
-                  </button>
                 </div>
 
                 {/* ТГ Бусты */}
