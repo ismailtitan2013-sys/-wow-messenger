@@ -2692,25 +2692,30 @@ const Chat = () => {
                     const color = rarityColors[nft.rarity] || '#f59e0b';
 
                     return (
-                      <div key={nft.id} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: `1px solid ${color}`, textAlign: 'center', boxShadow: `0 0 15px ${color}33`, position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.72rem', fontWeight: 800, color, background: `${color}22`, padding: '2px 8px', borderRadius: '8px' }}>
+                      <div key={nft.id} className="nft-card-holo" style={{ border: `1px solid ${color}88`, boxShadow: `0 0 20px ${color}35` }}>
+                        <div className="nft-badge-rarity" style={{ color, background: `${color}25`, border: `1px solid ${color}55` }}>
+                          {nft.rarity || 'RARE'}
+                        </div>
+                        <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc', background: 'rgba(15,23,42,0.8)', padding: '2px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {nft.serial}
                         </div>
                         {nft.imageUrl ? (
-                          <div style={{ margin: '12px auto 8px', width: '80px', height: '80px', borderRadius: '14px', overflow: 'hidden', border: `2px solid ${color}`, boxShadow: `0 0 12px ${color}` }}>
+                          <div style={{ margin: '32px auto 10px', width: '90px', height: '90px', borderRadius: '18px', overflow: 'hidden', border: `2px solid ${color}`, boxShadow: `0 0 16px ${color}88` }}>
                             <img src={nft.imageUrl} alt={nft.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                         ) : (
-                          <div style={{ fontSize: '2.8rem', margin: '12px 0 8px', filter: `drop-shadow(0 0 10px ${color})` }}>{nft.icon}</div>
+                          <div style={{ fontSize: '3.2rem', margin: '30px 0 10px', filter: `drop-shadow(0 0 14px ${color})` }}>{nft.icon}</div>
                         )}
-                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color }}>{nft.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '4px 0 12px' }}>{nft.desc}</div>
+                        <div style={{ fontWeight: 800, fontSize: '0.98rem', color, marginBottom: '4px' }}>{nft.name}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 14px', minHeight: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{nft.desc}</div>
 
                         {isOwned ? (
-                          <span style={{ color: '#10b981', fontWeight: 800, fontSize: '0.85rem' }}>В коллекции 💎</span>
+                          <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', borderRadius: '12px', padding: '8px', color: '#10b981', fontWeight: 900, fontSize: '0.85rem' }}>
+                            В коллекции 💎
+                          </div>
                         ) : (
-                          <button className="btn btn-primary" style={{ width: '100%', padding: '8px', fontSize: '0.82rem', fontWeight: 800, background: `linear-gradient(135deg, ${color}, #1e293b)`, borderRadius: '10px' }} onClick={() => handleBuyNft(nft.id)}>
-                            Купить 🪙 {nft.price}
+                          <button className="btn btn-primary" style={{ width: '100%', padding: '8px 12px', fontSize: '0.85rem', fontWeight: 900, background: `linear-gradient(135deg, ${color}, #1e293b)`, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => handleBuyNft(nft.id)}>
+                            <span>Купить</span> <CoinBadge amount={nft.price} size="small" />
                           </button>
                         )}
                       </div>

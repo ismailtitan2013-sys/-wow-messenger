@@ -2416,6 +2416,62 @@ body {
   box-shadow: 0 0 0 2.5px #34d399, 0 0 12px rgba(52, 211, 153, 0.7) !important;
 }
 
+/* Holographic Shimmer NFT Cards */
+.nft-card-holo {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 18px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.nft-card-holo::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.04) 55%,
+    transparent 100%
+  );
+  transform: rotate(30deg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.nft-card-holo:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+.nft-card-holo:hover::before {
+  opacity: 1;
+}
+
+.nft-badge-rarity {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 3px 9px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+
 
 
 
