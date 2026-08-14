@@ -19,6 +19,55 @@ import toast from 'react-hot-toast';
 import { requestFCMToken, onForegroundMessage } from '../firebase';
 import GiftEffectOverlay from '../components/GiftEffectOverlay';
 
+// Web Audio API Sound Synthesizer for Interactive Audio Feedback
+const playWebAudioEffect = (type = 'coin') => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    if (type === 'coin') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(987.77, now);
+      osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(now + 0.12);
+    } else if (type === 'send') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.06);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(now + 0.08);
+    } else if (type === 'gift') {
+      [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+        gain.gain.setValueAtTime(0.15, now + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.07);
+        osc.stop(now + idx * 0.07 + 0.25);
+      });
+    }
+  } catch (e) {}
+};
+
 // Top-level Helper Components to prevent React unmount/remount crashes
 const CoinBadge = ({ amount, size = 'medium', animated = true, style = {} }) => {
   const formatted = (amount || 0).toLocaleString();
@@ -437,6 +486,7 @@ const Chat = () => {
   };
 
   const handleTapCoin = () => {
+    playWebAudioEffect('coin');
     const currentEnergy = storeData?.clickerStats?.energy ?? 1000;
     const multitapPower = storeData?.clickerStats?.multitapLevel || 1;
 
