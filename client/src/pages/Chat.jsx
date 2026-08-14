@@ -20,6 +20,56 @@ import { requestFCMToken, onForegroundMessage } from '../firebase';
 import GiftEffectOverlay from '../components/GiftEffectOverlay';
 
 // Top-level Helper Components to prevent React unmount/remount crashes
+const CoinBadge = ({ amount, size = 'medium', animated = true, style = {} }) => {
+  const formatted = (amount || 0).toLocaleString();
+  const sizes = {
+    small: { fontSize: '0.78rem', iconSize: 16, padding: '3px 9px', gap: '5px' },
+    medium: { fontSize: '0.9rem', iconSize: 20, padding: '5px 12px', gap: '6px' },
+    large: { fontSize: '1.15rem', iconSize: 26, padding: '8px 18px', gap: '8px' }
+  };
+  const s = sizes[size] || sizes.medium;
+
+  return (
+    <div 
+      className={`coin-badge-glow ${animated ? 'coin-pulse' : ''}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: s.gap,
+        padding: s.padding,
+        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.12) 100%)',
+        border: '1px solid rgba(245, 158, 11, 0.45)',
+        boxShadow: '0 4px 14px rgba(245, 158, 11, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
+        borderRadius: '24px',
+        color: '#fbbf24',
+        fontWeight: 800,
+        fontSize: s.fontSize,
+        backdropFilter: 'blur(8px)',
+        userSelect: 'none',
+        ...style
+      }}
+    >
+      <div style={{
+        width: s.iconSize,
+        height: s.iconSize,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle at 30% 30%, #fff7ed, #f59e0b 60%, #92400e 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 2px 6px rgba(245, 158, 11, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.9)',
+        color: '#78350f',
+        fontSize: `calc(${s.fontSize} * 0.7)`,
+        fontWeight: 900,
+        flexShrink: 0
+      }}>
+        🪙
+      </div>
+      <span>{formatted}</span>
+    </div>
+  );
+};
+
 const UserAvatar = ({ usr, size = 'default' }) => {
   const [imgError, setImgError] = useState(false);
   const avatarUrl = usr?.avatarUrl;
@@ -1411,9 +1461,9 @@ const Chat = () => {
               <span style={{fontWeight: 600}}>
                 {renderUsernameWithBadge(user)}
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                <Coins size={14} color="#f59e0b" /> {(user?.coins || 0).toLocaleString()} Coins
-              </span>
+              <div style={{ marginTop: '4px' }}>
+                <CoinBadge amount={user?.coins} size="small" />
+              </div>
             </div>
           </div>
           <div className="sidebar-actions">
@@ -2063,11 +2113,8 @@ const Chat = () => {
             {/* 4. Glassmorphism Stat Cards (3 Columns) */}
             <div className="hybrid-stats-grid">
               <div className="hybrid-stat-card">
-                <div style={{ fontSize: '1.4rem' }}>🪙</div>
-                <div className="hybrid-stat-value" style={{ color: '#f59e0b' }}>
-                  {(showUserProfile.coins || 0).toLocaleString()}
-                </div>
-                <div className="hybrid-stat-label">Монеты</div>
+                <CoinBadge amount={showUserProfile.coins} size="large" />
+                <div className="hybrid-stat-label" style={{ marginTop: '6px' }}>Монеты</div>
               </div>
 
               <div className="hybrid-stat-card">
@@ -2158,9 +2205,7 @@ const Chat = () => {
               <div className="hybrid-section-title">
                 <span>🎁 Коллекция Подарков ({showUserProfile.giftsReceived?.length || 0})</span>
                 {showUserProfile.giftsReceived?.length > 0 && (
-                  <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 800 }}>
-                    🪙 {showUserProfile.giftsReceived.reduce((sum, g) => sum + (g.coins || 0), 0).toLocaleString()} coins
-                  </span>
+                  <CoinBadge amount={showUserProfile.giftsReceived.reduce((sum, g) => sum + (g.coins || 0), 0)} size="small" />
                 )}
               </div>
 
@@ -2248,9 +2293,7 @@ const Chat = () => {
             <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(245, 158, 11, 0.15))', padding: '14px 18px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 15px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
               <div>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Ваш текущий баланс: </span>
-                <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', textShadow: '0 0 10px rgba(245, 158, 11, 0.4)' }}>
-                  🪙 {(storeData?.userCoins || 0).toLocaleString()} Coins
-                </span>
+                <CoinBadge amount={storeData?.userCoins} size="large" animated={true} />
               </div>
               <div style={{ fontSize: '0.78rem', opacity: 0.8, color: 'var(--text-primary)' }}>
                 Пополнение через переводы & комиссии
@@ -2575,7 +2618,7 @@ const Chat = () => {
                           </div>
                         </div>
                         <div style={{ fontWeight: 900, fontSize: '1.05rem', color: '#f59e0b' }}>
-                          🪙 {(u.coins || 0).toLocaleString()}
+                          <CoinBadge amount={u.coins} size="small" />
                         </div>
                       </div>
                     );
@@ -2633,7 +2676,7 @@ const Chat = () => {
                         </button>
                       ) : (
                         <button className="btn btn-primary" style={{ width: '100%', fontSize: '0.8rem', padding: '6px', background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => handleBuyItem(item.id, activeStoreTab)}>
-                          🪙 {item.price} Coins
+                          <CoinBadge amount={item.price} size="small" />
                         </button>
                       )}
                     </div>
