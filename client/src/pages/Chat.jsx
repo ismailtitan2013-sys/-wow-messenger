@@ -590,6 +590,74 @@ const Chat = () => {
     toast.success(`🎯 Выполнено: "${title}"! Получено +${rewardAmount.toLocaleString()} 🪙!`, { icon: '✨' });
   };
 
+  const renderNftVisual = (nft, color) => {
+    if (nft.imageUrl && !nftImageErrors[nft.id]) {
+      return (
+        <div style={{ width: '100%', height: '130px', borderRadius: '14px', overflow: 'hidden', margin: '28px 0 12px', border: `1px solid ${color}66`, boxShadow: `0 0 20px ${color}40`, position: 'relative' }}>
+          <img
+            src={nft.imageUrl}
+            alt={nft.name}
+            onError={() => setNftImageErrors(prev => ({ ...prev, [nft.id]: true }))}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 60%)' }} />
+        </div>
+      );
+    }
+
+    if (nft.id?.includes('anon') || nft.name?.includes('Anonymous') || nft.serial?.startsWith('+888')) {
+      return (
+        <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311b92 100%)', border: '1px solid rgba(168, 85, 247, 0.5)', boxShadow: '0 0 25px rgba(168, 85, 247, 0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%)' }} />
+          <div style={{ fontSize: '1.8rem', marginBottom: '4px', filter: 'drop-shadow(0 0 12px #c084fc)' }}>📱</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#e879f9', letterSpacing: '1px', textShadow: '0 0 15px rgba(232, 121, 249, 0.8)' }}>
+            {nft.serial || '+888 0707'}
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#a855f7', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+            Fragment SIM Card
+          </div>
+        </div>
+      );
+    }
+
+    if (nft.id?.includes('username') || nft.name?.includes('Username') || nft.desc?.includes('durov')) {
+      return (
+        <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)', border: '1px solid rgba(56, 189, 248, 0.5)', boxShadow: '0 0 25px rgba(56, 189, 248, 0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: '1.8rem', marginBottom: '4px', filter: 'drop-shadow(0 0 12px #38bdf8)' }}>💎</div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#7dd3fc', textShadow: '0 0 15px rgba(125, 211, 252, 0.8)' }}>
+            @durov
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#38bdf8', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+            Fragment Collectible
+          </div>
+        </div>
+      );
+    }
+
+    if (nft.id?.includes('whale') || nft.name?.includes('Whale') || nft.name?.includes('TON')) {
+      return (
+        <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0f172a 100%)', border: '1px solid rgba(34, 211, 238, 0.5)', boxShadow: '0 0 25px rgba(34, 211, 238, 0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '4px', filter: 'drop-shadow(0 0 12px #22d3ee)' }}>🐳</div>
+          <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#67e8f9', textShadow: '0 0 15px rgba(103, 232, 249, 0.8)' }}>
+            TON Whales Club
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#22d3ee', fontWeight: 800, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+            GetGems Verified
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ width: '100%', height: '130px', borderRadius: '14px', margin: '28px 0 12px', background: `linear-gradient(135deg, ${color}25 0%, rgba(15,23,42,0.9) 100%)`, border: `1px solid ${color}55`, boxShadow: `0 0 20px ${color}30`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: '2.4rem', filter: `drop-shadow(0 0 14px ${color})` }}>{nft.icon || '💎'}</div>
+        <div style={{ fontSize: '0.75rem', fontWeight: 900, color, marginTop: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          {nft.name || 'GetGems NFT'}
+        </div>
+      </div>
+    );
+  };
+
   const handleUpgradeClicker = async () => {
     try {
       const res = await axios.post('/api/coins/upgrade-clicker', {}, {
@@ -2880,18 +2948,7 @@ const Chat = () => {
                         <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '0.75rem', fontWeight: 900, color: '#f8fafc', background: 'rgba(15,23,42,0.8)', padding: '2px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {nft.serial}
                         </div>
-                        {nft.imageUrl && !nftImageErrors[nft.id] ? (
-                          <div style={{ margin: '32px auto 10px', width: '90px', height: '90px', borderRadius: '18px', overflow: 'hidden', border: `2px solid ${color}`, boxShadow: `0 0 16px ${color}88` }}>
-                            <img
-                              src={nft.imageUrl}
-                              alt={nft.name}
-                              onError={() => setNftImageErrors(prev => ({ ...prev, [nft.id]: true }))}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '3.2rem', margin: '30px 0 10px', filter: `drop-shadow(0 0 14px ${color})` }}>{nft.icon}</div>
-                        )}
+                        {renderNftVisual(nft, color)}
                         <div style={{ fontWeight: 800, fontSize: '0.98rem', color, marginBottom: '4px' }}>{nft.name}</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 14px', minHeight: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{nft.desc}</div>
 
