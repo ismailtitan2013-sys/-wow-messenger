@@ -214,6 +214,35 @@ const Chat = () => {
   const [completedQuests, setCompletedQuests] = useState([]);
   const [nftImageErrors, setNftImageErrors] = useState({});
   const [nftRarityFilter, setNftRarityFilter] = useState('ALL');
+  const [customNfts, setCustomNfts] = useState([]);
+  const [showAddNftForm, setShowAddNftForm] = useState(false);
+  const [newNftUrl, setNewNftUrl] = useState('');
+  const [newNftName, setNewNftName] = useState('');
+  const [newNftPrice, setNewNftPrice] = useState(50000);
+  const [newNftRarity, setNewNftRarity] = useState('Epic');
+
+  const handleAddCustomNft = (e) => {
+    e.preventDefault();
+    if (!newNftName.trim() || !newNftUrl.trim()) {
+      toast.error('Введите название и прямую URL ссылку картинки NFT с GetGems/OpenSea!');
+      return;
+    }
+    const newNftObj = {
+      id: `custom_nft_${Date.now()}`,
+      serial: `#${Math.floor(1000 + Math.random() * 9000)}`,
+      name: newNftName,
+      rarity: newNftRarity,
+      price: Number(newNftPrice) || 50000,
+      imageUrl: newNftUrl.trim(),
+      desc: 'Пользовательский коллекционный NFT из GetGems / OpenSea'
+    };
+    setCustomNfts(prev => [newNftObj, ...prev]);
+    setNewNftName('');
+    setNewNftUrl('');
+    setShowAddNftForm(false);
+    playWebAudioEffect('gift');
+    toast.success(`🎨 NFT "${newNftName}" успешно добавлен в магазин!`, { icon: '✨' });
+  };
   
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
@@ -2742,27 +2771,84 @@ const Chat = () => {
             {activeStoreTab === 'nfts' && (
               <div style={{ padding: '10px 5px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#a855f7' }}>🎨 Цифровые NFT Коллекции</h3>
+                  <h3 style={{ margin: '0 0 4px', color: '#a855f7' }}>🎨 Цифровые NFT Коллекции с GetGems & OpenSea</h3>
                   <p style={{ margin: '0 0 12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Собирайте уникальные коллекционные NFT с уникальным порядковым номером и редким оформлением!
+                    Коллекционируйте реальные NFT с сайтов GetGems, OpenSea, TON и загружайте свои собственные по URL!
                   </p>
 
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '14px' }}>
                     {['ALL', 'Rare', 'Epic', 'Legendary', 'Mythic'].map(rarity => (
                       <button
                         key={rarity}
                         className={`store-tab-btn ${nftRarityFilter === rarity ? 'active' : ''}`}
                         onClick={() => setNftRarityFilter(rarity)}
-                        style={{ padding: '4px 10px', fontSize: '0.75rem', borderRadius: '10px' }}
+                        style={{ padding: '4px 12px', fontSize: '0.78rem', borderRadius: '10px' }}
                       >
                         {rarity === 'ALL' ? 'Все NFT' : rarity}
                       </button>
                     ))}
+                    <button
+                      className="store-tab-btn"
+                      onClick={() => setShowAddNftForm(!showAddNftForm)}
+                      style={{ padding: '4px 14px', fontSize: '0.78rem', borderRadius: '10px', background: 'linear-gradient(135deg, #a855f7, #ec4899)', color: '#fff', fontWeight: 900 }}
+                    >
+                      {showAddNftForm ? '❌ Отмена' : '➕ Добавить NFT с сайта'}
+                    </button>
                   </div>
+
+                  {showAddNftForm && (
+                    <form onSubmit={handleAddCustomNft} style={{ background: 'rgba(30, 41, 59, 0.9)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(168, 85, 247, 0.4)', marginBottom: '16px', textAlign: 'left' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#c084fc', marginBottom: '10px' }}>
+                        🌐 Импорт NFT с любого сайта (GetGems / OpenSea / TON):
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Название NFT (например: Bored Ape #8814)"
+                          value={newNftName}
+                          onChange={e => setNewNftName(e.target.value)}
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '10px', background: 'rgba(15,23,42,0.8)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Прямая URL ссылка на картинку (https://...)"
+                          value={newNftUrl}
+                          onChange={e => setNewNftUrl(e.target.value)}
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '10px', background: 'rgba(15,23,42,0.8)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <select
+                            value={newNftRarity}
+                            onChange={e => setNewNftRarity(e.target.value)}
+                            style={{ flex: 1, padding: '8px 12px', borderRadius: '10px', background: 'rgba(15,23,42,0.8)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                          >
+                            <option value="Rare">Rare (Редкий)</option>
+                            <option value="Epic">Epic (Эпический)</option>
+                            <option value="Legendary">Legendary (Легендарный)</option>
+                            <option value="Mythic">Mythic (Мифический)</option>
+                          </select>
+                          <input
+                            type="number"
+                            placeholder="Цена 🪙"
+                            value={newNftPrice}
+                            onChange={e => setNewNftPrice(e.target.value)}
+                            style={{ width: '120px', padding: '8px 12px', borderRadius: '10px', background: 'rgba(15,23,42,0.8)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                        <button type="submit" className="btn btn-primary" style={{ padding: '8px', fontSize: '0.85rem', fontWeight: 900, background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '10px', marginTop: '4px' }}>
+                          ✨ Разместить NFT в магазине
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
-                  {(storeData?.nfts || [
+                  {(storeData?.nfts && Array.isArray(storeData.nfts) ? [...customNfts, ...storeData.nfts] : [
+                    ...customNfts,
+                    { id: 'nft_bored_ape_8814', serial: '#8814', name: 'Bored Ape BAYC #8814', rarity: 'Mythic', price: 2500000, imageUrl: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=400&auto=format&fit=crop&q=80', desc: 'Официальный карточный NFT из коллекции OpenSea BAYC' },
+                    { id: 'nft_pudgy_1204', serial: '#1204', name: 'Pudgy Penguin #1204', rarity: 'Legendary', price: 1500000, imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&auto=format&fit=crop&q=80', desc: 'Эксклюзивный пингвин из коллекции OpenSea Pudgy Penguins' },
+                    { id: 'nft_azuki_9910', serial: '#9910', name: 'Azuki Anime #9910', rarity: 'Mythic', price: 3000000, imageUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&auto=format&fit=crop&q=80', desc: 'Аниме NFT карточка из официальной коллекции Azuki' },
                     { id: 'nft_faith_amulet_24949', serial: '#24949', name: 'Faith Symbol', rarity: 'Mythic', price: 1000000, imageUrl: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&auto=format&fit=crop&q=80', desc: 'Священный Значок Веры "Velvet Dusk"' },
                     { id: 'nft_tg_star_gift', serial: '#001', name: 'Telegram Star Gift', rarity: 'Rare', price: 50000, imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80', desc: 'Официальный коллекционный подарок Telegram Star' },
                     { id: 'nft_tg_pepe', serial: '#420', name: 'Telegram Cyber Pepe', rarity: 'Epic', price: 250000, imageUrl: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=400&auto=format&fit=crop&q=80', desc: 'Редчайший коллекционный Pepe Gift из Telegram' },
