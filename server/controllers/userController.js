@@ -56,6 +56,14 @@ const updateProfile = async (req, res) => {
 
     await user.save();
     logger.info(`User profile updated: ${user.username}`);
+    
+    const io = req.app.get('io');
+    if (io) {
+      const userClean = user.toJSON();
+      delete userClean.password;
+      io.emit('user_updated', userClean);
+    }
+
     res.status(200).json(user);
   } catch (error) {
     logger.error('Ошибка обновления профиля:', { error });

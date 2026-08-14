@@ -185,6 +185,23 @@ const Chat = () => {
   });
   const [selectedFile, setSelectedFile] = useState(null);
 
+  useEffect(() => {
+    if (user && showSettingsModal) {
+      setProfileData({
+        username: user.username || '',
+        bio: user.bio || '',
+        avatarUrl: user.avatarUrl || '',
+        settings: user.settings || {
+          showOnlineStatus: true,
+          showLastSeen: true,
+          allowPushNotifications: true,
+          readReceipts: true,
+          accentColor: '#4f46e5'
+        }
+      });
+    }
+  }, [showSettingsModal, user]);
+
   // Store & Coins States
   const DEFAULT_CATALOG = {
     frames: [
@@ -851,9 +868,7 @@ const Chat = () => {
     setUploadingStoryFile(true);
     const toastId = toast.loading('Загрузка файла с устройства...');
     try {
-      const res = await axios.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await axios.post('/api/upload', formData);
       const mediaPath = res.data.url;
       const isVideo = res.data.type === 'video' || file.type.startsWith('video/');
 
@@ -1024,9 +1039,7 @@ const Chat = () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
     try {
-      const res = await axios.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await axios.post('/api/upload', formData);
       return res.data;
     } catch (err) {
       toast.error('Ошибка при загрузке файла');
@@ -1044,9 +1057,7 @@ const Chat = () => {
       const formData = new FormData();
       formData.append('file', audioBlob, audioFileName);
       try {
-        const res = await axios.post('/api/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.post('/api/upload', formData);
         attachmentData = res.data;
       } catch (err) {
         toast.error('Ошибка загрузки голосового сообщения');
@@ -1180,32 +1191,32 @@ const Chat = () => {
     try {
       let newAvatarUrl = '';
       try {
-        newAvatarUrl = await compressImageToBase64(file, 300, 300, 0.85);
-      } catch (errCompress) {
-        console.warn('Base64 compression failed, falling back to upload endpoint:', errCompress);
         const formData = new FormData();
         formData.append('file', file);
-        const res = await axios.post('/api/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
-        });
-        newAvatarUrl = res.data.url;
+        const res = await axios.post('/api/upload', formData);
+        if (res.data && res.data.url) {
+          newAvatarUrl = res.data.url;
+        } else {
+          throw new Error('Upload returned empty URL');
+        }
+      } catch (errUpload) {
+        console.warn('Server upload failed, falling back to base64 compression:', errUpload);
+        newAvatarUrl = await compressImageToBase64(file, 300, 300, 0.85);
       }
 
       setProfileData(prev => ({ ...prev, avatarUrl: newAvatarUrl }));
       
       const payload = {
-        username: profileData.username || user.username,
-        bio: profileData.bio || user.bio || '',
+        username: profileData.username || user?.username,
+        bio: profileData.bio || user?.bio || '',
         avatarUrl: newAvatarUrl,
-        settings: profileData.settings || user.settings
+        settings: profileData.settings || user?.settings
       };
 
-      const updateRes = await axios.put('/api/users/profile', payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const updateRes = await axios.put('/api/users/profile', payload);
 
       setUser(prev => {
-        const updatedUser = { ...prev, ...updateRes.data };
+        const updatedUser = { ...prev, ...updateRes.data, avatarUrl: newAvatarUrl };
         localStorage.setItem('wow_user', JSON.stringify(updatedUser));
         return updatedUser;
       });

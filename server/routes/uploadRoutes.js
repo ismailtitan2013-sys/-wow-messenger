@@ -47,26 +47,32 @@ const upload = multer({
   }
 });
 
-router.post('/', authMiddleware, upload.single('file'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'Файл не загружен' });
+router.post('/', authMiddleware, (req, res) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('Ошибка при загрузке multer:', err);
+      return res.status(400).json({ message: err.message || 'Ошибка загрузки файла' });
     }
-    
-    const isImage = req.file.mimetype.startsWith('image/');
-    const isVideo = req.file.mimetype.startsWith('video/');
-    const isAudio = req.file.mimetype.startsWith('audio/');
-    
-    res.status(200).json({
-      url: `/uploads/${req.file.filename}`,
-      name: req.file.originalname,
-      size: req.file.size,
-      type: isImage ? 'image' : (isVideo ? 'video' : (isAudio ? 'audio' : 'document'))
-    });
-  } catch (error) {
-    console.error('Ошибка загрузки файла:', error);
-    res.status(500).json({ message: 'Внутренняя ошибка сервера при загрузке' });
-  }
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'Файл не загружен' });
+      }
+      
+      const isImage = req.file.mimetype.startsWith('image/');
+      const isVideo = req.file.mimetype.startsWith('video/');
+      const isAudio = req.file.mimetype.startsWith('audio/');
+      
+      res.status(200).json({
+        url: `/uploads/${req.file.filename}`,
+        name: req.file.originalname,
+        size: req.file.size,
+        type: isImage ? 'image' : (isVideo ? 'video' : (isAudio ? 'audio' : 'document'))
+      });
+    } catch (error) {
+      console.error('Ошибка загрузки файла:', error);
+      res.status(500).json({ message: 'Внутренняя ошибка сервера при загрузке' });
+    }
+  });
 });
 
 module.exports = router;
