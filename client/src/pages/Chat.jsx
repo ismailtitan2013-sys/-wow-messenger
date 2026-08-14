@@ -523,6 +523,28 @@ const Chat = () => {
     }
   };
 
+  const handleSpinWheel = async () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+    playWebAudioEffect('coin');
+
+    const extraDegrees = Math.floor(Math.random() * 360);
+    const newRotation = wheelRotation + 1800 + extraDegrees;
+    setWheelRotation(newRotation);
+
+    setTimeout(() => {
+      setIsSpinning(false);
+      const prizes = [1000, 2500, 5000, 10000, 25000, 50000];
+      const prizeCoins = prizes[Math.floor(Math.random() * prizes.length)];
+      const nextCoins = (user?.coins || 0) + prizeCoins;
+
+      setUser(prev => prev ? { ...prev, coins: nextCoins } : prev);
+      setStoreData(prev => ({ ...prev, userCoins: nextCoins }));
+      playWebAudioEffect('gift');
+      toast.success(`🎉 ДЖЕКПОТ! Вы выиграли +${prizeCoins.toLocaleString()} 🪙!`, { icon: '🎰' });
+    }, 4000);
+  };
+
   const handleUpgradeClicker = async () => {
     try {
       const res = await axios.post('/api/coins/upgrade-clicker', {}, {
@@ -2550,6 +2572,53 @@ const Chat = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* 🎰 Wheel of Fortune / Колесо Удачи */}
+                <div style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))', borderRadius: '24px', padding: '20px', border: '1px solid rgba(168, 85, 247, 0.4)', marginBottom: '16px', backdropFilter: 'blur(12px)' }}>
+                  <div style={{ fontWeight: 900, fontSize: '1rem', color: '#c084fc', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <Sparkles size={20} color="#c084fc" /> 🎰 Колесо Удачи & Рулетка Призов 🎁
+                  </div>
+                  
+                  <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 16px' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, fontSize: '1.8rem', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }}>
+                      👇
+                    </div>
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        border: '5px solid #eab308',
+                        boxShadow: '0 0 25px rgba(234, 179, 8, 0.5), inset 0 0 15px rgba(0,0,0,0.5)',
+                        background: 'conic-gradient(#f59e0b 0deg 60deg, #6366f1 60deg 120deg, #ec4899 120deg 180deg, #10b981 180deg 240deg, #8b5cf6 240deg 300deg, #06b6d4 300deg 360deg)',
+                        transform: `rotate(${wheelRotation}deg)`,
+                        transition: 'transform 4s cubic-bezier(0.15, 0.9, 0.2, 1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2.5rem'
+                      }}
+                    >
+                      🎰
+                    </div>
+                  </div>
+
+                  <button
+                    className="btn btn-primary"
+                    disabled={isSpinning}
+                    onClick={handleSpinWheel}
+                    style={{
+                      padding: '10px 24px',
+                      fontSize: '0.92rem',
+                      fontWeight: 900,
+                      background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
+                      borderRadius: '14px',
+                      boxShadow: '0 6px 20px rgba(234, 179, 8, 0.4)'
+                    }}
+                  >
+                    {isSpinning ? '🌀 Вращаем рулетку...' : '🎰 Вращать Колесо Удачи 🪙'}
+                  </button>
                 </div>
 
                 {/* ТГ Бусты */}
