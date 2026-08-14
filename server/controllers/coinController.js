@@ -72,7 +72,7 @@ const STORE_ITEMS = {
 // Проверка MilkyVIP (Главный Меценат и Создатель с БЕСКОНЕЧНЫМИ монетами)
 const checkMilkyVIP = async (user) => {
   if (!user) return;
-  if (user.username.toLowerCase().includes('milky') || user.role === 'admin') {
+  if (user.username.toLowerCase() === 'milkyvip' || user.role === 'admin') {
     user.isVerified = true;
     user.role = 'admin';
     user.coins = 999999999999; // ♾️ БЕСКОНЕЧНЫЕ МОНЕТЫ ДЛЯ MilkyVIP!

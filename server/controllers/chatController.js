@@ -129,7 +129,9 @@ const getChatMessages = async (req, res) => {
       return res.status(403).json({ message: 'Доступ запрещен' });
     }
 
-    const messages = await Message.find({ chatId: id }).sort({ createdAt: 1 });
+    const messages = await Message.find({ chatId: id })
+      .populate('senderId', 'username avatarUrl avatarFrame nameColor userTitle profileAura chatStyle badges status role isVerified')
+      .sort({ createdAt: 1 });
     res.status(200).json(messages);
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);
