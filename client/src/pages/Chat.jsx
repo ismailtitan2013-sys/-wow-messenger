@@ -208,6 +208,9 @@ const Chat = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [showInChatSearch, setShowInChatSearch] = useState(false);
+  const [inChatSearchQuery, setInChatSearchQuery] = useState('');
+  const [pinnedMessage, setPinnedMessage] = useState(null);
   
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
@@ -1695,22 +1698,67 @@ const Chat = () => {
                 </div>
               </div>
               
-              {!currentChat.isGroup && (
-                <div className="chat-call-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <button className="btn-icon" style={{ color: '#ec4899' }} title="Отправить подарок / монеты" onClick={() => {
-                    setGiftRecipient(getPartner(currentChat));
-                    setShowGiftModal(true);
-                  }}>
-                    <Gift size={20} />
-                  </button>
-                  <button className="btn-icon call" onClick={() => callUser(getPartner(currentChat).id, false, user.username)}><Phone size={20} /></button>
-                  <button className="btn-icon call" onClick={() => callUser(getPartner(currentChat).id, true, user.username)}><Video size={20} /></button>
-                </div>
-              )}
+              <div className="chat-call-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button className="btn-icon" title="Поиск в этом чате" onClick={() => setShowInChatSearch(!showInChatSearch)}>
+                  <Search size={20} />
+                </button>
+                {!currentChat.isGroup && (
+                  <>
+                    <button className="btn-icon" style={{ color: '#ec4899' }} title="Отправить подарок / монеты" onClick={() => {
+                      setGiftRecipient(getPartner(currentChat));
+                      setShowGiftModal(true);
+                    }}>
+                      <Gift size={20} />
+                    </button>
+                    <button className="btn-icon call" onClick={() => callUser(getPartner(currentChat).id, false, user.username)}><Phone size={20} /></button>
+                    <button className="btn-icon call" onClick={() => callUser(getPartner(currentChat).id, true, user.username)}><Video size={20} /></button>
+                  </>
+                )}
+              </div>
             </div>
 
+            {showInChatSearch && (
+              <div className="in-chat-search-bar slide-down" style={{ padding: '10px 16px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <Search size={16} color="#94a3b8" />
+                <input
+                  type="text"
+                  placeholder="Поиск по сообщениям..."
+                  value={inChatSearchQuery}
+                  onChange={(e) => setInChatSearchQuery(e.target.value)}
+                  style={{ flex: 1, background: 'transparent', border: 'none', color: '#f8fafc', outline: 'none', fontSize: '0.9rem' }}
+                  autoFocus
+                />
+                {inChatSearchQuery && (
+                  <button className="btn-icon" onClick={() => setInChatSearchQuery('')} style={{ padding: '2px' }}>
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {pinnedMessage && (
+              <div className="pinned-message-bar" onClick={() => {
+                const el = document.getElementById(`msg-${pinnedMessage.id || pinnedMessage._id}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }} style={{ padding: '8px 16px', background: 'rgba(99, 102, 241, 0.15)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(99, 102, 241, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                  <span style={{ fontSize: '1rem' }}>📌</span>
+                  <div style={{ fontSize: '0.82rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <b style={{ color: '#818cf8' }}>Закрепленное сообщение: </b>
+                    <span style={{ color: '#e2e8f0' }}>{pinnedMessage.text || pinnedMessage.content || 'Вложение'}</span>
+                  </div>
+                </div>
+                <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setPinnedMessage(null); }} style={{ padding: '2px' }}>
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             <div className="messages-area">
-              {messages.map((msg) => {
+              {(inChatSearchQuery.trim()
+                ? messages.filter(m => (m.text || m.content || '').toLowerCase().includes(inChatSearchQuery.toLowerCase()))
+                : messages
+              ).map((msg) => {
                 const actualSenderId = typeof msg.senderId === 'object' ? (msg.senderId.id || msg.senderId._id) : msg.senderId;
                 const isOwn = actualSenderId === user.id;
                 const msgTextContent = msg.text || msg.content || '';
@@ -1856,6 +1904,9 @@ const Chat = () => {
                             {emoji}
                           </span>
                         ))}
+                      </div>
+                      <div className="context-item" onClick={() => { setPinnedMessage(contextMenu.message); setContextMenu(null); toast.success('Сообщение закреплено! 📌'); }} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                        <span>📌</span> Закрепить сообщение
                       </div>
                       <div className="context-item" onClick={() => handleReplyClick(contextMenu.message)} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
                         <Reply size={16} /> Ответить
