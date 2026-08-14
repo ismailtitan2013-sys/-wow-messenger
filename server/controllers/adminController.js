@@ -283,6 +283,39 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const giveCoinsUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount } = req.body;
+
+    const numAmount = parseInt(amount, 10);
+    if (isNaN(numAmount)) {
+      return res.status(400).json({ message: 'Укажите числовое количество монет' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    user.coins = Math.max(0, (user.coins || 0) + numAmount);
+    await user.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      const userClean = user.toJSON();
+      delete userClean.password;
+      io.emit('user_updated', userClean);
+    }
+
+    logger.info(`Admin changed coins for ${user.username} by ${numAmount}. New balance: ${user.coins}`);
+    res.status(200).json({ message: `Баланс ${user.username} изменен на ${numAmount} монет (Всего: ${user.coins})`, user });
+  } catch (error) {
+    logger.error('Error changing user coins:', { error });
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+};
+
 module.exports = {
   getStats,
   broadcastMessage,
@@ -292,5 +325,6 @@ module.exports = {
   toggleBlockUser,
   toggleVerifyUser,
   toggleRole,
+  giveCoinsUser,
   deleteUser
 };

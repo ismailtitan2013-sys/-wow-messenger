@@ -2273,5 +2273,27 @@ body {
   box-shadow: 0 12px 25px rgba(245, 158, 11, 0.6);
 }
 
+/* Icon Hover Glow & Action Micro-animations */
+.btn-icon {
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.btn-icon:hover {
+  transform: scale(1.15) rotate(4deg);
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+}
+.btn-icon:active {
+  transform: scale(0.92);
+}
+
+/* Admin Button Micro-Glow */
+.admin-layout button {
+  transition: all 0.2s ease;
+}
+.admin-layout button:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+
 
 
