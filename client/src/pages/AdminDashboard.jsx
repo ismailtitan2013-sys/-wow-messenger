@@ -251,6 +251,7 @@ const AdminDashboard = () => {
                           <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px', color: '#f8fafc' }}>
                             {u.username}
                             {u.username === 'MilkyVIP' && <BadgeCheck size={18} color="#3b82f6" title="Главный Админ" />}
+                            {u.isVerified && u.username !== 'MilkyVIP' && <BadgeCheck size={18} color="#38bdf8" title="Подтвержденный аккаунт" />}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
                             Зарегистрирован: {new Date(u.createdAt).toLocaleDateString()}
@@ -284,6 +285,16 @@ const AdminDashboard = () => {
                             >
                               <Coins size={14} /> 🪙 Монеты
                             </button>
+
+                            {u.username !== 'MilkyVIP' && (
+                              <button 
+                                onClick={() => handleToggleVerify(u.id)}
+                                style={{ background: u.isVerified ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.05)', color: u.isVerified ? '#60a5fa' : '#94a3b8', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                                title="Дать или забрать галочку верификации"
+                              >
+                                {u.isVerified ? 'Снять галку' : 'Дать галку'}
+                              </button>
+                            )}
 
                             {u.username !== 'MilkyVIP' && (
                               <button 

@@ -466,93 +466,6 @@ const Chat = () => {
   const [wheelRotation, setWheelRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
 
-  // Chest Simulator States
-  const [chestIsOpening, setChestIsOpening] = useState(false);
-  const [chestWinner, setChestWinner] = useState(null);
-  const [spinningItemIndex, setSpinningItemIndex] = useState(0);
-  const [showChestModal, setShowChestModal] = useState(false);
-
-  const handleOpenChest = async (chestType) => {
-    if (chestIsOpening) return;
-    
-    const prices = { bronze: 1000, golden: 5000, royal: 15000 };
-    const price = prices[chestType] || 1000;
-    
-    const currentCoins = storeData?.userCoins || 0;
-    if (currentCoins < price) {
-      toast.error('Недостаточно монет для открытия этого кейса! 🪙');
-      return;
-    }
-    
-    setChestIsOpening(true);
-    setShowChestModal(true);
-    setChestWinner(null);
-    
-    const rewardPools = {
-      bronze: [
-        { type: 'coins', value: 250, label: '250 🪙', color: '#94a3b8' },
-        { type: 'coins', value: 500, label: '500 🪙', color: '#94a3b8' },
-        { type: 'coins', value: 1000, label: '1,000 🪙', color: '#38bdf8' },
-        { type: 'coins', value: 1500, label: '1,500 🪙', color: '#38bdf8' },
-        { type: 'coins', value: 3000, label: '3,000 🪙', color: '#f59e0b' }
-      ],
-      golden: [
-        { type: 'coins', value: 1000, label: '1,000 🪙', color: '#38bdf8' },
-        { type: 'coins', value: 2500, label: '2,500 🪙', color: '#38bdf8' },
-        { type: 'coins', value: 5000, label: '5,000 🪙', color: '#f59e0b' },
-        { type: 'coins', value: 10000, label: '10,000 🪙', color: '#a855f7' },
-        { type: 'coins', value: 25000, label: '25,000 🪙', color: '#ec4899' }
-      ],
-      royal: [
-        { type: 'coins', value: 5000, label: '5,000 🪙', color: '#f59e0b' },
-        { type: 'coins', value: 10000, label: '10,000 🪙', color: '#a855f7' },
-        { type: 'coins', value: 20000, label: '20,000 🪙', color: '#a855f7' },
-        { type: 'coins', value: 50000, label: '50,000 🪙', color: '#ec4899' },
-        { type: 'coins', value: 100000, label: '100,000 🪙 (Royal Jackpot!)', color: '#22c55e' }
-      ]
-    };
-    
-    const pool = rewardPools[chestType] || rewardPools.bronze;
-    const randIndex = Math.floor(Math.random() * pool.length);
-    const winner = pool[randIndex];
-    
-    let intervalTime = 60;
-    let count = 0;
-    const totalSpins = 20;
-    
-    const runSpinner = () => {
-      setSpinningItemIndex(Math.floor(Math.random() * pool.length));
-      count++;
-      if (count < totalSpins) {
-        setTimeout(runSpinner, intervalTime + (count * 12));
-      } else {
-        setSpinningItemIndex(randIndex);
-        setChestWinner(winner);
-        setChestIsOpening(false);
-        playWebAudioEffect('gift');
-        
-        const netDiff = winner.value - price;
-        try {
-          axios.post('/api/coins/tap', { count: netDiff }, {
-            headers: { Authorization: `Bearer ${token}` }
-          }).then(res => {
-            if (res.data && typeof res.data === 'object' && res.data.clickerStats) {
-              setStoreData(prev => ({ ...prev, userCoins: res.data.coins, clickerStats: res.data.clickerStats }));
-            } else {
-              setStoreData(prev => ({ ...prev, userCoins: prev.userCoins + netDiff }));
-            }
-          }).catch(() => {
-            setStoreData(prev => ({ ...prev, userCoins: prev.userCoins + netDiff }));
-          });
-        } catch (err) {
-          setStoreData(prev => ({ ...prev, userCoins: prev.userCoins + netDiff }));
-        }
-      }
-    };
-    
-    runSpinner();
-  };
-
   const fetchStoreAndOpen = async () => {
     try {
       const res = await axios.get('/api/coins/store', {
@@ -2736,9 +2649,7 @@ const Chat = () => {
               <button className={`store-tab-btn ${activeStoreTab === 'leaderboard' ? 'active' : ''}`} onClick={() => { setActiveStoreTab('leaderboard'); fetchLeaderboard(); }}>
                 🏆 Топ Игроков
               </button>
-              <button className={`store-tab-btn ${activeStoreTab === 'chests' ? 'active' : ''}`} onClick={() => setActiveStoreTab('chests')}>
-                📦 Кейсы
-              </button>
+
               <button className={`store-tab-btn ${activeStoreTab === 'frames' ? 'active' : ''}`} onClick={() => setActiveStoreTab('frames')}>
                 🖼️ Рамки
               </button>
@@ -3158,39 +3069,7 @@ const Chat = () => {
               </div>
             )}
 
-            {/* Вкладка: Кейс Симулятор */}
-            {activeStoreTab === 'chests' && (
-              <div style={{ padding: '10px 5px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ margin: '0 0 4px', color: '#f59e0b' }}>📦 Симулятор Кейсов WoW</h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Испытайте удачу и откройте сундук с сокровищами, чтобы выиграть горы монет!
-                  </p>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
-                  {[
-                    { id: 'bronze', name: 'Бронзовый Кейс', desc: 'Выигрыш до 3,000 🪙', price: 1000, emoji: '📦', color: '#cd7f32' },
-                    { id: 'golden', name: 'Золотой Кейс', desc: 'Выигрыш до 25,000 🪙', price: 5000, emoji: '🎁', color: '#ffd700' },
-                    { id: 'royal', name: 'Королевский Кейс', desc: 'Выигрыш до 100,000 🪙', price: 15000, emoji: '👑', color: '#ff007f' }
-                  ].map(caseItem => (
-                    <div key={caseItem.id} style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '20px', borderRadius: '18px', border: `1px solid ${caseItem.color}44`, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-                      <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{caseItem.emoji}</div>
-                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)', marginBottom: '4px' }}>{caseItem.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>{caseItem.desc}</div>
-                      <button 
-                        className="btn btn-primary"
-                        onClick={() => handleOpenChest(caseItem.id)}
-                        disabled={chestIsOpening}
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', background: caseItem.color, border: 'none', color: '#000', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                      >
-                        🪙 Открыть за {caseItem.price.toLocaleString()}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Карточки предметов Магазина (Рамки, Ник, Значки, Титулы, Ауры, Стили сообщений) */}
             {['frames', 'nameColors', 'badges', 'titles', 'auras', 'chatStyles'].includes(activeStoreTab) && (
@@ -3253,53 +3132,7 @@ const Chat = () => {
         </div>
       )}
 
-      {/* Модальное окно открытия кейса WoW Chest */}
-      {showChestModal && (
-        <div className="modal-overlay" style={{ zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="modal-content fade-in" style={{ maxWidth: '420px', textAlign: 'center', padding: '30px', background: '#1e293b', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-15px', marginRight: '-15px' }}>
-              <button className="btn-icon" onClick={() => { if (!chestIsOpening) setShowChestModal(false); }} disabled={chestIsOpening} style={{ padding: '6px' }}>
-                <X size={20} />
-              </button>
-            </div>
 
-            <div style={{ fontSize: '4.5rem', margin: '20px 0', animation: chestIsOpening ? 'pulse 0.6s infinite alternate' : 'none' }}>
-              📦
-            </div>
-
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ffd700', margin: '0 0 10px' }}>
-              {chestIsOpening ? 'Открытие кейса...' : 'Кейс открыт! 🎉'}
-            </h3>
-
-            <div style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '15px 0' }}>
-              {chestIsOpening ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.1)', borderTop: '4px solid #f59e0b', borderRadius: '50%', width: '30px', height: '30px', animation: 'spin 1s linear infinite' }}></div>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Рулетка крутится...</span>
-                </div>
-              ) : (
-                chestWinner && (
-                  <div style={{ animation: 'bounceIn 0.8s ease', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Вы выиграли:</span>
-                    <div style={{ fontSize: '2.2rem', fontWeight: 950, color: chestWinner.color, textShadow: '0 0 20px rgba(255, 255, 255, 0.2)' }}>
-                      {chestWinner.label}
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-
-            <button 
-              className="btn btn-primary" 
-              disabled={chestIsOpening} 
-              onClick={() => setShowChestModal(false)}
-              style={{ width: '100%', padding: '12px', borderRadius: '14px', background: '#ffd700', border: 'none', color: '#000', fontWeight: 800, cursor: 'pointer', marginTop: '10px' }}
-            >
-              {chestIsOpening ? 'Подождите...' : 'Забрать выигрыш!'}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Модальное окно отправки подарка */}
       {showGiftModal && (
