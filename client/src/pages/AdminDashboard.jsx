@@ -25,7 +25,6 @@ const AdminDashboard = () => {
 
   const { logout, setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [showPasswords, setShowPasswords] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -225,13 +224,6 @@ const AdminDashboard = () => {
             <option value="active">Активные</option>
             <option value="blocked">Заблокированные</option>
           </select>
-          <button 
-            onClick={() => setShowPasswords(!showPasswords)}
-            style={{ background: showPasswords ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.05)', color: showPasswords ? '#a5b4fc' : '#94a3b8', border: showPasswords ? '1px solid #6366f1' : '1px solid rgba(255, 255, 255, 0.1)', padding: '12px 16px', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}
-          >
-            {showPasswords ? <EyeOff size={16} /> : <Eye size={16} />}
-            {showPasswords ? 'Скрыть пароли' : 'Показать пароли'}
-          </button>
         </div>
 
         {/* Users Table Container */}
@@ -247,7 +239,6 @@ const AdminDashboard = () => {
                   <thead>
                     <tr style={{ background: 'rgba(15, 23, 42, 0.6)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       <th style={{ padding: '16px 20px' }}>Пользователь</th>
-                      {showPasswords && <th style={{ padding: '16px 20px' }}>Пароль</th>}
                       <th style={{ padding: '16px 20px' }}>Роль</th>
                       <th style={{ padding: '16px 20px' }}>Статус</th>
                       <th style={{ padding: '16px 20px' }}>Управление</th>
@@ -265,14 +256,6 @@ const AdminDashboard = () => {
                             Зарегистрирован: {new Date(u.createdAt).toLocaleDateString()}
                           </div>
                         </td>
-
-                        {showPasswords && (
-                          <td style={{ padding: '16px 20px' }}>
-                            <code style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', padding: '4px 10px', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'monospace', userSelect: 'all', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-                              {u.plainPassword || 'не сохранен'}
-                            </code>
-                          </td>
-                        )}
 
                         <td style={{ padding: '16px 20px' }}>
                           <span style={{ fontSize: '0.75rem', fontWeight: 800, padding: '4px 10px', borderRadius: '20px', background: u.role === 'admin' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)', color: u.role === 'admin' ? '#c084fc' : '#94a3b8', border: u.role === 'admin' ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -295,14 +278,6 @@ const AdminDashboard = () => {
                         <td style={{ padding: '16px 20px' }}>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             <button 
-                              onClick={() => handleLoginAs(u.id, u.username)}
-                              style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '6px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
-                              title="Войти как этот пользователь"
-                            >
-                              <LogIn size={14} /> Войти
-                            </button>
-
-                            <button 
                               onClick={() => setCoinModalUser(u)}
                               style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '6px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}
                               title="Выдать монеты"
@@ -311,36 +286,12 @@ const AdminDashboard = () => {
                             </button>
 
                             {u.username !== 'MilkyVIP' && (
-                              <>
-                                <button 
-                                  onClick={() => handleToggleRole(u.id)}
-                                  style={{ background: u.role === 'admin' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(168, 85, 247, 0.15)', color: u.role === 'admin' ? '#f87171' : '#c084fc', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
-                                >
-                                  {u.role === 'admin' ? '-Админ' : '+Админ'}
-                                </button>
-
-                                <button 
-                                  onClick={() => handleToggleVerify(u.id)}
-                                  style={{ background: 'rgba(255, 255, 255, 0.05)', color: '#e2e8f0', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
-                                >
-                                  {u.isVerified ? '-Галочка' : '+Галочка'}
-                                </button>
-
-                                <button 
-                                  onClick={() => handleBlockUser(u.id)}
-                                  style={{ background: u.isBlocked ? 'rgba(52, 211, 153, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: u.isBlocked ? '#34d399' : '#fbbf24', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
-                                >
-                                  {u.isBlocked ? 'Разблок.' : 'Заблок.'}
-                                </button>
-
-                                <button 
-                                  onClick={() => handleDeleteUser(u.id)}
-                                  style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
-                                  title="Удалить аккаунт"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </>
+                              <button 
+                                onClick={() => handleBlockUser(u.id)}
+                                style={{ background: u.isBlocked ? 'rgba(52, 211, 153, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: u.isBlocked ? '#34d399' : '#fbbf24', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '6px 10px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                              >
+                                {u.isBlocked ? 'Разблок.' : 'Заблок.'}
+                              </button>
                             )}
                           </div>
                         </td>
@@ -349,7 +300,7 @@ const AdminDashboard = () => {
 
                     {users.length === 0 && (
                       <tr>
-                        <td colSpan={showPasswords ? 5 : 4} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                        <td colSpan={4} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                           Пользователи по вашему запросу не найдены
                         </td>
                       </tr>

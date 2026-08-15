@@ -2123,7 +2123,7 @@ const Chat = () => {
                       )}
                       {(isAuthor || user?.role === 'admin' || user?.username === 'MilkyVIP') && (
                         <div className="context-item delete" onClick={handleDeleteClick} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                          <Trash2 size={16} /> Удалить у всех
+                          <Trash2 size={16} /> Удалить
                         </div>
                       )}
                     </>
