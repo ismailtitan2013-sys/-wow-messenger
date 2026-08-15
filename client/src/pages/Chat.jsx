@@ -2971,11 +2971,10 @@ const Chat = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                   {[...customNfts, ...[
-                    { id: 'nft_tg_star_gift', serial: '#001', name: 'Telegram Star Gift ⭐️', rarity: 'Mythic', price: 1000000, imageUrl: './assets/nfts/tg_star_gift.jpg', desc: 'Официальный 3D коллекционный подарок Telegram Star Gift в стеклянном шаре' },
-                    { id: 'nft_tg_plush_bear', serial: '#777', name: 'Telegram Plush Bear 🧸', rarity: 'Legendary', price: 500000, imageUrl: './assets/nfts/tg_plush_bear.jpg', desc: 'Официальный 3D плюшевый мишка Telegram Gift в фирменной шапочке' },
-                    { id: 'nft_tg_red_heart', serial: '#999', name: 'Telegram Red Heart ❤️', rarity: 'Mythic', price: 2500000, imageUrl: './assets/nfts/tg_red_heart.jpg', desc: 'Официальный 3D рубиновый подарок-сердце Telegram Gift в стеклянном кубе' },
-                    { id: 'nft_tg_diamond_ring', serial: '#007', name: 'Telegram Diamond Ring 💍', rarity: 'Mythic', price: 5000000, imageUrl: './assets/nfts/tg_diamond_ring.jpg', desc: 'Официальное 3D бриллиантовое кольцо Telegram Gift с голубым алмазом' },
-                    { id: 'nft_faith_amulet_24949', serial: '#24949', name: 'Faith Symbol 📿', rarity: 'Mythic', price: 1000000, imageUrl: './assets/nfts/faith_symbol.jpg', desc: 'Священный Значок Веры "Velvet Dusk" с золотым полумесяцем' },
+                    { id: 'nft_fragment_banner', serial: '#001', name: 'Fragment Official 3D Banner', rarity: 'Mythic', price: 10000000, imageUrl: './assets/nfts/fragment_official_banner.png', desc: 'Официальный 3D арт с сайта Fragment.com' },
+                    { id: 'nft_tg_business', serial: '#777', name: 'Telegram Business NFT 🚀', rarity: 'Legendary', price: 2500000, imageUrl: './assets/nfts/business_logo.png', desc: 'Официальная иконка Telegram Business с репозитория Telegram' },
+                    { id: 'nft_tg_affiliate', serial: '#999', name: 'Telegram Star Affiliate ⭐', rarity: 'Mythic', price: 5000000, imageUrl: './assets/nfts/affiliate_logo.png', desc: 'Официальный звездный значок Telegram Affiliate с сайта Telegram' },
+                    { id: 'nft_tg_icon512', serial: '#007', name: 'Telegram 3D Emblem 💎', rarity: 'Mythic', price: 1000000, imageUrl: './assets/nfts/icon512@2x.png', desc: 'Официальный 3D символ Telegram 512px с репозитория Telegram' },
                     { id: 'nft_anon_number', serial: '+888 0707', name: 'Anonymous TG Number 📱', rarity: 'Mythic', price: 3000000, desc: 'Анонимный номер Telegram (+888 0707) с маркетплейса Fragment' },
                     { id: 'nft_username_durov', serial: '@durov', name: 'Telegram Username NFT 💎', rarity: 'Mythic', price: 10000000, desc: 'Официальный коллекционный юзернейм Telegram NFT (@durov) c Fragment' },
                     { id: 'nft_tg_whale', serial: '#888', name: 'Telegram TON Whale 🐳', rarity: 'Mythic', price: 3000000, desc: 'Эксклюзивный кит блокчейна TON из официальной коллекции GetGems' }
