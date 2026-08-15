@@ -18,6 +18,16 @@ import { playMessageSound, startRingtone, stopRingtone } from '../utils/sound';
 import toast from 'react-hot-toast';
 import { requestFCMToken, onForegroundMessage } from '../firebase';
 import GiftEffectOverlay from '../components/GiftEffectOverlay';
+import { 
+  NFT_AZUKI_JPG,
+  NFT_BORED_APE_JPG,
+  NFT_FAITH_SYMBOL_JPG,
+  NFT_PUDGY_PENGUIN_JPG,
+  NFT_TG_DIAMOND_RING_JPG,
+  NFT_TG_PLUSH_BEAR_JPG,
+  NFT_TG_RED_HEART_JPG,
+  NFT_TG_STAR_GIFT_JPG
+} from '../assets/nft_data_uris.js';
 
 // Web Audio API Sound Synthesizer for Interactive Audio Feedback
 const playWebAudioEffect = (type = 'coin') => {
@@ -2971,13 +2981,16 @@ const Chat = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                   {[...customNfts, ...[
-                    { id: 'nft_fragment_banner', serial: '#001', name: 'Fragment Official 3D Banner', rarity: 'Mythic', price: 10000000, imageUrl: './assets/nfts/fragment_official_banner.png', desc: 'Официальный 3D арт с сайта Fragment.com' },
-                    { id: 'nft_tg_business', serial: '#777', name: 'Telegram Business NFT 🚀', rarity: 'Legendary', price: 2500000, imageUrl: './assets/nfts/business_logo.png', desc: 'Официальная иконка Telegram Business с репозитория Telegram' },
-                    { id: 'nft_tg_affiliate', serial: '#999', name: 'Telegram Star Affiliate ⭐', rarity: 'Mythic', price: 5000000, imageUrl: './assets/nfts/affiliate_logo.png', desc: 'Официальный звездный значок Telegram Affiliate с сайта Telegram' },
-                    { id: 'nft_tg_icon512', serial: '#007', name: 'Telegram 3D Emblem 💎', rarity: 'Mythic', price: 1000000, imageUrl: './assets/nfts/icon512@2x.png', desc: 'Официальный 3D символ Telegram 512px с репозитория Telegram' },
+                    { id: 'nft_tg_star_gift', serial: '#001', name: 'Telegram Star Gift ⭐️', rarity: 'Mythic', price: 1000000, imageUrl: NFT_TG_STAR_GIFT_JPG, desc: 'Официальный 3D коллекционный подарок Telegram Star Gift в стеклянном шаре' },
+                    { id: 'nft_tg_plush_bear', serial: '#777', name: 'Telegram Plush Bear 🧸', rarity: 'Legendary', price: 500000, imageUrl: NFT_TG_PLUSH_BEAR_JPG, desc: 'Официальный 3D плюшевый мишка Telegram Gift в фирменной шапочке' },
+                    { id: 'nft_tg_red_heart', serial: '#999', name: 'Telegram Red Heart ❤️', rarity: 'Mythic', price: 2500000, imageUrl: NFT_TG_RED_HEART_JPG, desc: 'Официальный 3D рубиновый подарок-сердце Telegram Gift в стеклянном кубе' },
+                    { id: 'nft_tg_diamond_ring', serial: '#007', name: 'Telegram Diamond Ring 💍', rarity: 'Mythic', price: 5000000, imageUrl: NFT_TG_DIAMOND_RING_JPG, desc: 'Официальное 3D бриллиантовое кольцо Telegram Gift с голубым алмазом' },
+                    { id: 'nft_faith_amulet_24949', serial: '#24949', name: 'Faith Symbol 📿', rarity: 'Mythic', price: 1000000, imageUrl: NFT_FAITH_SYMBOL_JPG, desc: 'Священный Значок Веры "Velvet Dusk" с золотым полумесяцем' },
+                    { id: 'nft_bored_ape_8814', serial: '#8814', name: 'Bored Ape BAYC #8814', rarity: 'Mythic', price: 2500000, imageUrl: NFT_BORED_APE_JPG, desc: 'Официальный 3D аватар Bored Ape Yacht Club BAYC #8814' },
+                    { id: 'nft_pudgy_1204', serial: '#1204', name: 'Pudgy Penguin #1204', rarity: 'Legendary', price: 1500000, imageUrl: NFT_PUDGY_PENGUIN_JPG, desc: 'Эксклюзивный 3D пингвин из коллекции OpenSea Pudgy Penguins' },
+                    { id: 'nft_azuki_9910', serial: '#9910', name: 'Azuki Anime #9910', rarity: 'Mythic', price: 3000000, imageUrl: NFT_AZUKI_JPG, desc: 'Официальная аниме NFT карточка с самурайским мечом из коллекции Azuki' },
                     { id: 'nft_anon_number', serial: '+888 0707', name: 'Anonymous TG Number 📱', rarity: 'Mythic', price: 3000000, desc: 'Анонимный номер Telegram (+888 0707) с маркетплейса Fragment' },
-                    { id: 'nft_username_durov', serial: '@durov', name: 'Telegram Username NFT 💎', rarity: 'Mythic', price: 10000000, desc: 'Официальный коллекционный юзернейм Telegram NFT (@durov) c Fragment' },
-                    { id: 'nft_tg_whale', serial: '#888', name: 'Telegram TON Whale 🐳', rarity: 'Mythic', price: 3000000, desc: 'Эксклюзивный кит блокчейна TON из официальной коллекции GetGems' }
+                    { id: 'nft_username_durov', serial: '@durov', name: 'Telegram Username NFT 💎', rarity: 'Mythic', price: 10000000, desc: 'Официальный коллекционный юзернейм Telegram NFT (@durov) c Fragment' }
                   ]].filter(nft => nftRarityFilter === 'ALL' || nft.rarity === nftRarityFilter).map(nft => {
                     const isOwned = storeData?.userNfts?.includes(nft.id) || user?.nfts?.includes(nft.id);
                     const rarityColors = {
